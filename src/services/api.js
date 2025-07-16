@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://sports-web-backend.vercel.app/api',
   withCredentials: true, // if using cookies
   headers: {
     'Content-Type': 'application/json', // ✅ ensures payload is sent
