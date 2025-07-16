@@ -9,20 +9,24 @@ function LoginPage() {
   const [err, setErr] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await API.post('/auth/login', { email, password });
+const handleLogin = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await API.post('/auth/login', { email, password });
 
-      const { role } = res.data.user;
+    const { role } = res.data.user;
 
+    // ✅ Wait 200ms to let browser store the cookie
+    setTimeout(() => {
       if (role === 'admin') navigate('/admin');
       else if (role === 'teacher') navigate('/teacher');
       else if (role === 'student') navigate('/student');
-    } catch (error) {
-      setErr(error.response?.data?.message || 'Login failed');
-    }
-  };
+    }, 200); // You can adjust this if needed
+  } catch (error) {
+    setErr(error.response?.data?.message || 'Login failed');
+  }
+};
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
