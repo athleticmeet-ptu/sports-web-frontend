@@ -1,13 +1,15 @@
-// src/pages/AdminDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import API from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'student', // or 'teacher'
+    role: 'student', // default
   });
 
   const [message, setMessage] = useState('');
@@ -22,6 +24,8 @@ function AdminDashboard() {
       const res = await API.post('/admin/create-user', form);
       setMessage(res.data.message);
       setForm({ name: '', email: '', password: '', role: 'student' });
+
+      setTimeout(() => navigate('/admin/users'), 1500);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error creating user');
     }
@@ -32,7 +36,7 @@ function AdminDashboard() {
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
 
       <form onSubmit={handleCreateUser} className="bg-white p-4 shadow rounded space-y-3">
-        <h3 className="text-lg font-semibold">Create Teacher/Student Account</h3>
+        <h3 className="text-lg font-semibold">Create User Account</h3>
 
         <input
           type="text"
@@ -61,6 +65,7 @@ function AdminDashboard() {
           onChange={handleChange}
           required
         />
+
         <select
           name="role"
           className="w-full border p-2"
@@ -69,12 +74,17 @@ function AdminDashboard() {
         >
           <option value="student">Student</option>
           <option value="teacher">Teacher</option>
+          <option value="captain">Captain</option>
         </select>
 
         <button type="submit" className="bg-blue-600 text-white w-full py-2 rounded">
           Create User
         </button>
       </form>
+
+      <Link to="/admin/session" className="text-blue-600 underline block mt-4">
+        Manage Sessions
+      </Link>
 
       {message && <p className="mt-4 text-green-600">{message}</p>}
     </div>
