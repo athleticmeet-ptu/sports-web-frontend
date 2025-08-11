@@ -5,7 +5,6 @@ function AdminSessionManager() {
   const [sessions, setSessions] = useState([]);
   const [startMonth, setStartMonth] = useState('Jan');
   const [year, setYear] = useState('');
-  const [semester, setSemester] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
@@ -26,13 +25,11 @@ function AdminSessionManager() {
 
       await API.post('/session/create', {
         startMonth,
-        year: Number(year),
-        semester
+        year: Number(year)
       });
 
       setStartMonth('Jan');
       setYear('');
-      setSemester('');
       fetchSessions();
     } catch (error) {
       setErr('Creation failed. Are you logged in as admin?');
@@ -89,14 +86,6 @@ function AdminSessionManager() {
             className="p-2 border w-full"
             required
           />
-          <input
-            type="text"
-            value={semester}
-            onChange={(e) => setSemester(e.target.value)}
-            placeholder="Semester (e.g. Sem 1)"
-            className="p-2 border w-full"
-            required
-          />
         </div>
         <button
           type="submit"
@@ -113,7 +102,7 @@ function AdminSessionManager() {
           <div key={s._id} className="border p-3 rounded flex justify-between items-center">
             <div>
               <p>
-                <strong>{s.session} - {s.semester}</strong>{' '}
+                <strong>{s.session}</strong>{' '}
                 {s.isActive && <span className="text-green-600">(Active)</span>}
               </p>
               <p className="text-sm text-gray-500">

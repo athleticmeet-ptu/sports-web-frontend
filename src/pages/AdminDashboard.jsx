@@ -82,9 +82,16 @@ function AdminDashboard() {
         </button>
       </form>
 
-      <Link to="/admin/session" className="text-blue-600 underline block mt-4">
-        Manage Sessions
-      </Link>
+      {/* Navigation Links */}
+      <div className="mt-4 space-y-2">
+        <Link to="/admin/session" className="text-blue-600 underline block">
+          Manage Sessions
+        </Link>
+
+        <Link to="/admin/approvals" className="text-blue-600 underline block">
+          Approve Teams
+        </Link>
+      </div>
 
       {message && <p className="mt-4 text-green-600">{message}</p>}
     </div>
