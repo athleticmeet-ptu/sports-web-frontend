@@ -9,7 +9,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminApprovalDashboard from './pages/AdminApprovalDashboard';
 import StudentProfileForm from './pages/StudentProfileForm';
 import CaptainDashboard from './pages/CaptainDashboard';
-
+import CreateStudent from './pages/CreateStudent';
+import CreateTeacher from './pages/CreateTeacher';
+import CreateCaptain from './pages/CreateCaptain';
 
 
 
@@ -20,6 +22,9 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />
+<Route path="/admin/create-student" element={<CreateStudent />} />
+<Route path="/admin/create-teacher" element={<CreateTeacher />} />
+<Route path="/admin/create-captain" element={<CreateCaptain />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/captain" element={<CaptainDashboard />} />
         <Route path="/student/profile" element={<ProtectedRoute role="student"><StudentProfileForm /></ProtectedRoute>} />
