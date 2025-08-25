@@ -1,4 +1,3 @@
-// src/components/ProtectedRoute.jsx
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import API from '../services/api';
@@ -11,10 +10,14 @@ const ProtectedRoute = ({ children, role }) => {
     const checkAuth = async () => {
       try {
         const res = await API.get('/auth/me', { withCredentials: true });
-        if (res.data.user.role === role) {
+        const user = res.data.user;
+
+        // ✅ check activeRole or roles array
+        if (user.activeRole === role || (user.roles && user.roles.includes(role))) {
           setAuthorized(true);
         }
-      } catch {
+      } catch (err) {
+        console.error("Auth check failed:", err);
         setAuthorized(false);
       } finally {
         setLoading(false);
@@ -25,7 +28,7 @@ const ProtectedRoute = ({ children, role }) => {
   }, [role]);
 
   if (loading) return <div>Loading...</div>;
-  return authorized ? children : <Navigate to="/login" />;
+  return authorized ? children : <Navigate to="/unauthorized" />; // better UX
 };
 
 export default ProtectedRoute;

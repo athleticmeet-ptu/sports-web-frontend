@@ -8,5 +8,4 @@ const API = axios.create({
     'Content-Type': 'application/json', // ✅ ensures payload is sent
   },
 });
-
 export default API;

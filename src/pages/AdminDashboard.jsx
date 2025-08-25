@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
 function AdminDashboard() {
   return (
     <div className="p-6 max-w-xl mx-auto">
@@ -42,6 +41,45 @@ function AdminDashboard() {
         >
           Approve Teams
         </Link>
+
+        {/* NEW: Captains + Teams Section */}
+        <Link
+          to="/admin/captains"
+          className="block bg-indigo-600 text-white px-4 py-2 rounded text-center"
+        >
+          View Captains & Teams
+        </Link>
+        <Link
+  to="/admin/students"
+  className="bg-indigo-600 text-white px-4 py-2 rounded"
+>
+  Manage Students
+</Link>
+  <Link
+          to="/admin/attendance"
+          className="block bg-indigo-600 text-white px-4 py-2 rounded text-center"
+        >
+          Attendance
+        </Link>
+                <Link to="/admin/assign-position" className="text-blue-600 hover:underline">
+                Assign Student Positions
+              </Link>
+              <Link to="/admin/assign-team-position" className="text-blue-600 hover:underline">
+              assign team position
+              </Link>
+              <Link to="/admin/export" className="text-blue-600 hover:underline">
+              export intercollege students
+              </Link>
+                <Link to="/admin/export-captains" className="text-blue-600 hover:underline">
+              export interyear students
+              </Link>
+                <Link to="/admin/issue-cert" className="text-blue-600 hover:underline">
+              Certificates 
+              </Link>
+                 <Link to="/admin/score" className="text-blue-600 hover:underline">
+              score matrix 
+              </Link>
+              
       </div>
     </div>
   );
