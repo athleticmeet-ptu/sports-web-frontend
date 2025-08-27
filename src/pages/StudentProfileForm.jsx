@@ -7,7 +7,7 @@ const StudentProfileForm = () => {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSessionIsActive, setSelectedSessionIsActive] = useState(false);
   const [profile, setProfile] = useState(null);
-    const [history, setHistory] = useState(null); // 🔥 Added
+  const [history, setHistory] = useState(null); // 🔥 Added
   const [loadingHistory, setLoadingHistory] = useState(false); // 🔥 Added
   const [formData, setFormData] = useState({
     dob: "",
@@ -38,6 +38,11 @@ const StudentProfileForm = () => {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
 
+  // New state variables for the three sports categories
+  const [ptuIntercollegeSport, setPtuIntercollegeSport] = useState("");
+  const [nationalLevelSport, setNationalLevelSport] = useState("");
+  const [internationalLevelSport, setInternationalLevelSport] = useState("");
+
   // fetch sessions
   const fetchSessions = async () => {
     try {
@@ -60,10 +65,11 @@ const StudentProfileForm = () => {
       setErr("Failed to load sessions.");
     }
   };
-  const fetchHistory = async (urn) => {
+  
+  const fetchHistory = async (urn,sessionId) => {
     setLoadingHistory(true);
     try {
-      const res = await API.get(`/student/history/${urn}`, { withCredentials: true });
+      const res = await API.get(`/student/history/${urn}/${sessionId}`, { withCredentials: true });
       setHistory(res.data);
     } catch {
       setHistory(null);
@@ -71,6 +77,7 @@ const StudentProfileForm = () => {
       setLoadingHistory(false);
     }
   };
+  
   // fetch profile
   const fetchProfile = async (sessionId) => {
     if (!sessionId) return;
@@ -82,9 +89,9 @@ const StudentProfileForm = () => {
       });
       const data = res.data;
       setProfile(data);
-          if (data?.urn) {
-      fetchHistory(data.urn);
-    }
+      if (data?.urn) {
+        fetchHistory(data.urn,data.sessionId);
+      }
       const adminSportList = data?.sports || [];
       setAdminSports(adminSportList);
 
@@ -108,15 +115,14 @@ const StudentProfileForm = () => {
         interCollegePgCourse: data?.interCollegePgCourse || 0,   
       });
       if (data?.isCloned) {
-      alert("This profile has been cloned from your last approved session. Please review and update if needed.");
-    }
+        alert("This profile has been cloned from your last approved session. Please review and update if needed.");
+      }
       const sessionInfo = sessions.find((s) => s._id === sessionId);
       setSelectedSessionIsActive(sessionInfo?.isActive || false);
     } catch {
       setErr("Failed to load profile.");
     } finally {
       setLoading(false);
-      
     }
   };
 
@@ -188,10 +194,10 @@ const StudentProfileForm = () => {
         },
         { withCredentials: true }
       );
-setProfile((prev) => ({
-  ...prev,
-  status: { ...prev?.status, personal: "pending" }
-}));
+      setProfile((prev) => ({
+        ...prev,
+        status: { ...prev?.status, personal: "pending" }
+      }));
       alert("✅ Personal details submitted for approval.");
       fetchProfile(selectedSession);
     } catch {
@@ -201,16 +207,32 @@ setProfile((prev) => ({
     }
   };
 
-  // add sport
-  const handleAddSport = () => {
-    if (!newSport.trim()) return;
-    const prefixed = newSport.startsWith("PTU Intercollege ")
-      ? newSport
-      : `PTU Intercollege ${newSport}`;
+  // Updated sport handlers for the three categories
+  const handleAddPtuIntercollegeSport = () => {
+    if (!ptuIntercollegeSport.trim()) return;
+    const prefixed = `PTU Intercollege ${ptuIntercollegeSport.trim()}`;
     if (!formData.sports.includes(prefixed)) {
       setFormData((prev) => ({ ...prev, sports: [...prev.sports, prefixed] }));
     }
-    setNewSport("");
+    setPtuIntercollegeSport("");
+  };
+
+  const handleAddNationalLevelSport = () => {
+    if (!nationalLevelSport.trim()) return;
+    const prefixed = `National Level ${nationalLevelSport.trim()}`;
+    if (!formData.sports.includes(prefixed)) {
+      setFormData((prev) => ({ ...prev, sports: [...prev.sports, prefixed] }));
+    }
+    setNationalLevelSport("");
+  };
+
+  const handleAddInternationalLevelSport = () => {
+    if (!internationalLevelSport.trim()) return;
+    const prefixed = `International Level ${internationalLevelSport.trim()}`;
+    if (!formData.sports.includes(prefixed)) {
+      setFormData((prev) => ({ ...prev, sports: [...prev.sports, prefixed] }));
+    }
+    setInternationalLevelSport("");
   };
 
   // remove sport
@@ -239,11 +261,10 @@ setProfile((prev) => ({
 
       alert("✅ Sports submitted for approval.");
       fetchProfile(selectedSession);
-          setProfile((prev) => ({
-      ...prev,
-      status: { ...prev.status, sports: "pending" },
-    }));
-    
+      setProfile((prev) => ({
+        ...prev,
+        status: { ...prev.status, sports: "pending" },
+      }));
     } catch {
       setErr("❌ Failed to submit sports.");
     } finally {
@@ -254,180 +275,175 @@ setProfile((prev) => ({
   useEffect(() => {
     fetchSessions();
   }, []);
+  
   useEffect(() => {
     if (selectedSession) fetchProfile(selectedSession);
   }, [selectedSession]);
 
   if (loading && !profile) return <p className="text-center">Loading...</p>;
 
- 
-// ---- Personal states ----
-const personalPending = profile?.status?.personal === "pending";
-const personalApproved = profile?.status?.personal === "approved";
+  // ---- Personal states ----
+  const personalPending = profile?.status?.personal === "pending";
+  const personalApproved = profile?.status?.personal === "approved";
 
-// ---- Sports states ----
-const sportsPending = profile?.status?.sports === "pending";
-const sportsApproved = profile?.status?.sports === "approved";
+  // ---- Sports states ----
+  const sportsPending = profile?.status?.sports === "pending";
+  const sportsApproved = profile?.status?.sports === "approved";
 
-// ---- Disable conditions ----
-const readOnlyPersonal =
-  !selectedSessionIsActive || personalPending || personalApproved;
+  // ---- Disable conditions ----
+  const readOnlyPersonal =
+    !selectedSessionIsActive || personalPending || personalApproved;
 
-const disableSports =
-  !personalApproved || sportsPending || sportsApproved;
+  const disableSports =
+    !personalApproved || sportsPending || sportsApproved;
 
+  return (
+    <div className="max-w-xl mx-auto p-6 bg-white shadow rounded">
+      <h2 className="text-2xl font-bold mb-4">Student Profile</h2>
+      {!selectedSessionIsActive && (
+        <p className="text-red-600 font-semibold mb-4">
+          ⚠️ This session has expired. You cannot update details.
+        </p>
+      )}
+      {/* ---- Status Messages ---- */}
+      {personalApproved && (
+        <p className="text-green-600 font-semibold mb-4">
+          ✅ Personal details approved
+        </p>
+      )}
+      {personalPending && !personalApproved && (
+        <p className="text-amber-600 font-semibold mb-4">
+          ⏳ Personal details pending approval
+        </p>
+      )}
+      {err && <p className="text-red-500 mb-2">{err}</p>}
 
+      {/* ---- Session Select ---- */}
+      <div className="mb-4">
+        <label className="block mb-1 font-semibold">Select Session</label>
+        <select
+          value={selectedSession}
+          onChange={(e) => setSelectedSession(e.target.value)}
+          className="border p-2 rounded w-full"
+        >
+          <option value="">-- Select Session --</option>
+          {sessions.map((s) => (
+            <option key={s._id} value={s._id}>
+              {s.session} {s.isActive ? "(Active)" : ""}
+            </option>
+          ))}
+        </select>
+      </div>
 
+      {/* ---- Personal Details ---- */}
+      {profile && (
+        <>
+          {!personalApproved ? (
+            <form className="space-y-4 mb-4">
+              {/* Inputs */}
+              <input
+                name="crn"
+                placeholder="CRN"
+                value={formData.crn}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending || profile?.isCloned}
+              />
 
+              <input
+                name="dob"
+                type="date"
+                value={formData.dob}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending|| profile?.isCloned}
+              />
 
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending|| profile?.isCloned}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
 
+              <input
+                name="fatherName"
+                placeholder="Father's Name"
+                value={formData.fatherName}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending|| profile?.isCloned}
+              />
 
-return (
-  <div className="max-w-xl mx-auto p-6 bg-white shadow rounded">
-    <h2 className="text-2xl font-bold mb-4">Student Profile</h2>
-{!selectedSessionIsActive && (
-  <p className="text-red-600 font-semibold mb-4">
-    ⚠️ This session has expired. You cannot update details.
-  </p>
-)}
-    {/* ---- Status Messages ---- */}
-    {personalApproved && (
-      <p className="text-green-600 font-semibold mb-4">
-        ✅ Personal details approved
-      </p>
-    )}
-    {personalPending && !personalApproved && (
-      <p className="text-amber-600 font-semibold mb-4">
-        ⏳ Personal details pending approval
-      </p>
-    )}
-    {err && <p className="text-red-500 mb-2">{err}</p>}
+              <input
+                type="number"
+                name="yearOfPassingMatric"
+                value={formData.yearOfPassingMatric}
+                onChange={handleChange}
+                disabled={personalPending|| profile?.isCloned}
+                className="w-full border p-2 rounded"
+              />
 
-    {/* ---- Session Select ---- */}
-    <div className="mb-4">
-      <label className="block mb-1 font-semibold">Select Session</label>
-      <select
-        value={selectedSession}
-        onChange={(e) => setSelectedSession(e.target.value)}
-        className="border p-2 rounded w-full"
-      >
-        <option value="">-- Select Session --</option>
-        {sessions.map((s) => (
-          <option key={s._id} value={s._id}>
-            {s.session} {s.isActive ? "(Active)" : ""}
-          </option>
-        ))}
-      </select>
-    </div>
+              <input
+                type="number"
+                name="yearOfPassingPlusTwo"
+                value={formData.yearOfPassingPlusTwo}
+                onChange={handleChange}
+                disabled={personalPending|| profile?.isCloned}
+                className="w-full border p-2 rounded"
+              />
 
-    {/* ---- Personal Details ---- */}
-    {profile && (
-      <>
-        {!personalApproved ? (
-          <form className="space-y-4 mb-4">
-            {/* Inputs */}
-            <input
-              name="crn"
-              placeholder="CRN"
-              value={formData.crn}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending || profile?.isCloned}
-            />
+              <input
+                name="firstAdmissionDate"
+                type="month"
+                value={formData.firstAdmissionDate}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending|| profile?.isCloned}
+              />
 
-            <input
-              name="dob"
-              type="date"
-              value={formData.dob}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending|| profile?.isCloned}
-            />
+              <input
+                name="lastExamName"
+                placeholder="Name of Last Exam Passed"
+                value={formData.lastExamName}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending}
+              />
 
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending|| profile?.isCloned}
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+              <input
+                name="lastExamYear"
+                placeholder="Year of Last Exam Passed"
+                value={formData.lastExamYear}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending}
+              />
 
-            <input
-              name="fatherName"
-              placeholder="Father's Name"
-              value={formData.fatherName}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending|| profile?.isCloned}
-            />
+              <input
+                type="number"
+                name="yearsOfParticipation"
+                value={formData.yearsOfParticipation}
+                onChange={handleChange}
+                disabled={personalPending}
+                className="w-full border p-2 rounded"
+              />
 
-            <input
-              type="text"
-              name="yearOfPassingMatric"
-              value={formData.yearOfPassingMatric}
-              onChange={handleChange}
-              disabled={personalPending|| profile?.isCloned}
-              className="w-full border p-2 rounded"
-            />
-
-            <input
-              type="text"
-              name="yearOfPassingPlusTwo"
-              value={formData.yearOfPassingPlusTwo}
-              onChange={handleChange}
-              disabled={personalPending|| profile?.isCloned}
-              className="w-full border p-2 rounded"
-            />
-
-            <input
-              name="firstAdmissionDate"
-              type="month"
-              value={formData.firstAdmissionDate}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending|| profile?.isCloned}
-            />
-
-            <input
-              name="lastExamName"
-              placeholder="Name of Last Exam Passed"
-              value={formData.lastExamName}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending}
-            />
-
-            <input
-              name="lastExamYear"
-              placeholder="Year of Last Exam Passed"
-              value={formData.lastExamYear}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending}
-            />
-
-            <input
-              type="number"
-              name="yearsOfParticipation"
-              value={formData.yearsOfParticipation}
-              onChange={handleChange}
-              disabled={personalPending}
-              className="w-full border p-2 rounded"
-            />
-
-            <input
-              name="contact"
-              placeholder="Contact Number"
-              value={formData.contact}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              disabled={personalPending|| profile?.isCloned}
-            />
-            <input
+              <input
+                name="contact"
+                placeholder="Contact Number"
+                value={formData.contact}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending|| profile?.isCloned}
+              />
+              
+              <input
                 type="number"
                 name="interCollegeGraduateCourse"
                 value={formData.interCollegeGraduateCourse}
@@ -446,281 +462,335 @@ return (
                 disabled={personalPending|| profile?.isCloned}
                 className="w-full border p-2 rounded"
               />
-            <textarea
-              name="address"
-              placeholder="Address"
-              value={formData.address}
-              onChange={handleChange|| profile?.isCloned}
-              className="w-full border p-2 rounded"
-              disabled={personalPending}
-            />
-
-            {/* Uploads */}
-            <div>
-              <label className="block mb-1 font-semibold">Upload Photo</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleUpload(e, "photo")}
-                disabled={personalPending || uploading|| profile?.isCloned}
+              
+              <textarea
+                name="address"
+                placeholder="Address"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                disabled={personalPending}
               />
+
+              {/* Uploads */}
+              <div>
+                <label className="block mb-1 font-semibold">Upload Photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleUpload(e, "photo")}
+                  disabled={personalPending || uploading|| profile?.isCloned}
+                />
+                {formData.photo && (
+                  <img
+                    src={formData.photo}
+                    alt="Preview"
+                    className="w-24 h-24 object-cover rounded mt-2"
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="block mb-1 font-semibold">
+                  Upload Signature
+                </label>
+                <input
+                  name="signaturePhoto"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleUpload(e, "signaturePhoto")}
+                  disabled={personalPending || uploading|| profile?.isCloned}
+                />
+                {formData.signaturePhoto && (
+                  <img
+                    src={formData.signaturePhoto}
+                    alt="Signature"
+                    className="w-24 h-12 object-contain mt-2 border"
+                  />
+                )}
+              </div>
+
+              {/* Buttons */}
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={handleSavePersonal}
+                  disabled={personalPending || submitting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                >
+                  {submitting ? "Saving..." : "Save Personal Details"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmitPersonalForApproval}
+                  disabled={
+                    personalPending || personalApproved || submittingForApproval
+                  }
+                  className={`py-2 px-4 rounded text-white ${
+                    personalPending || personalApproved || submittingForApproval
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
+                >
+                  {submittingForApproval
+                    ? "Submitting..."
+                    : "Submit for Approval"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            // Case 2: Approved → Show readonly
+            <div className="space-y-2 mb-4 bg-gray-50 p-4 rounded">
+              <p><strong>CRN:</strong> {formData.crn}</p>
+              <p><strong>Father's Name:</strong> {formData.fatherName}</p>
+              <p><strong>DOB:</strong> {formData.dob}</p>
+              <p><strong>Gender:</strong> {formData.gender}</p>
+              <p><strong>Matric Year:</strong> {formData.yearOfPassingMatric}</p>
+              <p><strong>+2 Year:</strong> {formData.yearOfPassingPlusTwo}</p>
+              <p><strong>First Admission:</strong> {formData.firstAdmissionDate}</p>
+              <p>
+                <strong>Last Exam:</strong> {formData.lastExamName} (
+                {formData.lastExamYear})
+              </p>
+              <p>
+                <strong>Participation Years:</strong>{" "}
+                {formData.yearsOfParticipation}
+              </p>
+              <p><strong>Contact:</strong> {formData.contact}</p>
+              <p><strong>Address:</strong> {formData.address}</p>
               {formData.photo && (
                 <img
                   src={formData.photo}
-                  alt="Preview"
-                  className="w-24 h-24 object-cover rounded mt-2"
+                  alt="Profile"
+                  className="w-24 h-24 object-cover rounded"
                 />
               )}
-            </div>
-
-            <div>
-              <label className="block mb-1 font-semibold">
-                Upload Signature
-              </label>
-              <input
-                name="signaturePhoto"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleUpload(e, "signaturePhoto")}
-                disabled={personalPending || uploading|| profile?.isCloned}
-              />
               {formData.signaturePhoto && (
                 <img
                   src={formData.signaturePhoto}
                   alt="Signature"
-                  className="w-24 h-12 object-contain mt-2 border"
+                  className="w-24 h-12 object-contain border"
                 />
               )}
             </div>
-
-            {/* Buttons */}
-            <div className="flex space-x-2">
-              <button
-                type="button"
-                onClick={handleSavePersonal}
-                disabled={personalPending || submitting}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-              >
-                {submitting ? "Saving..." : "Save Personal Details"}
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmitPersonalForApproval}
-                disabled={
-                  personalPending || personalApproved || submittingForApproval
-                }
-                className={`py-2 px-4 rounded text-white ${
-                  personalPending || personalApproved || submittingForApproval
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                {submittingForApproval
-                  ? "Submitting..."
-                  : "Submit for Approval"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          // Case 2: Approved → Show readonly
-          <div className="space-y-2 mb-4 bg-gray-50 p-4 rounded">
-            <p><strong>CRN:</strong> {formData.crn}</p>
-            <p><strong>Father's Name:</strong> {formData.fatherName}</p>
-            <p><strong>DOB:</strong> {formData.dob}</p>
-            <p><strong>Gender:</strong> {formData.gender}</p>
-            <p><strong>Matric Year:</strong> {formData.yearOfPassingMatric}</p>
-            <p><strong>+2 Year:</strong> {formData.yearOfPassingPlusTwo}</p>
-            <p><strong>First Admission:</strong> {formData.firstAdmissionDate}</p>
-            <p>
-              <strong>Last Exam:</strong> {formData.lastExamName} (
-              {formData.lastExamYear})
-            </p>
-            <p>
-              <strong>Participation Years:</strong>{" "}
-              {formData.yearsOfParticipation}
-            </p>
-            <p><strong>Contact:</strong> {formData.contact}</p>
-            <p><strong>Address:</strong> {formData.address}</p>
-            {formData.photo && (
-              <img
-                src={formData.photo}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded"
-              />
-            )}
-            {formData.signaturePhoto && (
-              <img
-                src={formData.signaturePhoto}
-                alt="Signature"
-                className="w-24 h-12 object-contain border"
-              />
-            )}
-          </div>
-        )}
-
-        {/* ---- Sports ---- */}
-        <div className="mb-4">
-          <label className="block mb-1 font-semibold">Sports</label>
-
-          {!personalApproved && (
-            <p className="text-sm text-gray-500">
-              ⚠️ Sports can be added only after personal details are approved.
-            </p>
           )}
 
-          {sportsApproved && (
-            <div className="flex flex-wrap gap-2">
-              
-              {profile.sports.map((sport, idx) => (
-                <span
-                  key={idx}
-                  className="bg-green-200 px-3 py-1 rounded-full"
-                >
-                  {sport}
-                </span>
-              ))}
-              <p>Sports approved too!!!!</p>
-            </div>
-          )}
-          <label className="block mb-1 font-semibold">Sports & Positions</label>
+          {/* ---- Sports Section with Three Categories ---- */}
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold">Sports</label>
 
-  {profile?.positions?.length > 0 && (
-    <div className="space-y-2 mb-3">
-      <h3 className="font-semibold text-green-700">🏆 Achievements</h3>
-      <ul className="list-disc list-inside text-gray-700">
-        {profile.positions.map((p, idx) => (
-          <li key={idx}>
-            {p.sport} - <span className="font-bold">{p.position}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-          {personalApproved && !sportsApproved && (
-            <>
-              {sportsPending && (
-                <p className="text-sm text-amber-700 mt-2">
-                  ⏳ Sports pending admin approval…
-                </p>
-              )}
+            {!personalApproved && (
+              <p className="text-sm text-gray-500">
+                ⚠️ Sports can be added only after personal details are approved.
+              </p>
+            )}
 
+            {sportsApproved && (
               <div className="flex flex-wrap gap-2">
-                {[
-                  ...adminSports,
-                  ...formData.sports.filter((s) => !adminSports.includes(s)),
-                ].map((sport, idx) => (
+                {profile.sports.map((sport, idx) => (
                   <span
                     key={idx}
-                    className="bg-gray-200 px-3 py-1 rounded-full flex items-center space-x-2"
+                    className="bg-green-200 px-3 py-1 rounded-full"
                   >
-                    <span>{sport}</span>
-                    {!adminSports.includes(sport) && !sportsPending && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSport(sport)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        ✕
-                      </button>
-                    )}
+                    {sport}
                   </span>
                 ))}
+                <p>Sports approved too!!!!</p>
               </div>
+            )}
+            
+            <label className="block mb-1 font-semibold">Sports & Positions</label>
 
-              <div className="flex space-x-2 mt-2">
-                <input
-                  type="text"
-                  value={newSport}
-                  onChange={(e) => setNewSport(e.target.value)}
-                  placeholder="Enter sport"
-                  className="border p-2 rounded flex-1"
-                  disabled={sportsPending}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddSport}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  disabled={sportsPending}
-                >
-                  +
-                </button>
+            {profile?.positions?.length > 0 && (
+              <div className="space-y-2 mb-3">
+                <h3 className="font-semibold text-green-700">�� Achievements</h3>
+                <ul className="list-disc list-inside text-gray-700">
+                  {profile.positions.map((p, idx) => (
+                    <li key={idx}>
+                      {p.sport} - <span className="font-bold">{p.position}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
+            )}
+            
+            {personalApproved && !sportsApproved && (
+              <>
+                {sportsPending && (
+                  <p className="text-sm text-amber-700 mt-2">
+                    ⏳ Sports pending admin approval…
+                  </p>
+                )}
 
-              {formData.sports.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleSubmitSports}
-                  disabled={sportsPending || sportsSubmitting}
-                  className="mt-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
-                >
-                  {sportsSubmitting
-                    ? "Submitting..."
-                    : "Submit Sports for Approval"}
-                </button>
-              )}
-            </>
-          )}
-        </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    ...adminSports,
+                    ...formData.sports.filter((s) => !adminSports.includes(s)),
+                  ].map((sport, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-gray-200 px-3 py-1 rounded-full flex items-center space-x-2"
+                    >
+                      <span>{sport}</span>
+                      {!adminSports.includes(sport) && !sportsPending && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSport(sport)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Three Sports Categories */}
+                <div className="space-y-4 mt-4">
+                  {/* PTU Intercollege Sports */}
+                  <div className="border p-3 rounded bg-blue-50">
+                    <h4 className="font-semibold text-blue-800 mb-2">🏆 PTU Intercollege Sports</h4>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={ptuIntercollegeSport}
+                        onChange={(e) => setPtuIntercollegeSport(e.target.value)}
+                        placeholder="Enter sport name"
+                        className="border p-2 rounded flex-1"
+                        disabled={sportsPending}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddPtuIntercollegeSport}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        disabled={sportsPending}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* National Level Sports */}
+                  <div className="border p-3 rounded bg-green-50">
+                    <h4 className="font-semibold text-green-800 mb-2">🏅 National Level Sports</h4>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={nationalLevelSport}
+                        onChange={(e) => setNationalLevelSport(e.target.value)}
+                        placeholder="Enter sport name"
+                        className="border p-2 rounded flex-1"
+                        disabled={sportsPending}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddNationalLevelSport}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        disabled={sportsPending}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* International Level Sports */}
+                  <div className="border p-3 rounded bg-purple-50">
+                    <h4 className="font-semibold text-purple-800 mb-2">🌍 International Level Sports</h4>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={internationalLevelSport}
+                        onChange={(e) => setInternationalLevelSport(e.target.value)}
+                        placeholder="Enter sport name"
+                        className="border p-2 rounded flex-1"
+                        disabled={sportsPending}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddInternationalLevelSport}
+                        className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+                        disabled={sportsPending}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {formData.sports.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleSubmitSports}
+                    disabled={sportsPending || sportsSubmitting}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                  >
+                    {sportsSubmitting
+                      ? "Submitting..."
+                      : "Submit Sports for Approval"}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
           {/* ---- Student History Section ---- */}
-<div className="mt-6">
-  <h3 className="text-xl font-bold mb-2">📜 Student History</h3>
-  {loadingHistory && <p>Loading history...</p>}
-  {history && (
-    <div className="space-y-4">
-      {/* Sports History */}
-      <div className="border p-3 rounded bg-yellow-100">
-        <h4 className="font-semibold">Sports History</h4>
-        {history.sportsHistory?.length > 0 ? (
-          history.sportsHistory.map((sport, i) => (
-            <div key={i} className="border-b py-1">
-              <p>🏅 Sport: {sport}</p>
-            </div>
-          ))
-        ) : (
-          <p>No sports history found.</p>
-        )}
-      </div>
+          <div className="mt-6">
+            <h3 className="text-xl font-bold mb-2">�� Student History</h3>
+            {loadingHistory && <p>Loading history...</p>}
+            {history && (
+              <div className="space-y-4">
+                {/* Sports History */}
+                <div className="border p-3 rounded bg-yellow-100">
+                  <h4 className="font-semibold">Sports History</h4>
+                  {history.sportsHistory?.length > 0 ? (
+                    history.sportsHistory.map((sport, i) => (
+                      <div key={i} className="border-b py-1">
+                        <p>🏅 Sport: {sport}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No sports history found.</p>
+                  )}
+                </div>
 
-      {/* Captain History */}
-      <div className="border p-3 rounded bg-green-100">
-        <h4 className="font-semibold">Captain History</h4>
-        {history.captainRecords?.length > 0 ? (
-          history.captainRecords.map((c, i) => (
-            <div key={i} className="border-b py-1">
-              <p>🏆 Sport: {c.sport}</p>
-              <p>📅 Session: {c.session?.session}</p>
-              <p>👥 Team Members: {c.teamMembers?.length || 0}</p>
-            </div>
-          ))
-        ) : (
-          <p>No captain records found.</p>
-        )}
-      </div>
+                {/* Captain History */}
+                <div className="border p-3 rounded bg-green-100">
+                  <h4 className="font-semibold">Captain History</h4>
+                  {history.captainRecords?.length > 0 ? (
+                    history.captainRecords.map((c, i) => (
+                      <div key={i} className="border-b py-1">
+                        <p>�� Sport: {c.sport}</p>
+                        <p>📅 Session: {c.session?.session}</p>
+                        <p>👥 Team Members: {c.teamMembers?.length || 0}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No captain records found.</p>
+                  )}
+                </div>
 
-      {/* Member History */}
-      <div className="border p-3 rounded bg-blue-100">
-        <h4 className="font-semibold">Team Member History</h4>
-        {history.memberRecords?.length > 0 ? (
-          history.memberRecords.map((m, i) => (
-            <div key={i} className="border-b py-1">
-              <p>🏅 Sport: {m.members.find(mem => mem.urn === history.student?.urn)?.sport || "N/A"}</p>
-              <p>📅 Session: {m.sessionId?.session}</p>
-              <p>👤 Captain ID: {m.captainId}</p>
-            </div>
-          ))
-        ) : (
-          <p>No member records found.</p>
-        )}
-      </div>
+                {/* Member History */}
+                <div className="border p-3 rounded bg-blue-100">
+                  <h4 className="font-semibold">Team Member History</h4>
+                  {history.memberRecords?.length > 0 ? (
+                    history.memberRecords.map((m, i) => (
+                      <div key={i} className="border-b py-1">
+                        <p>🏅 Sport: {m.members.find(mem => mem.urn === history.student?.urn)?.sport || "N/A"}</p>
+                        <p>📅 Session: {m.sessionId?.session}</p>
+                        <p>👤 Captain ID: {m.captainId}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No member records found.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
-  )}
-</div>
-
-      </>
-    )}
-  </div>
-);
-
+  );
 };
 
 export default StudentProfileForm;

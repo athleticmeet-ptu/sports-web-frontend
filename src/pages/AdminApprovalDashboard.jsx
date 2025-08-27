@@ -119,10 +119,26 @@ const AdminApprovalDashboard = () => {
                         className="w-24 h-12 object-contain rounded mb-2 border"
                       />
                     )}
-                    <p><strong>Name:</strong> {student.name}</p>
-                    <p><strong>URN:</strong> {student.urn}</p>
-                    <p><strong>Branch:</strong> {student.branch}</p>
-                    <p><strong>Year:</strong> {student.year}</p>
+  <p><strong>Name:</strong> {student.name || "N/A"}</p>
+  <p><strong>Email:</strong> {student.email || "N/A"}</p>
+  <p><strong>URN:</strong> {student.urn || "N/A"}</p>
+  <p><strong>CRN:</strong> {student.crn || "N/A"}</p>
+  <p><strong>Branch:</strong> {student.branch || "N/A"}</p>
+  <p><strong>Year:</strong> {student.year || "N/A"}</p>
+  <p><strong>DOB:</strong> {student.dob || "N/A"}</p>
+  <p><strong>Gender:</strong> {student.gender || "N/A"}</p>
+  <p><strong>Address:</strong> {student.address || "N/A"}</p>
+  <p><strong>Phone:</strong> {student.phone || "N/A"}</p>
+  <p><strong>Father's Name:</strong> {student.fatherName || "N/A"}</p>
+  <p><strong>Year of Passing (Matric):</strong> {student.yearOfPassingMatric || "N/A"}</p>
+  <p><strong>Year of Passing (Plus Two):</strong> {student.yearOfPassingPlusTwo || "N/A"}</p>
+  <p><strong>Years of Participation:</strong> {student.yearsOfParticipation || 0}</p>
+  <p><strong>First Admission Date:</strong> {student.firstAdmissionDate || "N/A"}</p>
+  <p><strong>Last Exam Name:</strong> {student.lastExamName || "N/A"}</p>
+  <p><strong>Last Exam Year:</strong> {student.lastExamYear || "N/A"}</p>
+  <p><strong>Inter College Graduate Course:</strong> {student.interCollegeGraduateCourse }</p>
+  <p><strong>Inter College PG Years:</strong> {student.interCollegePgCourse}</p>
+
                     <p>
                       <strong>Sports:</strong>{" "}
                       {student.sports?.length > 0

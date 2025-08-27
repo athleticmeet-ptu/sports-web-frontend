@@ -37,8 +37,8 @@ const fetchCaptainInfo = async (sessionId) => {
     const captainData = res.data?.data || null;
 
     // yahan se direct captain ka URN nikalega
-    if (captainData?.urn) {
-      fetchCaptainHistory(captainData.urn);
+    if (captainData?.urn && selectedSession) {
+      fetchCaptainHistory(captainData.urn,selectedSession);
     }
 
     return captainData;
@@ -48,10 +48,10 @@ const fetchCaptainInfo = async (sessionId) => {
   }
 };
 
-const fetchCaptainHistory = async (urn) => {
+const fetchCaptainHistory = async (urn,sessionId) => {
   try {
     setLoadingHistory(true);
-    const res = await API.get(`/captain/history/${urn}`);
+    const res = await API.get(`/captain/history/${urn}/${sessionId}`);
     setHistory(res.data);
   } catch (err) {
     console.error("Error fetching captain history:", err);
@@ -154,22 +154,38 @@ const fetchCaptainHistory = async (urn) => {
       setErr(err.response?.data?.message || 'Failed to add team member.');
     }
   };
-  const generateCertificatesPDF = async () => {
-    if (!captainInfo || !teamInfo) return;
-    const pdf = new jsPDF("landscape", "px", "a4");
-    const allMembers = [captainInfo, ...teamInfo.members];
-    for (let i = 0; i < allMembers.length; i++) {
-      const input = certRefs.current[i];
-      if (!input) continue;
-      const canvas = await html2canvas(input, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = pdf.internal.pageSize.getHeight();
-      if (i !== 0) pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    }
-    pdf.save("Team_Certificates.pdf");
-  };
+const generateCertificatesPDF = async () => {
+  if (!captainInfo || !teamInfo) return;
+
+  const pdf = new jsPDF("landscape", "px", "a4");
+  const allMembers = [captainInfo, ...teamInfo.members];
+
+  for (let i = 0; i < allMembers.length; i++) {
+    const stu = allMembers[i];
+    const input = certRefs.current[i];
+    if (!input) continue;
+
+    // ✅ Decide template based on position
+    const template =
+      stu.position?.toLowerCase() === "participated"
+        ? "Certificates2.png"
+        : "Certificates.png";
+
+    // ✅ force background change before taking screenshot
+    input.style.backgroundImage = `url('/${template}')`;
+
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const width = pdf.internal.pageSize.getWidth();
+    const height = pdf.internal.pageSize.getHeight();
+
+    if (i !== 0) pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+  }
+
+  pdf.save("Team_Certificates.pdf");
+};
+
   if (loading) return <p className="p-6">Loading...</p>;
 
   const sessionExpired = activeSession && !activeSession.isActive;
@@ -413,50 +429,103 @@ return (
         </div>
 
         {/* Certificates */}
+        {/* Certificates */}
         {captainInfo.certificateAvailable ? (
-          <>
-            <button
-              onClick={generateCertificatesPDF}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Download Certificates (Captain + Team)
-            </button>
+  <>
+    <button
+      onClick={generateCertificatesPDF}
+      className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+    >
+      Download Certificates (Captain + Team)
+    </button>
 
-            {/* Hidden Certificates Preview */}
-            <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
-              {[captainInfo, ...teamInfo.members].map((stu, i) => (
-                <div
-                  key={i}
-                  ref={(el) => (certRefs.current[i] = el)}
-                  style={{
-                    width: "1000px",
-                    height: "700px",
-                    backgroundImage: "url('/Certificates.png')",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    position: "relative",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <div style={{ position: "absolute", top: "340px", left: 0, width: "100%", textAlign: "center", fontSize: "32px", fontWeight: "bold" }}>
-                    {stu.name}
-                  </div>
-                  <div style={{ position: "absolute", top: "405px", left: "640px", fontSize: "24px" }}>{stu.urn}</div>
-                  <div style={{ position: "absolute", top: "405px", left: "185px", fontSize: "24px" }}>{stu.branch}</div>
-                  <div style={{ position: "absolute", top: "465px", left: "435px", fontSize: "20px" }}>{stu.sport}</div>
-                  <div style={{ position: "absolute", top: "465px", left: "710px", fontSize: "20px" }}>{activeSession?.session}</div>
-                  <div style={{ position: "absolute", top: "465px", right: "750px", fontSize: "20px" }}>
-                    {stu.position}
-                  </div>
-                </div>
-              ))}
+    {/* Hidden Certificates Preview */}
+    <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+      {[captainInfo, ...teamInfo.members].map((stu, i) => {
+        // ✅ Captain ka position use karo har student ke liye
+        const captainPosition = captainInfo?.position?.toLowerCase();
+
+        // ✅ template select karo (sirf captain position ke hisaab se)
+        const template =
+          captainPosition === "participated"
+            ? "Certificates2.png"
+            : "Certificates.png";
+
+        // ✅ styles select karo template ke hisaab se
+        const styles =
+          template === "Certificates2.png"
+            ? {
+                name: {
+                  top: "344px",
+                  left: "470px",
+                  fontSize: "32px",
+                  textAlign: "center",
+                },
+                urn: { top: "410px", left: "600px", fontSize: "24px" },
+                branch: { top: "410px", left: "240px", fontSize: "24px" },
+                sport: { top: "455px", left: "320px", fontSize: "20px" },
+                session: { top: "460px", left: "591px", fontSize: "20px" },
+              }
+            : {
+                name: {
+                  top: "340px",
+                  left: "0",
+                  width: "100%",
+                  textAlign: "center",
+                  fontSize: "32px",
+                  fontWeight: "bold",
+                },
+                urn: { top: "405px", left: "640px", fontSize: "24px" },
+                branch: { top: "405px", left: "185px", fontSize: "24px" },
+                sport: { top: "465px", left: "435px", fontSize: "20px" },
+                session: { top: "465px", left: "710px", fontSize: "20px" },
+                position: { top: "465px", right: "750px", fontSize: "20px" },
+              };
+
+        return (
+          <div
+            key={i}
+            ref={(el) => (certRefs.current[i] = el)}
+            style={{
+              width: "1000px",
+              height: "700px",
+              backgroundImage: `url('/${template}')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              position: "relative",
+              marginBottom: "20px",
+            }}
+          >
+            <div style={{ position: "absolute", ...styles.name }}>
+              {stu.name}
             </div>
-          </>
-        ) : (
-          <p className="mt-4 text-red-600 font-semibold">
-            ⚠️ Certificate not yet available
-          </p>
-        )}
+            <div style={{ position: "absolute", ...styles.urn }}>
+              {stu.urn}
+            </div>
+            <div style={{ position: "absolute", ...styles.branch }}>
+              {stu.branch}
+            </div>
+            <div style={{ position: "absolute", ...styles.sport }}>
+              {stu.sport}
+            </div>
+            <div style={{ position: "absolute", ...styles.session }}>
+              {activeSession?.session}
+            </div>
+            <div style={{ position: "absolute", ...styles.position }}>
+              {/* ✅ Sabko captain ka hi position show karo */}
+              {captainInfo?.position}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </>
+) : (
+  <p className="mt-4 text-red-600 font-semibold">
+    ⚠️ Certificate not yet available
+  </p>
+)}
+
       </div>
     )}
   </div>

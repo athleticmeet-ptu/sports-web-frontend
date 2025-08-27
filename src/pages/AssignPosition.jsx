@@ -27,7 +27,7 @@ const AssignPosition = () => {
     try {
       const res = await API.post("/admin/assign-position", {
         captainId: selectedCaptain,
-        position: Number(position),
+        position: position,
       });
       setMessage(res.data.message);
     } catch (err) {
@@ -65,17 +65,22 @@ const AssignPosition = () => {
         </div>
 
         {/* Position input */}
-        <div>
-          <label className="block font-medium mb-1">Position</label>
-          <input
-            type="number"
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
-            className="w-full border px-3 py-2 rounded-md"
-            placeholder="Enter position (1, 2, 3...)"
-            required
-          />
-        </div>
+<div>
+  <label className="block font-medium mb-1">Position</label>
+  <select
+    value={position}
+    onChange={(e) => setPosition(e.target.value)}
+    className="w-full border px-3 py-2 rounded-md"
+    required
+  >
+    <option value="">Select Position</option>
+    <option value="1st">1st</option>
+    <option value="2nd">2nd</option>
+    <option value="3rd">3rd</option>
+    <option value="participated">Participated</option>
+  </select>
+</div>
+
 
         <button
           type="submit"

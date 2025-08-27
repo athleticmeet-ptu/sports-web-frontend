@@ -9,22 +9,55 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation } from "swiper/modules";
 
+// 🎯 Layout configs for different templates
+const layoutConfig = {
+  default: {
+    name: { top: "340px", left: "0", fontSize: "32px", textAlign: "center" },
+    urn: { top: "405px", left: "640px", fontSize: "24px" },
+    branch: { top: "405px", left: "185px", fontSize: "24px" },
+    position: { top: "465px", left: "250px", fontSize: "20px" },
+    sport: { top: "465px", left: "435px", fontSize: "20px" },
+    session: { top: "465px", left: "710px", fontSize: "20px" },
+  },
+  participation: {
+    name: { top: "344px", left: "0", fontSize: "32px", textAlign: "center" },
+    urn: { top: "410px", left: "600px", fontSize: "24px" },
+    branch: { top: "410px", left: "240px", fontSize: "24px" },
+    sport: { top: "455px", left: "320px", fontSize: "20px" },
+    session: { top: "460px", left: "591px", fontSize: "20px" },
+  },
+};
+
 // Certificate Card
-const CertificateCard = React.forwardRef(({ student }, ref) => {
+const CertificateCard = React.forwardRef(({ student, captainPosition }, ref) => {
   // ✅ normalize data (captain vs member)
-const data = student.recipientType === "captain"
-  ? {
-      name: student.captainId?.name,
-      urn: student.captainId?.urn,
-      branch: student.captainId?.branch,
-      year: student.captainId?.year || "", // agar model me ho
-    }
-  : {
-      name: student.memberInfo?.name,
-      urn: student.memberInfo?.urn,
-      branch: student.memberInfo?.branch,
-      year: student.memberInfo?.year,
-    };
+  const data =
+    student.recipientType === "captain"
+      ? {
+          name: student.captainId?.name,
+          urn: student.captainId?.urn,
+          branch: student.captainId?.branch,
+          year: student.captainId?.year || "",
+        }
+      : {
+          name: student.memberInfo?.name,
+          urn: student.memberInfo?.urn,
+          branch: student.memberInfo?.branch,
+          year: student.memberInfo?.year,
+        };
+
+  // ✅ Template select logic → sirf captainPosition use hoga
+  const isParticipation = captainPosition?.toLowerCase() === "participated";
+
+  const templateBg = isParticipation ? "/Certificates2.png" : "/Certificates.png";
+  const layout = isParticipation ? layoutConfig.participation : layoutConfig.default;
+
+  const baseStyle = {
+    position: "absolute",
+    color: "#000",
+    fontWeight: "bold",
+  };
+
   return (
     <div
       ref={ref}
@@ -32,90 +65,39 @@ const data = student.recipientType === "captain"
         position: "relative",
         width: "1000px",
         height: "700px",
-        backgroundImage: `url(${student.templateUrl || "/Certificates.png"})`,
+        backgroundImage: `url(${templateBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         margin: "0 auto",
       }}
     >
       {/* Name */}
-      <div
-        style={{
-          position: "absolute",
-          top: "340px",
-          left: "0",
-          width: "100%",
-          textAlign: "center",
-          fontSize: "32px",
-          fontWeight: "bold",
-          color: "#000",
-        }}
-      >
+      <div style={{ ...baseStyle, ...layout.name, width: "100%" }}>
         {data.name}
       </div>
 
       {/* URN */}
-      <div
-        style={{
-          position: "absolute",
-          top: "405px",
-          left: "640px",
-          fontSize: "24px",
-          color: "#000",
-        }}
-      >
+      <div style={{ ...baseStyle, ...layout.urn, fontWeight: "normal" }}>
         {data.urn}
       </div>
 
       {/* Branch */}
-      <div
-        style={{
-          position: "absolute",
-          top: "405px",
-          left: "185px",
-          fontSize: "24px",
-          color: "#000",
-        }}
-      >
-       D{data.year} {data.branch}
+      <div style={{ ...baseStyle, ...layout.branch, fontWeight: "normal" }}>
+        D{data.year} {data.branch}
       </div>
 
       {/* Position */}
-      <div
-        style={{
-          position: "absolute",
-          top: "465px",
-          right: "750px",
-          fontSize: "20px",
-          color: "#000",
-        }}
-      >
-        {student.position}
+      <div style={{ ...baseStyle, ...layout.position, fontWeight: "normal" }}>
+        {captainPosition}
       </div>
 
       {/* Sport */}
-      <div
-        style={{
-          position: "absolute",
-          top: "465px",
-          left: "435px",
-          fontSize: "20px",
-          color: "#000",
-        }}
-      >
+      <div style={{ ...baseStyle, ...layout.sport, fontWeight: "normal" }}>
         {student.sport}
       </div>
 
       {/* Session */}
-      <div
-        style={{
-          position: "absolute",
-          top: "465px",
-          left: "710px",
-          fontSize: "20px",
-          color: "#000",
-        }}
-      >
+      <div style={{ ...baseStyle, ...layout.session, fontWeight: "normal" }}>
         {student.session?.session || ""}
       </div>
     </div>
@@ -125,6 +107,7 @@ const data = student.recipientType === "captain"
 const Certificate = () => {
   const [students, setStudents] = useState([]);
   const [selectedCaptain, setSelectedCaptain] = useState(null);
+  const [captainPosition, setCaptainPosition] = useState(""); // ✅ new state
   const certRefs = useRef([]);
   const { captainId } = useParams();
 
@@ -135,6 +118,10 @@ const Certificate = () => {
         console.log("Certificates API Response:", res.data);
 
         if (res.data && res.data.length > 0) {
+          // ✅ captain ka position nikaal lo
+          const captain = res.data.find((s) => s.recipientType === "captain");
+          setCaptainPosition(captain?.position || "");
+
           setStudents(res.data);
           certRefs.current = res.data.map(() => React.createRef());
           setSelectedCaptain({ captainId });
@@ -164,16 +151,15 @@ const Certificate = () => {
     pdf.save("Certificates.pdf");
   };
 
-const sendToCaptain = async (captainId) => {
-  try {
-    await API.post(`/admin/certificates/send/${captainId}`);
-    alert("Certificates sent!");
-  } catch (err) {
-    console.error(err);
-    alert("Error sending certificates");
-  }
-};
-
+  const sendToCaptain = async (captainId) => {
+    try {
+      await API.post(`/admin/certificates/send/${captainId}`);
+      alert("Certificates sent!");
+    } catch (err) {
+      console.error(err);
+      alert("Error sending certificates");
+    }
+  };
 
   const btnStyle = {
     marginTop: "10px",
@@ -201,7 +187,11 @@ const sendToCaptain = async (captainId) => {
           >
             {students.map((stu, index) => (
               <SwiperSlide key={index}>
-                <CertificateCard ref={certRefs.current[index]} student={stu} />
+                <CertificateCard
+                  ref={certRefs.current[index]}
+                  student={stu}
+                  captainPosition={captainPosition} // ✅ pass captain position
+                />
               </SwiperSlide>
             ))}
           </Swiper>
