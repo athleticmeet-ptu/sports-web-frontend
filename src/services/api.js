@@ -2,10 +2,11 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL  ||'https://localhost:5000/api',
-  withCredentials: true, // if using cookies
+  baseURL: '/api',   // ✅ bas itna hi
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json', // ✅ ensures payload is sent
+    'Content-Type': 'application/json',
   },
 });
+
 export default API;
