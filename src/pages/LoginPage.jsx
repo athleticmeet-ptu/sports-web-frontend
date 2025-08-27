@@ -39,7 +39,7 @@ function LoginPage() {
 
     try {
       // ✅ Tell backend which role we are using
-      await API.post("/auth/set-role", { role: selectedRole });
+      await API.post("/auth/set-role", { role: selectedRole,  withCredentials: true  });
 
       redirectUser(selectedRole);
     } catch (error) {
