@@ -38,10 +38,14 @@ function LoginPage() {
     }
 
     try {
-      // ✅ Tell backend which role we are using
-      await API.post("/auth/set-role", { role: selectedRole,  withCredentials: true  });
+    // ✅ Correct: withCredentials must be in config, not in body
+    await API.post(
+      "/auth/set-role",
+      { role: selectedRole },   // body
+      { withCredentials: true } // ✅ config
+    );
 
-      redirectUser(selectedRole);
+    redirectUser(selectedRole);
     } catch (error) {
       setErr(error.response?.data?.message || "Failed to set role");
     }
