@@ -14,7 +14,8 @@ function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post("/auth/login", { email, password });
+      const res = await API.post("/auth/login", { email, password }, { withCredentials: true });
+
 
       const { user } = res.data;
 
