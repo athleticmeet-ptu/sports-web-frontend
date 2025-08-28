@@ -1,8 +1,10 @@
 // pages/Students.jsx
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function Students() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
