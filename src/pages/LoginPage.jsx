@@ -62,15 +62,16 @@ function LoginPage() {
     }, 200);
   };
 
- return (
+return (
   <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-50">
     <form
       onSubmit={handleLogin}
       className="w-full max-w-sm p-8 bg-white shadow-lg rounded-2xl border border-gray-100"
     >
       <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-        Welcome Back 👋
+        Welcome To GNDEC SPORTS 👋
       </h2>
+
       {err && (
         <p className="text-red-500 mb-4 text-center font-medium bg-red-50 p-2 rounded">
           {err}
@@ -79,6 +80,7 @@ function LoginPage() {
 
       {!roles.length ? (
         <>
+          {/* Email Field */}
           <div className="mb-4">
             <label className="block text-gray-600 text-sm mb-1">Email</label>
             <input
@@ -91,18 +93,27 @@ function LoginPage() {
             />
           </div>
 
-          <div className="mb-6">
+          {/* Password Field with Eye Toggle */}
+          <div className="mb-6 relative">
             <label className="block text-gray-600 text-sm mb-1">Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10"
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            {/* Eye / Hide Icon (no extra package, just emoji) */}
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-10 cursor-pointer text-gray-500 hover:text-gray-700 select-none"
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </span>
           </div>
 
+          {/* Login Button */}
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition transform hover:scale-[1.02] shadow-md"
@@ -112,6 +123,7 @@ function LoginPage() {
         </>
       ) : (
         <>
+          {/* Role Selection */}
           <label className="block text-gray-600 text-sm mb-2">Select Role</label>
           <select
             value={selectedRole}
@@ -125,6 +137,8 @@ function LoginPage() {
               </option>
             ))}
           </select>
+
+          {/* Continue Button */}
           <button
             type="button"
             onClick={handleRoleSelection}
@@ -137,6 +151,7 @@ function LoginPage() {
     </form>
   </div>
 );
+
 }
 
 export default LoginPage;
