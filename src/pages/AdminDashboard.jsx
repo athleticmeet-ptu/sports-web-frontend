@@ -13,32 +13,35 @@ function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="w-12 h-12 border-4 border-blue-600 border-dashed rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 🔹 Navbar */}
-      <nav className="bg-blue-600 text-white px-6 py-4 shadow-md">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Admin Dashboard</h1>
-          <div className="space-x-4 flex flex-wrap gap-2">
-            <Link to="/admin/create-student" className="hover:underline">Create Student</Link>
-            <Link to="/admin/create-teacher" className="hover:underline">Create Teacher</Link>
-            <Link to="/admin/create-captain" className="hover:underline">Create Captain</Link>
-            <Link to="/admin/session" className="hover:underline">Manage Sessions</Link>
-            <Link to="/admin/approvals" className="hover:underline">Approve Teams</Link>
-            <Link to="/admin/captains" className="hover:underline">View Captains & Teams</Link>
-            <Link to="/admin/students" className="hover:underline">Manage Students</Link>
-            <Link to="/admin/attendance" className="hover:underline">Attendance</Link>
-            <Link to="/admin/assign-position" className="hover:underline">Assign Student Positions</Link>
-            <Link to="/admin/assign-team-position" className="hover:underline">Assign Team Position</Link>
-            <Link to="/admin/export" className="hover:underline">Export Students</Link>
-            <Link to="/admin/export-captains" className="hover:underline">Export Captains</Link>
-            <Link to="/admin/issue-cert" className="hover:underline">Certificates</Link>
-            <Link to="/admin/score" className="hover:underline">Score Matrix</Link>
+      {/* 🔹 Gradient Navbar */}
+      <nav className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white px-6 py-4 shadow-lg">
+        <div className="flex items-center justify-between flex-wrap">
+          {/* Logo */}
+          <h1 className="text-2xl font-bold tracking-wide">Admin Dashboard</h1>
+
+          {/* Links */}
+          <div className="flex flex-wrap gap-4 mt-3 md:mt-0">
+            <Link to="/admin/create-student" className="nav-link">Create Student</Link>
+            <Link to="/admin/create-teacher" className="nav-link">Create Teacher</Link>
+            <Link to="/admin/create-captain" className="nav-link">Create Captain</Link>
+            <Link to="/admin/session" className="nav-link">Manage Sessions</Link>
+            <Link to="/admin/approvals" className="nav-link">Approve Teams</Link>
+            <Link to="/admin/captains" className="nav-link">Captains & Teams</Link>
+            <Link to="/admin/students" className="nav-link">Manage Students</Link>
+            <Link to="/admin/attendance" className="nav-link">Attendance</Link>
+            <Link to="/admin/assign-position" className="nav-link">Assign Positions</Link>
+            <Link to="/admin/assign-team-position" className="nav-link">Team Position</Link>
+            <Link to="/admin/export" className="nav-link">Export Students</Link>
+            <Link to="/admin/export-captains" className="nav-link">Export Captains</Link>
+            <Link to="/admin/issue-cert" className="nav-link">Certificates</Link>
+            <Link to="/admin/score" className="nav-link">Score Matrix</Link>
           </div>
         </div>
       </nav>
@@ -51,33 +54,33 @@ function AdminDashboard() {
 
         {/* Blocks Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
-            <h3 className="text-lg font-semibold mb-2">Pending Positions</h3>
+          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold mb-2 text-orange-600">Pending Positions</h3>
             <p className="text-gray-600">10 positions pending approval</p>
           </div>
 
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
-            <h3 className="text-lg font-semibold mb-2">Teams Overview</h3>
+          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold mb-2 text-orange-600">Teams Overview</h3>
             <p className="text-gray-600">5 active teams</p>
           </div>
 
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
-            <h3 className="text-lg font-semibold mb-2">Attendance</h3>
+          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold mb-2 text-orange-600">Attendance</h3>
             <p className="text-gray-600">75% average attendance</p>
           </div>
         </div>
 
         {/* Analytics Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
-            <h3 className="text-lg font-semibold mb-4">Performance Analytics</h3>
+          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold mb-4 text-orange-600">Performance Analytics</h3>
             <div className="h-40 flex items-center justify-center text-gray-500">
               📊 Chart / Graph Placeholder
             </div>
           </div>
 
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
-            <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold mb-4 text-orange-600">Recent Activity</h3>
             <ul className="space-y-2 text-gray-600">
               <li>✔️ Student "Rahul" created</li>
               <li>✔️ Teacher "Mr. Singh" added</li>
@@ -86,6 +89,22 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Extra Tailwind CSS for nav-link */}
+      <style>
+        {`
+          .nav-link {
+            position: relative;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+          }
+          .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+          }
+        `}
+      </style>
     </div>
   );
 }
