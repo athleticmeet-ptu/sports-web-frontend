@@ -10,18 +10,25 @@ const StudentDetails = () => {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
 
-  const fetchDetails = async () => {
-    try {
-      const res = await API.get(`/admin/student/${id}`, { withCredentials: true });
-      setStudent(res.data);
-      setForm(res.data); // prefill all fields
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch student details");
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchDetails = async () => {
+  try {
+    const res = await API.get(`/admin/student/${id}`, { withCredentials: true });
+    setStudent(res.data);
+
+    // ✅ photo & signaturePhoto ke liye fallback empty string
+    setForm({
+      ...res.data,
+      photo: res.data.photo || "",
+      signaturePhoto: res.data.signaturePhoto || "",
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Failed to fetch student details");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this student?")) return;
@@ -34,18 +41,48 @@ const StudentDetails = () => {
       alert("Failed to delete student");
     }
   };
+const handleUpdate = async () => {
+  try {
+    const formData = new FormData();
 
-  const handleUpdate = async () => {
-    try {
-      const res = await API.put(`/admin/student/${id}`, form, { withCredentials: true });
-      setStudent(res.data);
-      setEditing(false);
-      alert("Student updated successfully");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update student");
+    // ✅ Append all normal fields (except file fields)
+    for (const key in form) {
+      if (
+        form[key] !== undefined &&
+        form[key] !== null &&
+        key !== "photo" &&
+        key !== "signaturePhoto"
+      ) {
+          if (key === "userId" && typeof form[key] === "object" && form[key]._id) {
+          formData.append("userId", form[key]._id);
+        } else {
+          formData.append(key, form[key]);
+        }
+      }
     }
-  };
+
+    // ✅ Append file fields separately
+    if (form.photo instanceof File) {
+      formData.append("photo", form.photo);
+    }
+    if (form.signaturePhoto instanceof File) {
+      formData.append("signaturePhoto", form.signaturePhoto);
+    }
+
+    const res = await API.put(`/admin/student/${id}`, formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    setStudent(res.data);
+    setEditing(false);
+    alert("Student updated successfully");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update student");
+  }
+};
+
 
   useEffect(() => {
     fetchDetails();
@@ -70,7 +107,8 @@ const StudentDetails = () => {
           <>
             <h2 className="text-2xl font-bold mb-4">{student.name}</h2>
             <img src={student.photo} alt="student" className="w-32 h-32 object-cover mb-4" />
-
+              <img src={student.signaturePhoto} alt="student" className="w-32 h-32 object-cover mb-4" />
+            <p><strong>Passowrd:</strong>{student.userId.password}</p>
             <p><strong>Email:</strong> {student.userId?.email}</p>
             <p><strong>URN:</strong> {student.urn}</p>
             <p><strong>CRN:</strong> {student.crn}</p>
@@ -115,6 +153,15 @@ const StudentDetails = () => {
               <input name="crn" value={form.crn || ""} onChange={handleChange} placeholder="CRN" className="border p-2" />
               <input name="branch" value={form.branch || ""} onChange={handleChange} placeholder="Branch" className="border p-2" />
               <input name="year" type="number" value={form.year || ""} onChange={handleChange} placeholder="Year" className="border p-2" />
+                {/* 🔹 New password field */}
+  <input
+    name="password"
+    type="password"
+    value={form.password || ""}
+    onChange={handleChange}
+    placeholder="Password"
+    className="border p-2"
+  />
               <input name="dob" type="date" value={form.dob ? form.dob.substring(0, 10) : ""} onChange={handleChange} className="border p-2" />
               <input name="gender" value={form.gender || ""} onChange={handleChange} placeholder="Gender" className="border p-2" />
               <input name="contact" value={form.contact || ""} onChange={handleChange} placeholder="Contact" className="border p-2" />
@@ -138,6 +185,34 @@ const StudentDetails = () => {
                 <option value="approved">Sports - Approved</option>
               </select>
             </div>
+{/* Photo Upload */}
+<div>
+  <label>Photo</label>
+  <input
+    type="file"
+    name="photo"
+    accept="image/*"
+    onChange={(e) => setForm({ ...form, photo: e.target.files[0] })}
+  />
+  {/* Show preview if already uploaded */}
+  {form.photo && typeof form.photo === "string" && (
+    <img src={form.photo} alt="photo" width={100} />
+  )}
+</div>
+
+{/* Signature Upload */}
+<div>
+  <label>Signature</label>
+  <input
+    type="file"
+    name="signaturePhoto"
+    accept="image/*"
+    onChange={(e) => setForm({ ...form, signaturePhoto: e.target.files[0] })}
+  />
+  {form.signaturePhoto && typeof form.signaturePhoto === "string" && (
+    <img src={form.signaturePhoto} alt="signature" width={100} />
+  )}
+</div>
 
             <div className="flex gap-4 mt-6">
               <button
