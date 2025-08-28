@@ -7,6 +7,7 @@ export default function Students() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -20,16 +21,19 @@ export default function Students() {
     role: 'student',
   });
 
-  const [students, setStudents] = useState([]); // future API data
+  const [students, setStudents] = useState([]); // future API
   const [sessions, setSessions] = useState([]);
+
+  // Custom dropdown states
+  const [courseOpen, setCourseOpen] = useState(false);
+  const [yearOpen, setYearOpen] = useState(false);
+  const [sessionOpen, setSessionOpen] = useState(false);
 
   const courses = ['B.Tech CSE', 'B.Tech IT', 'MBA'];
   const years = Array.from({ length: 10 }, (_, i) => 2020 + i);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
-
-    // fetch active session
     API.get('/session/active')
       .then(res => {
         if (res.data?._id) {
@@ -118,15 +122,26 @@ export default function Students() {
                 onChange={handleChange}
                 required
               />
-              <input
-                name="password"
-                type="password"
-                placeholder="Password"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
+
+              {/* Password with eye */}
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none pr-10"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+                <span
+                  className="absolute right-3 top-3 cursor-pointer select-none text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </span>
+              </div>
+
               <input
                 name="rollNumber"
                 placeholder="URN"
@@ -136,41 +151,77 @@ export default function Students() {
                 required
               />
 
-              {/* Course */}
-              <select
-                name="course"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                value={form.course}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Select Course --</option>
-                {courses.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              {/* Custom Course Dropdown */}
+              <div className="relative">
+                <div
+                  className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
+                  onClick={() => setCourseOpen(!courseOpen)}
+                >
+                  <span>{form.course || '-- Select Course --'}</span>
+                  <span className="text-gray-500">{courseOpen ? '▲' : '▼'}</span>
+                </div>
+                {courseOpen && (
+                  <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                    {courses.map(c => (
+                      <div
+                        key={c}
+                        className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                        onClick={() => { setForm({ ...form, course: c }); setCourseOpen(false); }}
+                      >
+                        {c}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              {/* Year */}
-              <select
-                name="year"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                value={form.year}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Select Year --</option>
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+              {/* Custom Year Dropdown */}
+              <div className="relative">
+                <div
+                  className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
+                  onClick={() => setYearOpen(!yearOpen)}
+                >
+                  <span>{form.year || '-- Select Year --'}</span>
+                  <span className="text-gray-500">{yearOpen ? '▲' : '▼'}</span>
+                </div>
+                {yearOpen && (
+                  <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                    {years.map(y => (
+                      <div
+                        key={y}
+                        className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                        onClick={() => { setForm({ ...form, year: y }); setYearOpen(false); }}
+                      >
+                        {y}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              {/* Session */}
-              <select
-                name="sessionId"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                value={form.sessionId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Select Session --</option>
-                {sessions.map(s => <option key={s._id} value={s._id}>{s.session}</option>)}
-              </select>
+              {/* Custom Session Dropdown */}
+              <div className="relative">
+                <div
+                  className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
+                  onClick={() => setSessionOpen(!sessionOpen)}
+                >
+                  <span>{sessions.find(s => s._id === form.sessionId)?.session || '-- Select Session --'}</span>
+                  <span className="text-gray-500">{sessionOpen ? '▲' : '▼'}</span>
+                </div>
+                {sessionOpen && (
+                  <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                    {sessions.map(s => (
+                      <div
+                        key={s._id}
+                        className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                        onClick={() => { setForm({ ...form, sessionId: s._id }); setSessionOpen(false); }}
+                      >
+                        {s.session}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <button
                 type="submit"
