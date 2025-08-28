@@ -6,6 +6,7 @@ import API from "../services/api";
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [err, setErr] = useState("");
   const [roles, setRoles] = useState([]); // ✅ multiple roles
   const [selectedRole, setSelectedRole] = useState("");
