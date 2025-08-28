@@ -150,17 +150,20 @@ export default function CreateStudent() {
           </select>
 
           {/* Year picker */}
-          <input
-            name="year"
-            type="number"
-            placeholder="Degree Year"
-            min="2000"
-            max="2099"
-            className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
-            value={form.year}
-            onChange={handleChange}
-            required
-          />
+        <select
+  name="year"
+  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
+  value={form.year}
+  onChange={handleChange}
+  required
+>
+  <option value="">-- Select Year --</option>
+  {Array.from({length: 10}, (_, i) => {
+    const y = 2020 + i; // example 2020-2029
+    return <option key={y} value={y}>{y}</option>
+  })}
+</select>
+
 
           <select
             name="sessionId"
