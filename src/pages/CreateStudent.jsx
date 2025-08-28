@@ -23,8 +23,11 @@ export default function CreateStudent() {
 
   const [sessions, setSessions] = useState([]);
   const [message, setMessage] = useState('');
+
+  // Custom dropdown states
   const [courseOpen, setCourseOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
+  const [sessionOpen, setSessionOpen] = useState(false);
 
   const courses = ['B.Tech CSE', 'B.Tech IT', 'MBA']; // future add more
   const years = Array.from({length: 10}, (_, i) => 2020 + i);
@@ -193,20 +196,30 @@ export default function CreateStudent() {
           </div>
 
           {/* Session Dropdown */}
-          <select
-            name="sessionId"
-            className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
-            value={form.sessionId}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Select Session --</option>
-            {sessions.map((s) => (
-              <option key={s._id} value={s._id}>
-                {s.session}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <div
+              className="w-full border p-3 rounded-lg cursor-pointer focus:ring-2 focus:ring-orange-400 focus:outline-none flex justify-between items-center"
+              onClick={() => setSessionOpen(!sessionOpen)}
+            >
+              <span>
+                {sessions.find(s => s._id === form.sessionId)?.session || '-- Select Session --'}
+              </span>
+              <span className="text-gray-500">{sessionOpen ? '▲' : '▼'}</span>
+            </div>
+            {sessionOpen && (
+              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                {sessions.map(s => (
+                  <div
+                    key={s._id}
+                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                    onClick={() => { setForm({ ...form, sessionId: s._id }); setSessionOpen(false); }}
+                  >
+                    {s.session}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <button
             type="submit"
