@@ -76,6 +76,15 @@ export default function Students() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+       {/* Dashboard Button */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate('/admin')}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium shadow transition"
+        >
+          &larr; Dashboard
+        </button>
+      </div>
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Students</h2>
 
       {/* Create Student Button */}
