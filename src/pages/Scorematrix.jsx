@@ -1,142 +1,168 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
+const months = [
+  { short: "Jan", full: "January" },
+  { short: "Feb", full: "February" },
+  { short: "Mar", full: "March" },
+  { short: "Apr", full: "April" },
+  { short: "May", full: "May" },
+  { short: "Jun", full: "June" },
+  { short: "July", full: "July" },
+  { short: "Aug", full: "August" },
+  { short: "Sep", full: "September" },
+  { short: "Oct", full: "October" },
+  { short: "Nov", full: "November" },
+  { short: "Dec", full: "December" },
+];
+
 export default function StudentsTable() {
   const [students, setStudents] = useState([]);
-  const [sessions, setSessions] = useState([]); // only full-year sessions
-  const [selectedSession, setSelectedSession] = useState("");
+  const [sessions, setSessions] = useState([]);
+  const [startMonth, setStartMonth] = useState("Jan");
+  const [endMonth, setEndMonth] = useState("Dec");
+  const [startYear, setStartYear] = useState(new Date().getFullYear());
+  const [endYear, setEndYear] = useState(new Date().getFullYear());
+  const [years, setYears] = useState([]);
 
-  // 🔹 Fetch sessions on mount
+  // 🔹 Fetch all sessions
   useEffect(() => {
     API.get("/session")
       .then((res) => {
         if (!res.data) return;
 
-        // extract unique years
-        const years = new Set();
+        setSessions(res.data);
+
+        const yr = new Set();
         res.data.forEach((s) => {
-          if (s.session) {
-            const match = s.session.match(/\b(\d{4})\b/); // extract year
-            if (match) years.add(match[1]);
-          }
+          if (s.startDate) yr.add(new Date(s.startDate).getFullYear());
+          if (s.endDate) yr.add(new Date(s.endDate).getFullYear());
         });
 
-        // create full year options like Jan–Dec YYYY
-        const fullSessions = Array.from(years).map((year) => ({
-          _id: `year-${year}`, // fake id for dropdown
-          session: `Jan–Dec ${year}`,
-          year,
-        }));
-
-        setSessions(fullSessions);
-
-        // preselect current year if available
-        const currentYear = new Date().getFullYear();
-        const active = fullSessions.find((s) => s.year === String(currentYear));
-        if (active) setSelectedSession(active._id);
+        setYears(Array.from(yr).sort());
       })
       .catch((err) => console.error("Error fetching sessions:", err));
   }, []);
 
-  // 🔹 Fetch students whenever selectedSession (year) changes
+  // 🔹 Fetch students whenever range changes
   useEffect(() => {
-    if (!selectedSession) return;
+    if (!startYear || !endYear || !startMonth || !endMonth) return;
 
-    const selected = sessions.find((s) => s._id === selectedSession);
-    if (!selected) return;
+    // Build session string to send to backend
+    let sessionString = `${startMonth}–${endMonth} ${endYear}`;
 
-    // call backend with full-year param (e.g. Jan-Dec 2025)
+    if (startYear !== endYear) {
+      sessionString = `${startMonth} ${startYear}–${endMonth} ${endYear}`;
+    }
+
     API.get("/admin/students-unique", {
-      params: { session: selected.session },
+      params: { session: sessionString },
     })
       .then((res) => setStudents(res.data || []))
       .catch((err) => console.error("Error fetching students:", err));
-  }, [selectedSession, sessions]);
+  }, [startMonth, endMonth, startYear, endYear]);
 
-  // 🔹 Score Calculation
-const getScore = (student) => {
-  let total = 0;
+  // 🔹 Score Calculation (unchanged)
+  const getScore = (student) => {
+    let total = 0;
+    const multipliers = {
+      international: { "1st": 60, "2nd": 58, "3rd": 56, participated: 55 },
+      national: { "1st": 55, "2nd": 53, "3rd": 51, participated: 50 },
+      state: { "1st": 50, "2nd": 48, "3rd": 46, participated: 45 },
+      institute: { "1st": 45, "2nd": 43, "3rd": 41, participated: 15 },
+    };
 
-  const multipliers = {
-    international: { "1st": 60, "2nd": 58, "3rd": 56, participated: 55 },
-    national: { "1st": 55, "2nd": 53, "3rd": 51, participated: 50 },
-    state: { "1st": 50, "2nd": 48, "3rd": 46, participated: 45 },
-    institute: { "1st": 45, "2nd": 43, "3rd": 41, participated: 15 },
-  };
+    student.sports.forEach((sport, i) => {
+      let rawPos = (student.positions?.[i] || "").toString().toLowerCase();
+      let position = "";
+      if (["participation", "participated"].includes(rawPos)) position = "participated";
+      else if (rawPos.includes("1")) position = "1st";
+      else if (rawPos.includes("2")) position = "2nd";
+      else if (rawPos.includes("3")) position = "3rd";
+      else if (rawPos === "pending") position = "pending";
 
-  student.sports.forEach((sport, i) => {
-    let rawPos = (student.positions?.[i] || "").toString().toLowerCase();
+      let level = "institute";
+      if (/international/i.test(sport)) level = "international";
+      else if (/national|inter\s*university/i.test(sport)) level = "national";
+      else if (/state|inter\s*college|ptu|university/i.test(sport)) level = "state";
 
-    // normalize position
-    let position = "";
-    if (["participation", "participated"].includes(rawPos)) position = "participated";
-    else if (rawPos.includes("1")) position = "1st";
-    else if (rawPos.includes("2")) position = "2nd";
-    else if (rawPos.includes("3")) position = "3rd";
-    else if (rawPos === "pending") position = "pending";
-
-    // detect level
-    let level = "institute";
-    if (/international/i.test(sport)) level = "international";
-    else if (/national|inter\s*university/i.test(sport)) level = "national";
-    else if (/state|inter\s*college|ptu|university/i.test(sport)) level = "state";
-
-    // ✅ logic for pending
-    if (position === "pending") {
-      // check if this student has a valid position for the same sport
-      const hasValidPos = student.positions?.some(
-        (p) =>
-          p &&
-          !/pending/i.test(p) &&
-          !/^\s*$/.test(p) // not empty
-      );
-
-      if (hasValidPos) {
-        return; // ignore pending if valid exists
+      if (position === "pending") {
+        const hasValidPos = student.positions?.some(
+          (p) => p && !/pending/i.test(p) && !/^\s*$/.test(p)
+        );
+        if (hasValidPos) return;
+        return;
       }
 
-      // if only pending → always 0 (no marks)
-      return;
+      const value = multipliers[level][position] || 0;
+      total += value;
+    });
+
+    if (student.isCaptain) total += 15;
+    if (student.sports.some((s) => /gym|swimming|shooting/i.test(s))) {
+      total += 30;
     }
 
-    // normal scoring
-    const value = multipliers[level][position] || 0;
-    total += value;
-  });
-
-  // captain bonus
-  if (student.isCaptain) total += 15;
-
-  // gym/swimming/shooting bonus
-  if (student.sports.some((s) => /gym|swimming|shooting/i.test(s))) {
-    total += 30;
-  }
-
-  return total;
-};
-
+    return total;
+  };
 
   return (
     <div className="p-6">
       <h1 className="text-xl font-bold mb-4">Students (URN Unique)</h1>
 
-      {/* Session Dropdown */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">
-          Select Session (Full Year)
-        </label>
-        <select
-          value={selectedSession}
-          onChange={(e) => setSelectedSession(e.target.value)}
-          className="border px-3 py-2 rounded-md"
-        >
-          <option value="">-- Select Session --</option>
-          {sessions.map((s) => (
-            <option key={s._id} value={s._id}>
-              {s.session}
-            </option>
-          ))}
-        </select>
+      {/* 🔹 Session Picker */}
+      <div className="flex gap-4 mb-4">
+        <div>
+          <label className="block font-medium mb-1">Start Month</label>
+          <select
+            value={startMonth}
+            onChange={(e) => setStartMonth(e.target.value)}
+            className="border px-3 py-2 rounded-md"
+          >
+            {months.map((m) => (
+              <option key={m.short} value={m.short}>{m.short}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">Start Year</label>
+          <select
+            value={startYear}
+            onChange={(e) => setStartYear(Number(e.target.value))}
+            className="border px-3 py-2 rounded-md"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">End Month</label>
+          <select
+            value={endMonth}
+            onChange={(e) => setEndMonth(e.target.value)}
+            className="border px-3 py-2 rounded-md"
+          >
+            {months.map((m) => (
+              <option key={m.short} value={m.short}>{m.short}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">End Year</label>
+          <select
+            value={endYear}
+            onChange={(e) => setEndYear(Number(e.target.value))}
+            className="border px-3 py-2 rounded-md"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Students Table */}

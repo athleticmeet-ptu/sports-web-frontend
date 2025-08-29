@@ -4,9 +4,18 @@ import API from '../services/api';
 function AdminSessionManager() {
   const [sessions, setSessions] = useState([]);
   const [startMonth, setStartMonth] = useState('Jan');
-  const [year, setYear] = useState('');
+  const [endMonth, setEndMonth] = useState('July');
+  const [year, setYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June',
+    'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
+  ];
+
+  // year list banayenge (current year -10 se +10 tak)
+  const years = Array.from({ length: 21 }, (_, i) => new Date().getFullYear() - 10 + i);
 
   const fetchSessions = async () => {
     try {
@@ -25,11 +34,13 @@ function AdminSessionManager() {
 
       await API.post('/session/create', {
         startMonth,
+        endMonth,
         year: Number(year)
       });
 
       setStartMonth('Jan');
-      setYear('');
+      setEndMonth('July');
+      setYear(new Date().getFullYear());
       fetchSessions();
     } catch (error) {
       setErr('Creation failed. Are you logged in as admin?');
@@ -69,24 +80,48 @@ function AdminSessionManager() {
         <h3 className="font-semibold mb-2">Create New Session</h3>
         {err && <p className="text-red-500">{err}</p>}
         <div className="flex gap-2 mb-2">
+          {/* Start Month Picker */}
           <select
             value={startMonth}
             onChange={(e) => setStartMonth(e.target.value)}
             className="p-2 border w-full"
             required
           >
-            <option value="Jan">Jan–July</option>
-            <option value="July">July–Dec</option>
+            {months.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
           </select>
-          <input
-            type="number"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            placeholder="Year (e.g. 2025)"
+
+          {/* End Month Picker */}
+          <select
+            value={endMonth}
+            onChange={(e) => setEndMonth(e.target.value)}
             className="p-2 border w-full"
             required
-          />
+          >
+            {months.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+
+          {/* Year Picker */}
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="p-2 border w-full"
+            required
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
         </div>
+
+        {/* Preview */}
+        <p className="text-sm text-gray-600 mb-2">
+          Preview: <strong>{startMonth}–{endMonth} {year}</strong>
+        </p>
+
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded"

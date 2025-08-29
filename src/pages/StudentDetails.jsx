@@ -53,8 +53,10 @@ const handleUpdate = async () => {
         key !== "photo" &&
         key !== "signaturePhoto"
       ) {
-          if (key === "userId" && typeof form[key] === "object" && form[key]._id) {
+        if (key === "userId" && typeof form[key] === "object" && form[key]._id) {
           formData.append("userId", form[key]._id);
+        } else if (key === "session" && typeof form[key] === "object" && form[key]._id) {
+          formData.append("session", form[key]._id);
         } else {
           formData.append(key, form[key]);
         }
@@ -82,6 +84,7 @@ const handleUpdate = async () => {
     alert("Failed to update student");
   }
 };
+
 
 
   useEffect(() => {
