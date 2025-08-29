@@ -10,19 +10,18 @@ function LoginPage() {
   const [err, setErr] = useState("");
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ loading state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true); // show loader
+    setLoading(true);
     try {
       const res = await API.post(
         "/auth/login",
         { email, password },
         { withCredentials: true }
       );
-
       const { user } = res.data;
 
       if (Array.isArray(user.roles) && user.roles.length > 1) {
@@ -34,7 +33,7 @@ function LoginPage() {
     } catch (error) {
       setErr(error.response?.data?.message || "Login failed");
     } finally {
-      setLoading(false); // stop loader
+      setLoading(false);
     }
   };
 
@@ -43,8 +42,7 @@ function LoginPage() {
       setErr("Please select a role");
       return;
     }
-
-    setLoading(true); // show loader
+    setLoading(true);
     try {
       const res = await API.post(
         "/auth/set-role",
@@ -56,7 +54,7 @@ function LoginPage() {
     } catch (error) {
       setErr(error.response?.data?.message || "Failed to set role");
     } finally {
-      setLoading(false); // stop loader
+      setLoading(false);
     }
   };
 
@@ -71,65 +69,73 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-50">
+    <div
+      className="flex items-center justify-center min-h-screen bg-cover bg-center relative"
+      style={{
+        backgroundImage: `url('https://sports.gndec.ac.in/sites/default/files/5.jpg')`,
+      }}
+    >
+      {/* Optional dark overlay for readability */}
+      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+
+      {/* Glassmorphism Login Form */}
       <form
         onSubmit={handleLogin}
-        className="w-full max-w-sm p-8 bg-white shadow-lg rounded-2xl border border-gray-100"
+        className="relative w-full max-w-sm p-8 rounded-2xl border border-white/20 shadow-xl backdrop-blur-md bg-white/30"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-6 drop-shadow-md">
           Welcome To GNDEC SPORTS 👋
         </h2>
 
         {err && (
-          <p className="text-red-500 mb-4 text-center font-medium bg-red-50 p-2 rounded">
+          <p className="text-red-600 mb-4 text-center font-medium bg-red-100/60 p-2 rounded">
             {err}
           </p>
         )}
 
         {!roles.length ? (
           <>
-            {/* Email Field */}
+            {/* Email */}
             <div className="mb-4">
-              <label className="block text-gray-600 text-sm mb-1">Email</label>
+              <label className="block text-gray-800 text-sm mb-1">Email</label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white/70"
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
 
-            {/* Password Field with Eye Toggle */}
+            {/* Password Field w/ Toggle */}
             <div className="mb-6 relative">
-              <label className="block text-gray-600 text-sm mb-1">Password</label>
+              <label className="block text-gray-800 text-sm mb-1">Password</label>
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10 bg-white/70"
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-10 cursor-pointer text-gray-500 hover:text-gray-700 select-none"
+                className="absolute right-3 top-10 cursor-pointer text-gray-600 hover:text-gray-800 select-none"
               >
                 {showPassword ? "🙈" : "👁️"}
               </span>
             </div>
 
-            {/* Login Button with Gradient + Loader */}
+            {/* Login Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`w-full text-white py-3 rounded-lg font-semibold shadow-md transition transform hover:scale-[1.02] 
-                ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                }`}
+              className={`w-full text-white py-3 rounded-lg font-semibold shadow-md transition transform hover:scale-[1.02] ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+              }`}
             >
               {loading ? "Logging in..." : "Login"}
             </button>
@@ -137,11 +143,11 @@ function LoginPage() {
         ) : (
           <>
             {/* Role Selection */}
-            <label className="block text-gray-600 text-sm mb-2">Select Role</label>
+            <label className="block text-gray-800 text-sm mb-2">Select Role</label>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none"
+              className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none bg-white/70"
             >
               <option value="">-- Choose Role --</option>
               {roles.map((r) => (
@@ -151,17 +157,16 @@ function LoginPage() {
               ))}
             </select>
 
-            {/* Continue Button with Gradient + Loader */}
+            {/* Continue Button */}
             <button
               type="button"
               disabled={loading}
               onClick={handleRoleSelection}
-              className={`w-full text-white py-3 rounded-lg font-semibold shadow-md transition transform hover:scale-[1.02]
-                ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                }`}
+              className={`w-full text-white py-3 rounded-lg font-semibold shadow-md transition transform hover:scale-[1.02] ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              }`}
             >
               {loading ? "Please wait..." : "Continue"}
             </button>
