@@ -1,18 +1,14 @@
-// src/components/AttendanceDashboard.jsx
+// src/pages/AttendanceDashboard.jsx
 import { useState, useEffect } from "react";
 import API from "../services/api";
 
 const AttendanceDashboard = () => {
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
-  const [sessions, setSessions] = useState([]);
-  const [selectedSession, setSelectedSession] = useState("");
-
-  const [month, setMonth] = useState(new Date().getMonth()); // 0 = Jan
-  const [year, setYear] = useState(new Date().getFullYear());
-
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [showForm, setShowForm] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     branch: "",
@@ -24,6 +20,12 @@ const AttendanceDashboard = () => {
     phone: "",
   });
 
+  const [dateOffset, setDateOffset] = useState(0);
+
+  // Sessions
+  const [sessions, setSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState("");
+
   useEffect(() => {
     loadSessions();
     loadStudents();
@@ -31,9 +33,11 @@ const AttendanceDashboard = () => {
 
   useEffect(() => {
     if (selectedSession) {
-      loadAttendance();
+      loadAttendance(date, selectedSession);
     }
-  }, [month, year, selectedSession]);
+  }, [date, selectedSession]);
+
+  const normalizeDate = (d) => new Date(d).toISOString().split("T")[0];
 
   const loadSessions = async () => {
     try {
@@ -57,44 +61,23 @@ const AttendanceDashboard = () => {
     }
   };
 
-  const loadAttendance = async () => {
+  const loadAttendance = async (selectedDate, sessionId) => {
     try {
-      const start = new Date(year, month, 1).toISOString().split("T")[0];
-      const end = new Date(year, month + 1, 0).toISOString().split("T")[0];
-
-      const res = await API.get(
-        `/attendance/range?start=${start}&end=${end}&sessionId=${selectedSession}`
-      );
-
+      const res = await API.get(`/attendance/${selectedDate}?sessionId=${sessionId}`);
       const records = {};
       res.data.forEach((r) => {
         const studentId = r.student?._id || r.studentId || r._id;
-        const day = new Date(r.date).getDate();
-        if (!records[studentId]) records[studentId] = {};
-        records[studentId][day] = r.status;
+        if (studentId) {
+          records[studentId] = {
+            status: r.status,
+            sessionId: r.session?._id || r.session,
+            date: normalizeDate(r.date),
+          };
+        }
       });
       setAttendance(records);
     } catch (err) {
       console.error("Failed to fetch attendance", err);
-    }
-  };
-
-  const handleAttendance = async (studentId, status, dateStr, day) => {
-    try {
-      await API.post("/attendance/mark", {
-        studentId,
-        status,
-        sessionId: selectedSession,
-        markedBy: "ADMIN_ID",
-        date: dateStr,
-      });
-
-      setAttendance((prev) => ({
-        ...prev,
-        [studentId]: { ...prev[studentId], [day]: status },
-      }));
-    } catch (err) {
-      console.error("Failed to mark attendance", err);
     }
   };
 
@@ -123,27 +106,50 @@ const AttendanceDashboard = () => {
     }
   };
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthName = new Date(year, month).toLocaleString("default", {
-    month: "long",
-  });
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this student?")) {
+      await API.delete(`/gym-swimming/${id}`);
+      loadStudents();
+    }
+  };
+
+  const handleAttendance = async (studentId, status, forDate) => {
+    try {
+      await API.post("/attendance/mark", {
+        studentId,
+        status,
+        sessionId: selectedSession,
+        markedBy: "ADMIN_ID",
+        date: forDate,
+      });
+      setAttendance({
+        ...attendance,
+        [studentId]: { status, sessionId: selectedSession, date: forDate },
+      });
+    } catch (err) {
+      console.error("Failed to mark attendance", err);
+    }
+  };
+
+  const getDateBlock = () => {
+    const days = [];
+    const today = new Date();
+    today.setDate(today.getDate() + dateOffset * 10);
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    return days;
+  };
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">🏊 Gym & Swimming Attendance</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:scale-105 transition"
-        >
-          ➕ Add Student
-        </button>
-      </div>
+      <h2 className="text-xl font-bold mb-4">Gym & Swimming Attendance</h2>
 
       {/* Session Selector */}
-      <div className="mb-4 flex gap-4 items-center">
-        <label className="font-semibold">Select Session:</label>
+      <div className="mb-4">
+        <label className="mr-2 font-semibold">Select Session:</label>
         <select
           value={selectedSession}
           onChange={(e) => setSelectedSession(e.target.value)}
@@ -157,113 +163,143 @@ const AttendanceDashboard = () => {
         </select>
       </div>
 
-      {/* Month Navigation */}
-      <div className="flex items-center gap-4 mb-4">
+      {/* Date Navigation */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <button
-          onClick={() => {
-            if (month === 0) {
-              setMonth(11);
-              setYear((y) => y - 1);
-            } else {
-              setMonth((m) => m - 1);
-            }
-          }}
+          onClick={() => setDateOffset(dateOffset - 1)}
           className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
         >
-          ⬅ Prev
+          ⬅ Prev 10 days
         </button>
-        <span className="text-lg font-bold">
-          {monthName} {year}
-        </span>
+
+        {getDateBlock().map((d) => (
+          <button
+            key={d}
+            onClick={() => setDate(d)}
+            className={`px-4 py-2 rounded ${
+              date === d
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+            }`}
+          >
+            {d}
+          </button>
+        ))}
+
         <button
-          onClick={() => {
-            if (month === 11) {
-              setMonth(0);
-              setYear((y) => y + 1);
-            } else {
-              setMonth((m) => m + 1);
-            }
-          }}
+          onClick={() => setDateOffset(dateOffset + 1)}
           className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
         >
-          Next ➡
+          Next 10 days ➡
         </button>
+
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="ml-4 border p-2 rounded"
+        />
       </div>
 
-      {/* Attendance Table */}
-      <div className="overflow-x-auto border rounded-lg shadow">
-        <table className="min-w-max border-collapse">
-          <thead className="bg-gray-100 sticky top-0">
-            <tr>
-              <th className="p-2 border">Name</th>
-              <th className="p-2 border">URN</th>
-              <th className="p-2 border">Branch</th>
-              <th className="p-2 border">Year</th>
-              <th className="p-2 border">Sport</th>
-              {Array.from({ length: daysInMonth }, (_, i) => (
-                <th key={i} className="p-2 border text-center">
-                  {i + 1}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((st) => (
+      {/* Current Date Info */}
+      <div className="mb-4 text-lg font-semibold text-gray-700">
+        📅 Showing attendance for:{" "}
+        <span className="text-blue-600">{date}</span>
+      </div>
+
+      {/* Student Table */}
+      <table className="w-full border rounded-lg shadow">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-2">Name</th>
+            <th className="p-2">URN</th>
+            <th className="p-2">CRN</th>
+            <th className="p-2">Branch</th>
+            <th className="p-2">Year</th>
+            <th className="p-2">Sport</th>
+            <th className="p-2">Email</th>
+            <th className="p-2">Phone</th>
+            <th className="p-2">Attendance</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {students.map((st) => {
+            const att = attendance[st._id];
+            return (
               <tr key={st._id} className="border-b">
-                <td className="p-2 border">{st.name}</td>
-                <td className="p-2 border">{st.urn}</td>
-                <td className="p-2 border">{st.branch}</td>
-                <td className="p-2 border">{st.year}</td>
-                <td className="p-2 border">{st.sport}</td>
-                {Array.from({ length: daysInMonth }, (_, i) => {
-                  const day = i + 1;
-                  const dateStr = `${year}-${String(month + 1).padStart(
-                    2,
-                    "0"
-                  )}-${String(day).padStart(2, "0")}`;
-                  const status = attendance[st._id]?.[day];
-                  return (
-                    <td key={day} className="p-1 border text-center">
-                      {status ? (
-                        <span
-                          className={`font-bold ${
-                            status === "Present"
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {status === "Present" ? "P" : "A"}
-                        </span>
-                      ) : (
-                        <div className="flex gap-1 justify-center">
-                          <button
-                            onClick={() =>
-                              handleAttendance(st._id, "Present", dateStr, day)
-                            }
-                            className="px-2 py-1 text-xs bg-green-500 text-white rounded"
-                          >
-                            P
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleAttendance(st._id, "Absent", dateStr, day)
-                            }
-                            className="px-2 py-1 text-xs bg-red-500 text-white rounded"
-                          >
-                            A
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
+                <td className="p-2">{st.name}</td>
+                <td className="p-2">{st.urn}</td>
+                <td className="p-2">{st.crn}</td>
+                <td className="p-2">{st.branch}</td>
+                <td className="p-2">{st.year}</td>
+                <td className="p-2">{st.sport}</td>
+                <td className="p-2">{st.email || "-"}</td>
+                <td className="p-2">{st.phone || "-"}</td>
+                <td className="p-2">
+                  <div className="mb-2">
+                    {att?.status && att?.date === date ? (
+                      <span
+                        className={`font-bold ${
+                          att.status === "Present"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {att.status === "Present" ? "✅ Present" : "❌ Absent"}
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">Not Marked</span>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => handleAttendance(st._id, "Present", date)}
+                      className="px-3 py-1 bg-green-500 text-white rounded mr-2 hover:bg-green-600"
+                    >
+                      Mark Present
+                    </button>
+                    <button
+                      onClick={() => handleAttendance(st._id, "Absent", date)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Mark Absent
+                    </button>
+                  </div>
+                </td>
+                <td className="p-2">
+                  <button
+                    onClick={() => {
+                      setEditStudent(st);
+                      setForm(st);
+                      setShowForm(true);
+                    }}
+                    className="px-3 py-1 bg-yellow-400 rounded mr-2 hover:bg-yellow-500"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(st._id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            );
+          })}
+        </tbody>
+      </table>
 
-      {/* Add/Edit Student Form */}
+      {/* Add Student */}
+      <button
+        onClick={() => setShowForm(true)}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Add Student
+      </button>
+
+      {/* Popup Form */}
       {showForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow w-96">
@@ -343,7 +379,6 @@ const AttendanceDashboard = () => {
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="border p-2 rounded"
               />
-
               <div className="flex justify-end gap-2 mt-3">
                 <button
                   type="button"
