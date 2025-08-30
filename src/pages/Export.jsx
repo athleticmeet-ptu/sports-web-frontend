@@ -446,9 +446,10 @@ const handleCheckboxChange = (id) => {
                 <td className="border p-2 text-center">
                   <input
   type="checkbox"
-  checked={selectedStudents[stu._id] === true}
+  checked={Boolean(selectedStudents[stu._id])}   // ✅ safe way
   onChange={() => handleCheckboxChange(stu._id)}
 />
+
 
                 </td>
                 <td className="border p-2">{stu.name}</td>
