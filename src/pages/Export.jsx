@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
@@ -15,6 +15,8 @@ import {
 import API from "../services/api";
 
 // 🔹 Helper functions
+
+
 const fetchImageBuffer = async (url) => {
   try {
     const response = await fetch(url);
@@ -291,6 +293,7 @@ const StudentExport = () => {
   const [filterURN, setFilterURN] = useState("");
   const [selectedStudents, setSelectedStudents] = useState({}); // track checkboxes
   const [filterActivity, setFilterActivity] = useState("");
+  const selectAllRef = useRef(null);
 
   // Load sessions
   useEffect(() => {
@@ -323,13 +326,14 @@ const StudentExport = () => {
   }, [selectedSession]);
 
 const handleCheckboxChange = (id) => {
-  setSelectedStudents((prev) => {
-    return { ...prev, [id]: !prev[id] };
-  });
+  setSelectedStudents((prev) => ({
+    ...prev,
+    [id]: !prev[id],
+  }));
 };
 
 
- const handleSelectAll = (e) => {
+const handleSelectAll = (e) => {
   const isChecked = e.target.checked;
   const newSelection = { ...selectedStudents };
 
@@ -348,6 +352,32 @@ const handleCheckboxChange = (id) => {
 
   setSelectedStudents(newSelection);
 };
+  useEffect(() => {
+  if (!selectAllRef.current) return;
+
+  const visibleStudents = students.filter((s) => {
+    const activityText = s.sports?.join(", ").toLowerCase() || "";
+    return (
+      (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
+      (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
+      (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
+    );
+  });
+
+  const total = visibleStudents.length;
+  const selectedCount = visibleStudents.filter((s) => selectedStudents[s._id]).length;
+
+  if (selectedCount === 0) {
+    selectAllRef.current.checked = false;
+    selectAllRef.current.indeterminate = false;
+  } else if (selectedCount === total) {
+    selectAllRef.current.checked = true;
+    selectAllRef.current.indeterminate = false;
+  } else {
+    selectAllRef.current.checked = false;
+    selectAllRef.current.indeterminate = true;
+  }
+}, [students, filterName, filterURN, filterActivity, selectedStudents]);
 
 
   const filteredStudents = students.filter((s) => {
@@ -414,14 +444,14 @@ const handleCheckboxChange = (id) => {
         <table className="min-w-full border-collapse border">
           <thead className="bg-gray-200 sticky top-0">
             <tr>
-              <th className="border p-2">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={handleSelectAll}
-                />
-                Select All
-              </th>
+             <th className="border p-2">
+  <input
+    type="checkbox"
+    ref={selectAllRef}
+    onChange={handleSelectAll}
+  />
+  Select All
+</th>
               <th className="border p-2">Name</th>
               <th className="border p-2">Father's Name</th>
               <th className="border p-2">DOB</th>
@@ -444,14 +474,16 @@ const handleCheckboxChange = (id) => {
             {filteredStudents.map((stu) => (
               <tr key={stu._id} className="hover:bg-gray-50">
                 <td className="border p-2 text-center">
-                  <input
-  type="checkbox"
-  checked={Boolean(selectedStudents[stu._id])}   // ✅ safe way
-  onChange={() => handleCheckboxChange(stu._id)}
-/>
+  <input
+    type="checkbox"
+    checked={!!selectedStudents[stu._id]}
+    onChange={() => handleCheckboxChange(stu._id)}
+  />
+</td>
 
 
-                </td>
+
+      
                 <td className="border p-2">{stu.name}</td>
                 <td className="border p-2">{stu.fatherName}</td>
                 <td className="border p-2">{stu.dob}</td>
