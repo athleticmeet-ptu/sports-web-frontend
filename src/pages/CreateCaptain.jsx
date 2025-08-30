@@ -243,13 +243,45 @@ export default function CreateCaptain() {
           <p className="text-gray-500">Captain data will appear here after API integration.</p>
         ) : (
           <ul className="space-y-2">
-            {captains.map(c => (
-              <li key={c._id} className="border p-2 rounded-lg flex justify-between items-center hover:bg-orange-50">
-                <span>{c.name} ({c.sport}) - {c.branch}</span>
-                <span className="text-gray-500 text-sm">URN: {c.urn}</span>
-              </li>
-            ))}
-          </ul>
+  {captains.map((c) => (
+    <li
+      key={c._id}
+      className="border p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center hover:bg-orange-50"
+    >
+      {/* Captain Info */}
+      <div className="mb-2 md:mb-0">
+        <p><b>Name:</b> {c.name}</p>
+        <p><b>Sport:</b> {c.sport}</p>
+        <p><b>Branch:</b> {c.branch}</p>
+        <p><b>Year:</b> {c.year}</p>
+        <p><b>URN:</b> {c.urn}</p>
+        <p><b>Email:</b> {c.email || "N/A"}</p>
+        <p><b>Phone:</b> {c.phone || "N/A"}</p>
+        <p><b>Team Members:</b> {c.teamMembers?.length || 0}</p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col md:flex-row gap-2">
+        <button
+          onClick={() => setSelectedCaptain(c)}
+          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+        >
+          View Team Members
+        </button>
+        <button
+          onClick={() => {
+            startEditing(c);
+            setSelectedCaptain(c); // optional if you want to open modal with details
+          }}
+          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+        >
+          Edit Captain
+        </button>
+      </div>
+    </li>
+  ))}
+</ul>
+
         )}
       </div>
     </div>
