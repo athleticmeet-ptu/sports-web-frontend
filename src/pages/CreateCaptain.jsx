@@ -43,7 +43,7 @@ export default function CreateCaptain() {
       .catch(() => setMessage('⚠ No active session found.'));
     
     // fetch existing captains for display
-    API.get('/admin/users?role=captain')
+    API.get('/admin/captains')
       .then(res => setCaptains(res.data || []))
       .catch(() => {});
   }, []);
