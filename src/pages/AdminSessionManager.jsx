@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import API from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 function AdminSessionManager() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [startMonth, setStartMonth] = useState('Jan');
   const [endMonth, setEndMonth] = useState('July');
   const [year, setYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // page loader
   const [submitLoading, setSubmitLoading] = useState(false);
   const [err, setErr] = useState('');
 
@@ -14,10 +16,8 @@ function AdminSessionManager() {
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June',
     'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
   ];
-
   const years = Array.from({ length: 21 }, (_, i) => new Date().getFullYear() - 10 + i);
 
-  // Dropdown open states
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
@@ -28,6 +28,8 @@ function AdminSessionManager() {
       setSessions(res.data);
     } catch (error) {
       setErr('Failed to load sessions');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,16 +38,8 @@ function AdminSessionManager() {
     try {
       setSubmitLoading(true);
       setErr('');
-
-      await API.post('/session/create', {
-        startMonth,
-        endMonth,
-        year: Number(year)
-      });
-
-      setStartMonth('Jan');
-      setEndMonth('July');
-      setYear(new Date().getFullYear());
+      await API.post('/session/create', { startMonth, endMonth, year: Number(year) });
+      setStartMonth('Jan'); setEndMonth('July'); setYear(new Date().getFullYear());
       fetchSessions();
     } catch (error) {
       setErr('Creation failed. Are you logged in as admin?');
@@ -55,27 +49,17 @@ function AdminSessionManager() {
   };
 
   const setActive = async (id) => {
-    try {
-      await API.put(`/session/set-active/${id}`);
-      fetchSessions();
-    } catch {
-      setErr('Failed to set active');
-    }
+    try { await API.put(`/session/set-active/${id}`); fetchSessions(); }
+    catch { setErr('Failed to set active'); }
   };
 
   const deleteSession = async (id) => {
     if (!window.confirm('Delete this session?')) return;
-    try {
-      await API.delete(`/session/${id}`);
-      fetchSessions();
-    } catch {
-      setErr('Failed to delete session');
-    }
+    try { await API.delete(`/session/${id}`); fetchSessions(); }
+    catch { setErr('Failed to delete session'); }
   };
 
-  useEffect(() => {
-    fetchSessions();
-  }, []);
+  useEffect(() => { fetchSessions(); }, []);
 
   if (loading) {
     return (
@@ -86,7 +70,17 @@ function AdminSessionManager() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-3xl mx-auto min-h-screen bg-gray-50">
+      {/* Dashboard Button */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate('/admin')}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium shadow transition"
+        >
+          &larr; Dashboard
+        </button>
+      </div>
+
       <h2 className="text-2xl font-bold mb-4 text-gray-800">Manage Sessions</h2>
 
       <form onSubmit={createSession} className="bg-white shadow-md p-6 rounded-2xl mb-6">
@@ -106,13 +100,7 @@ function AdminSessionManager() {
             {startOpen && (
               <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
                 {months.map(m => (
-                  <div
-                    key={m}
-                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
-                    onClick={() => { setStartMonth(m); setStartOpen(false); }}
-                  >
-                    {m}
-                  </div>
+                  <div key={m} className="px-3 py-2 hover:bg-orange-100 cursor-pointer" onClick={() => { setStartMonth(m); setStartOpen(false); }}>{m}</div>
                 ))}
               </div>
             )}
@@ -130,13 +118,7 @@ function AdminSessionManager() {
             {endOpen && (
               <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
                 {months.map(m => (
-                  <div
-                    key={m}
-                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
-                    onClick={() => { setEndMonth(m); setEndOpen(false); }}
-                  >
-                    {m}
-                  </div>
+                  <div key={m} className="px-3 py-2 hover:bg-orange-100 cursor-pointer" onClick={() => { setEndMonth(m); setEndOpen(false); }}>{m}</div>
                 ))}
               </div>
             )}
@@ -154,13 +136,7 @@ function AdminSessionManager() {
             {yearOpen && (
               <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
                 {years.map(y => (
-                  <div
-                    key={y}
-                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
-                    onClick={() => { setYear(y); setYearOpen(false); }}
-                  >
-                    {y}
-                  </div>
+                  <div key={y} className="px-3 py-2 hover:bg-orange-100 cursor-pointer" onClick={() => { setYear(y); setYearOpen(false); }}>{y}</div>
                 ))}
               </div>
             )}
@@ -174,9 +150,7 @@ function AdminSessionManager() {
         <button
           type="submit"
           disabled={submitLoading}
-          className={`w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg transition transform hover:scale-[1.02] ${
-            submitLoading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
+          className={`w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg transition transform hover:scale-[1.02] ${submitLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {submitLoading ? 'Creating...' : 'Create Session'}
         </button>
@@ -191,25 +165,11 @@ function AdminSessionManager() {
                 <strong>{s.session}</strong>{' '}
                 {s.isActive && <span className="text-green-600">(Active)</span>}
               </p>
-              <p className="text-sm text-gray-500">
-                {new Date(s.startDate).toLocaleDateString()} - {new Date(s.endDate).toLocaleDateString()}
-              </p>
+              <p className="text-sm text-gray-500">{new Date(s.startDate).toLocaleDateString()} - {new Date(s.endDate).toLocaleDateString()}</p>
             </div>
             <div className="flex gap-2">
-              {!s.isActive && (
-                <button
-                  onClick={() => setActive(s._id)}
-                  className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
-                >
-                  Set Active
-                </button>
-              )}
-              <button
-                onClick={() => deleteSession(s._id)}
-                className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
-              >
-                Delete
-              </button>
+              {!s.isActive && <button onClick={() => setActive(s._id)} className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">Set Active</button>}
+              <button onClick={() => deleteSession(s._id)} className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Delete</button>
             </div>
           </div>
         ))}
