@@ -35,7 +35,8 @@ function AdminDashboard() {
             <Link to="/admin/approvals" className="nav-link">Approve Teams</Link>
             <Link to="/admin/captains" className="nav-link">Captains & Teams</Link>
             <Link to="/admin/students" className="nav-link">Manage Students</Link>
-            <Link to="/admin/attendance" className="nav-link">Attendance</Link>
+            <Link to="/admin/gym-attendance" className="nav-link">Gym-Attendance</Link>
+            <Link to="/admin/swimming-attendance" className="nav-link">Swimming-Attendance</Link>
             <Link to="/admin/assign-position" className="nav-link">Assign Positions</Link>
             <Link to="/admin/assign-team-position" className="nav-link">Team Position</Link>
             <Link to="/admin/export" className="nav-link">Export Students</Link>

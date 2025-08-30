@@ -313,7 +313,7 @@ return (
           Final Position: {captainInfo.position === 1 ? "🥇 1st" 
             : captainInfo.position === 2 ? "🥈 2nd" 
             : captainInfo.position === 3 ? "🥉 3rd" 
-            : captainInfo.position + "th"}
+            : captainInfo.position}
         </p>
 
         <p><strong>Status:</strong> 
@@ -354,7 +354,7 @@ return (
                   {m.position === 1 ? "🥇 1st" 
                     : m.position === 2 ? "🥈 2nd" 
                     : m.position === 3 ? "🥉 3rd" 
-                    : m.position + "th"}
+                    : m.position }
                 </td>
               </tr>
             ))}

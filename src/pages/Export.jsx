@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { Document, Packer, Paragraph, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, TextRun, HeadingLevel, WidthType, ImageRun } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  Table as DocxTable,
+  TableRow as DocxTableRow,
+  TableCell as DocxTableCell,
+  TextRun,
+  HeadingLevel,
+  ImageRun,
+} from "docx";
 import API from "../services/api";
 
-// 🔹 Helper function to fetch image buffer
+// 🔹 Helper functions
 const fetchImageBuffer = async (url) => {
   try {
     const response = await fetch(url);
@@ -16,191 +26,181 @@ const fetchImageBuffer = async (url) => {
     return null;
   }
 };
-  const fetchImagesBuffer = async (url) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image from ${url}`);
-      }
-      const blob = await response.blob();
-      return await blob.arrayBuffer();
-    } catch (error) {
-      console.error('Error fetching image buffer:', error);
-      return null; // Return null in case of error to avoid breaking the process
-    }
-  };
-  const exportToExcel = async (students) => {
+const fetchImagesBuffer = fetchImageBuffer;
+
+// 🔹 Export functions (Excel & Word)
+const exportToExcel = async (students) => {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Students');
+  const worksheet = workbook.addWorksheet("Students");
 
-  const sessionName = students.length > 0 && students[0].session
-    ? students[0].session
-    : "N/A";
+  const sessionName =
+    students.length > 0 && students[0].session ? students[0].session : "N/A";
 
-  // 🔹 Add Session heading at top
-  worksheet.mergeCells('A1:S1');   // poora row merge
-  const sessionCell = worksheet.getCell('A1');
+  // Session header
+  worksheet.mergeCells("A1:S1");
+  const sessionCell = worksheet.getCell("A1");
   sessionCell.value = `Session: ${sessionName}`;
-  sessionCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  sessionCell.alignment = { vertical: "middle", horizontal: "center" };
   sessionCell.font = { bold: true, size: 14 };
   worksheet.getRow(1).height = 25;
 
-  // 🔹 shift baaki headers 1 row neeche
-  const headerStartRow = 2;
-
+  // Column widths
   worksheet.columns = [
-    { width: 8 }, { width: 20 }, { width: 20 }, { width: 15 },
-    { width: 20 }, { width: 25 }, { width: 10 }, { width: 10 },
-    { width: 22 }, { width: 18 }, { width: 12 }, { width: 12 },
-    { width: 12 }, { width: 15 }, { width: 20 }, { width: 30 },
-    { width: 20 }, { width: 15 }, { width: 10 },
+    { width: 8 },
+    { width: 20 },
+    { width: 20 },
+    { width: 15 },
+    { width: 20 },
+    { width: 25 },
+    { width: 10 },
+    { width: 10 },
+    { width: 22 },
+    { width: 18 },
+    { width: 12 },
+    { width: 12 },
+    { width: 12 },
+    { width: 15 },
+    { width: 20 },
+    { width: 30 },
+    { width: 20 },
+    { width: 15 },
+    { width: 10 },
   ];
 
-  // Merge cells (shifted down by +1 row)
-  worksheet.mergeCells('G2:H2');
-  worksheet.mergeCells('I2:I3');
-  worksheet.mergeCells('J2:K2');
-  worksheet.mergeCells('L2:M2');
-  worksheet.mergeCells('N2:N3');
-  worksheet.mergeCells('O2:O3');
-  worksheet.mergeCells('P2:P3');
-  worksheet.mergeCells('Q2:Q3');
-  worksheet.mergeCells('R2:R3');
-  worksheet.mergeCells('S2:S3');
-
-  ['A', 'B', 'C', 'D', 'E', 'F'].forEach(col => {
-    worksheet.mergeCells(`${col}2:${col}3`);
-  });
+  // Merge header cells
+  worksheet.mergeCells("G2:H2");
+  worksheet.mergeCells("I2:I3");
+  worksheet.mergeCells("J2:K2");
+  worksheet.mergeCells("L2:M2");
+  worksheet.mergeCells("N2:N3");
+  worksheet.mergeCells("O2:O3");
+  worksheet.mergeCells("P2:P3");
+  worksheet.mergeCells("Q2:Q3");
+  worksheet.mergeCells("R2:R3");
+  worksheet.mergeCells("S2:S3");
+  ["A", "B", "C", "D", "E", "F"].forEach((col) =>
+    worksheet.mergeCells(`${col}2:${col}3`)
+  );
 
   // Row 2 headers
-  worksheet.getCell('A2').value = 'Sr. No';
-  worksheet.getCell('B2').value = 'Name';
-  worksheet.getCell('C2').value = "Father's Name";
-  worksheet.getCell('D2').value = 'Date of Birth';
-  worksheet.getCell('E2').value = 'University Reg. No';
-  worksheet.getCell('F2').value = 'Present Branch/Year';
-  worksheet.getCell('G2').value = 'Year of Passing';
-  worksheet.getCell('I2').value = 'Date of First Admission to College after Matric/+2 Exam';
-  worksheet.getCell('J2').value = 'Name & year of the last Examination';
-  worksheet.getCell('L2').value = 'No of years of';
-  worksheet.getCell('N2').value = 'No of participation in Inter Varsity Tournament';
-  worksheet.getCell('O2').value = 'Signature of Student';
-  worksheet.getCell('P2').value = 'Home Address with Phone No';
-  worksheet.getCell('Q2').value = 'Passport Size Photograph';
-  worksheet.getCell('R2').value = 'Activity';
-  worksheet.getCell('S2').value = 'Position';
+  worksheet.getCell("A2").value = "Sr. No";
+  worksheet.getCell("B2").value = "Name";
+  worksheet.getCell("C2").value = "Father's Name";
+  worksheet.getCell("D2").value = "Date of Birth";
+  worksheet.getCell("E2").value = "University Reg. No";
+  worksheet.getCell("F2").value = "Present Branch/Year";
+  worksheet.getCell("G2").value = "Year of Passing";
+  worksheet.getCell("I2").value = "Date of First Admission";
+  worksheet.getCell("J2").value = "Last Examination";
+  worksheet.getCell("L2").value = "No of years of";
+  worksheet.getCell("N2").value = "No of participation in Inter Varsity Tournament";
+  worksheet.getCell("O2").value = "Signature of Student";
+  worksheet.getCell("P2").value = "Home Address with Phone No";
+  worksheet.getCell("Q2").value = "Passport Size Photograph";
+  worksheet.getCell("R2").value = "Activity";
+  worksheet.getCell("S2").value = "Position";
 
   // Row 3 subheaders
-  worksheet.getCell('G3').value = 'Matric\n7(a)';
-  worksheet.getCell('H3').value = '+2\n7(b)';
-  worksheet.getCell('J3').value = 'Name\n9(a)';
-  worksheet.getCell('K3').value = 'Year\n9(b)';
-  worksheet.getCell('L3').value = 'Graduate\n10(a)';
-  worksheet.getCell('M3').value = 'PG\n10(b)';
+  worksheet.getCell("G3").value = "Matric";
+  worksheet.getCell("H3").value = "+2";
+  worksheet.getCell("J3").value = "Name";
+  worksheet.getCell("K3").value = "Year";
+  worksheet.getCell("L3").value = "Graduate";
+  worksheet.getCell("M3").value = "PG";
 
-  // Style for row 2 and 3
-  [2, 3].forEach(rowNum => {
+  // Style headers
+  [2, 3].forEach((rowNum) => {
     const row = worksheet.getRow(rowNum);
     row.height = 35;
-    row.eachCell(cell => {
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    row.eachCell((cell) => {
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.font = { bold: true };
       cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
       };
     });
   });
 
-  // 🔹 data rows ab 4th row se start honge
+  // Data rows
   for (let i = 0; i < students.length; i++) {
     const s = students[i];
-    const activity = s.events?.map(e => e.activity).join(', ') || '';
-    const position = s.events?.map(e => e.position).join(', ') || '';
+    const activity = s.sports?.join(", ") || "";
+    const position = s.events?.map((e) => e.position).join(", ") || "";
 
     const row = worksheet.addRow([
       i + 1,
-      s.name || '',
-      s.fatherName || '',
-      s.dob || '',
-      s.universityRegNo || '',
-      s.branchYear || '',
-      s.matricYear || '',
-      s.plusTwoYear || '',
-      s.firstAdmissionYear || '',
-      s.lastExam || '',
-      s.lastExamYear || '',
-      s.interCollegeGraduateYears || '',
-      s.interCollegePgYears || '',
-      s.interVarsityYears || '',
-      '',
-      s.addressWithPhone || '',
-      '',
+      s.name || "",
+      s.fatherName || "",
+      s.dob || "",
+      s.universityRegNo || "",
+      s.branchYear || "",
+      s.matricYear || "",
+      s.plusTwoYear || "",
+      s.firstAdmissionYear || "",
+      s.lastExam || "",
+      s.lastExamYear || "",
+      s.interCollegeGraduateYears || "",
+      s.interCollegePgYears || "",
+      s.interVarsityYears || "",
+      "",
+      s.addressWithPhone || "",
+      "",
       activity,
       position,
     ]);
 
     row.height = 90;
 
-    // Signature
     if (s.signatureUrl) {
       try {
         const buffer = await fetchImagesBuffer(s.signatureUrl);
-        const imageId = workbook.addImage({ buffer, extension: 'png' });
+        const imageId = workbook.addImage({ buffer, extension: "png" });
         worksheet.addImage(imageId, {
-          tl: { col: 14, row: i + 3.3 }, // shift +1 row
+          tl: { col: 14, row: i + 3.3 },
           ext: { width: 100, height: 40 },
         });
-      } catch (err) { console.error("Signature image error:", err); }
+      } catch {}
     }
-
-    // Passport
     if (s.passportPhotoUrl) {
       try {
         const buffer = await fetchImagesBuffer(s.passportPhotoUrl);
-        const imageId = workbook.addImage({ buffer, extension: 'png' });
+        const imageId = workbook.addImage({ buffer, extension: "png" });
         worksheet.addImage(imageId, {
           tl: { col: 16, row: i + 3.1 },
           ext: { width: 70, height: 80 },
         });
-      } catch (err) { console.error("Passport photo error:", err); }
+      } catch {}
     }
   }
 
-  // Styling for all cells
-  worksheet.eachRow(row => {
-    row.eachCell(cell => {
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+  worksheet.eachRow((row) => {
+    row.eachCell((cell) => {
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
       };
     });
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), 'students.xlsx');
+  saveAs(new Blob([buffer]), "students.xlsx");
 };
 
-  
-
-
-// 🔹 Export to Word
 const safeText = (val) => {
-  if (val === null || val === undefined || val === "" || val === 0) return "";
+  if (!val) return "";
   return val.toString();
 };
-
 const formatDate = (val) => {
   if (!val) return "";
-  // agar sirf year hai ya YYYY-MM
   if (/^\d{4}$/.test(val)) return val;
   if (/^\d{4}-\d{2}$/.test(val)) {
-    const [y,m] = val.split("-");
+    const [y, m] = val.split("-");
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     return `${monthNames[parseInt(m)-1]} ${y}`;
   }
@@ -209,38 +209,32 @@ const formatDate = (val) => {
 
 const exportToWord = async (students) => {
   const tableRows = [];
+  // Header
+  tableRows.push(
+    new DocxTableRow({
+      children: [
+        ...["Sr. No","Name","Father’s Name","DOB","Reg No","Branch/Year"]
+        .map(t => new DocxTableCell({ rowSpan: 2, children: [ new Paragraph({ children: [ new TextRun({ text: t, bold:true }) ] }) ] })),
+        new DocxTableCell({ columnSpan: 2, children: [ new Paragraph({ children: [ new TextRun({ text: "Year of Passing", bold:true }) ] }) ] }),
+        new DocxTableCell({ rowSpan: 2, children: [ new Paragraph({ children: [ new TextRun({ text: "First Admission", bold:true }) ] }) ] }),
+        new DocxTableCell({ columnSpan: 2, children: [ new Paragraph({ children: [ new TextRun({ text: "Last Exam", bold:true }) ] }) ] }),
+        new DocxTableCell({ columnSpan: 3, children: [ new Paragraph({ children: [ new TextRun({ text: "Years of Participation", bold:true }) ] }) ] }),
+        ...["Signature","Address","Passport","Activity","Position"]
+        .map(t => new DocxTableCell({ rowSpan: 2, children: [ new Paragraph({ children: [ new TextRun({ text: t, bold:true }) ] }) ] }))
+      ]
+    })
+  );
 
-  // Header row
-  tableRows.push(new DocxTableRow({
-    children: [
-      ...["Sr. No","Name","Father’s Name","Date of Birth","University Reg. No","Present Branch/Year"]
-        .map(t => new DocxTableCell({
-          rowSpan:2,
-          children:[ new Paragraph({ children:[ new TextRun({ text:t, bold:true }) ] }) ]
-        })),
-      new DocxTableCell({ columnSpan:2, children:[ new Paragraph({ children:[ new TextRun({ text:"Year of Passing", bold:true }) ] }) ] }),
-      new DocxTableCell({ rowSpan:2, children:[ new Paragraph({ children:[ new TextRun({ text:"Date of First Admission", bold:true }) ] }) ] }),
-      new DocxTableCell({ columnSpan:2, children:[ new Paragraph({ children:[ new TextRun({ text:"Last Examination", bold:true }) ] }) ] }),
-      new DocxTableCell({ columnSpan:3, children:[ new Paragraph({ children:[ new TextRun({ text:"Years of Participation", bold:true }) ] }) ] }),
-      ...["Signature","Home Address","Passport Photo","Activity","Position"]
-        .map(t => new DocxTableCell({
-          rowSpan:2, children:[ new Paragraph({ children:[ new TextRun({ text:t, bold:true }) ] }) ]
-        }))
-    ]
-  }));
+  tableRows.push(
+    new DocxTableRow({
+      children: ["Matric","+2","Name","Year","Graduate","PG","Inter-Varsity"]
+      .map(t => new DocxTableCell({ children: [ new Paragraph({ children: [ new TextRun({ text: t, bold:true }) ] }) ] }))
+    })
+  );
 
-  // Sub header row
-  tableRows.push(new DocxTableRow({
-    children: ["Matric","+2","Name","Year","Graduate","PG","Inter-Varsity"].map(t =>
-      new DocxTableCell({ children:[ new Paragraph({ children:[ new TextRun({ text:t, bold:true }) ] }) ] })
-    )
-  }));
-
-  // Data rows
   for (const [i,s] of students.entries()) {
     const signatureImage = s.signatureUrl ? await fetchImageBuffer(s.signatureUrl) : null;
     const passportImage = s.passportPhotoUrl ? await fetchImageBuffer(s.passportPhotoUrl) : null;
-
     const activity = safeText(s.sports?.join(", "));
     const position = s.events?.map(e=>`${safeText(e.activity)} : ${safeText(e.position)}`).join(", ") || "";
 
@@ -266,11 +260,11 @@ const exportToWord = async (students) => {
       position
     ];
 
-    tableRows.push(new DocxTableRow({
-      children: cells.map(val => new DocxTableCell({
-        children:[ new Paragraph({ children:[ val instanceof ImageRun ? val : new TextRun(val) ] }) ]
-      }))
-    }));
+    tableRows.push(
+      new DocxTableRow({
+        children: cells.map(val => new DocxTableCell({ children:[ new Paragraph({ children:[ val instanceof ImageRun ? val : new TextRun(val) ] }) ] }))
+      })
+    );
   }
 
   const doc = new Document({
@@ -278,14 +272,7 @@ const exportToWord = async (students) => {
       properties:{ page:{ size:{ orientation:"landscape" } } },
       children: [
         new Paragraph({ text:"Student List", heading:HeadingLevel.HEADING_1, spacing:{ after:300 } }),
-        new Paragraph({
-          children: [ new TextRun({
-            text: `Session: ${students.length > 0 && students[0].session ? students[0].session : "N/A"}`,
-            bold: true,
-            size: 26,
-          }) ],
-          spacing: { after: 200 },
-        }),
+        new Paragraph({ children:[ new TextRun({ text:`Session: ${students.length>0 && students[0].session ? students[0].session : "N/A"}`, bold:true, size:26 }) ], spacing:{ after:200 } }),
         new DocxTable({ rows: tableRows })
       ]
     }]
@@ -296,60 +283,83 @@ const exportToWord = async (students) => {
 };
 
 
-
-// 🔹 Main Component
 const StudentExport = () => {
   const [students, setStudents] = useState([]);
-  const [sports, setSports] = useState([]);
   const [sessions, setSessions] = useState([]);
-  const [positions, setPositions] = useState([]);
-
-  const [selectedSport, setSelectedSport] = useState("");
   const [selectedSession, setSelectedSession] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState("");
+  const [filterName, setFilterName] = useState("");
+  const [filterURN, setFilterURN] = useState("");
+  const [selectedStudents, setSelectedStudents] = useState({}); // track checkboxes
+  const [filterActivity, setFilterActivity] = useState("");
 
-  // 🔹 Load dropdown values
+  // Load sessions
   useEffect(() => {
-    const loadFilters = async () => {
+    const loadSessions = async () => {
       try {
-        const [sportsRes, sessionsRes, positionsRes] = await Promise.all([
-          API.get(`/admin/sports`),
-          API.get(`/admin/sessions`),
-          API.get(`/admin/positions`),
-        ]);
-        setSports(sportsRes.data);
-        setSessions(sessionsRes.data);
-        setPositions(positionsRes.data);
+        const res = await API.get(`/admin/sessions`);
+        setSessions(res.data);
       } catch (err) {
-        console.error("❌ Error fetching filters:", err);
+        console.error(err);
       }
     };
-    loadFilters();
+    loadSessions();
   }, []);
 
-  // 🔹 Load students when filter changes
+  // Load all students for selected session
   useEffect(() => {
     const loadStudents = async () => {
-      if (!selectedSport && !selectedSession && !selectedPosition) return;
+      if (!selectedSession) return;
       try {
-        const res = await API.get(
-          `/admin/export?session=${selectedSession}&sport=${selectedSport}&position=${selectedPosition}`
-        );
+        const res = await API.get(`/admin/export?session=${selectedSession}`);
         setStudents(res.data);
+        const obj = {};
+        res.data.forEach((s) => { obj[s._id] = false; }); // initialize all as unchecked
+        setSelectedStudents(obj);
       } catch (err) {
-        console.error("❌ Error fetching students:", err);
+        console.error(err);
       }
     };
     loadStudents();
-  }, [selectedSport, selectedSession, selectedPosition]);
+  }, [selectedSession]);
+
+  const handleCheckboxChange = (id) => {
+    setSelectedStudents((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleSelectAll = (e) => {
+    const isChecked = e.target.checked;
+    const newSelection = { ...selectedStudents };
+    
+    filteredStudents.forEach(student => {
+      newSelection[student._id] = isChecked;
+    });
+    
+    setSelectedStudents(newSelection);
+  };
+
+  const filteredStudents = students.filter((s) => {
+    const activityText = s.sports?.join(", ").toLowerCase() || "";
+    return (
+      (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
+      (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
+      (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
+    );
+  });
+
+  const getSelectedStudents = () => {
+    return filteredStudents.filter((student) => selectedStudents[student._id]);
+  };
+
+  // Check if all filtered students are selected
+  const allSelected = filteredStudents.length > 0 && 
+    filteredStudents.every(student => selectedStudents[student._id]);
 
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Export Students</h1>
 
-      {/* 🔹 Filters */}
+      {/* Filters */}
       <div className="flex gap-3 mb-4">
-        {/* Session Dropdown */}
         <select
           value={selectedSession}
           onChange={(e) => setSelectedSession(e.target.value)}
@@ -357,58 +367,113 @@ const StudentExport = () => {
         >
           <option value="">-- Select Session --</option>
           {sessions.map((s) => (
-            <option key={s._id} value={s._id}>
-              {s.session} {/* 👈 naam dikhana hai */}
-            </option>
+            <option key={s._id} value={s._id}>{s.session}</option>
           ))}
         </select>
 
-{/* Sport Dropdown */}
-<select
-  value={selectedSport}
-  onChange={(e) => setSelectedSport(e.target.value)}
-  className="border p-2 rounded"
->
-  <option value="">-- Select Sport --</option>
-  {sports.map((sport, idx) => (
-    <option key={sport._id || idx} value={sport._id || sport.name || sport}>
-      {sport.name || sport}
-    </option>
-  ))}
-</select>
+        <input
+          type="text"
+          placeholder="Search by Name"
+          value={filterName}
+          onChange={(e) => setFilterName(e.target.value)}
+          className="border p-2 rounded"
+        />
 
-{/* Position Dropdown */}
-<select
-  value={selectedPosition}
-  onChange={(e) => setSelectedPosition(e.target.value)}
-  className="border p-2 rounded"
->
-  <option value="">-- Select Position --</option>
-  {positions.map((pos, idx) => (
-    <option key={pos._id || idx} value={pos._id || pos.position || pos}>
-      {pos.position || pos}
-    </option>
-  ))}
-</select>
-
+        <input
+          type="text"
+          placeholder="Search by URN"
+          value={filterURN}
+          onChange={(e) => setFilterURN(e.target.value)}
+          className="border p-2 rounded"
+        />
+        
+        <input
+          type="text"
+          placeholder="Search by Activity"
+          value={filterActivity}
+          onChange={(e) => setFilterActivity(e.target.value)}
+          className="border p-2 rounded"
+        />
       </div>
 
-      {/* 🔹 Export Buttons */}
+      {/* Table */}
+      <div className="max-h-[400px] overflow-auto border mb-4">
+        <table className="min-w-full border-collapse border">
+          <thead className="bg-gray-200 sticky top-0">
+            <tr>
+              <th className="border p-2">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={handleSelectAll}
+                />
+                Select All
+              </th>
+              <th className="border p-2">Name</th>
+              <th className="border p-2">Father's Name</th>
+              <th className="border p-2">DOB</th>
+              <th className="border p-2">Reg No</th>
+              <th className="border p-2">Branch/Year</th>
+              <th className="border p-2">Matric</th>
+              <th className="border p-2">+2</th>
+              <th className="border p-2">First Admission</th>
+              <th className="border p-2">Last Exam</th>
+              <th className="border p-2">Last Exam Year</th>
+              <th className="border p-2">Graduate Years</th>
+              <th className="border p-2">PG Years</th>
+              <th className="border p-2">Inter Varsity Years</th>
+              <th className="border p-2">Address</th>
+              <th className="border p-2">Activity</th>
+              <th className="border p-2">Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredStudents.map((stu) => (
+              <tr key={stu._id} className="hover:bg-gray-50">
+                <td className="border p-2 text-center">
+                  <input
+                    type="checkbox"
+                    checked={!!selectedStudents[stu._id]}
+                    onChange={() => handleCheckboxChange(stu._id)}
+                  />
+                </td>
+                <td className="border p-2">{stu.name}</td>
+                <td className="border p-2">{stu.fatherName}</td>
+                <td className="border p-2">{stu.dob}</td>
+                <td className="border p-2">{stu.universityRegNo}</td>
+                <td className="border p-2">{stu.branchYear}</td>
+                <td className="border p-2">{stu.matricYear}</td>
+                <td className="border p-2">{stu.plusTwoYear}</td>
+                <td className="border p-2">{stu.firstAdmissionYear}</td>
+                <td className="border p-2">{stu.lastExam}</td>
+                <td className="border p-2">{stu.lastExamYear}</td>
+                <td className="border p-2">{stu.interCollegeGraduateYears}</td>
+                <td className="border p-2">{stu.interCollegePgYears}</td>
+                <td className="border p-2">{stu.interVarsityYears}</td>
+                <td className="border p-2">{stu.addressWithPhone}</td>
+                <td className="border p-2">{stu.sports?.join(", ")}</td>
+                <td className="border p-2">{stu.events?.map(e => `${e.activity}: ${e.position}`).join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Export Buttons */}
       <div className="flex gap-3">
         <button
-          onClick={() => exportToExcel(students)}
-          disabled={!students.length}
+          onClick={() => exportToExcel(getSelectedStudents())}
+          disabled={getSelectedStudents().length === 0}
           className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 disabled:opacity-50"
         >
-          Export to Excel
+          Export to Excel ({getSelectedStudents().length})
         </button>
-
         <button
-          onClick={() => exportToWord(students)}
-          disabled={!students.length}
+          onClick={() => exportToWord(getSelectedStudents())}
+          disabled={getSelectedStudents().length === 0}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
         >
-          Export to Word
+          Export to Word ({getSelectedStudents().length})
         </button>
       </div>
     </div>

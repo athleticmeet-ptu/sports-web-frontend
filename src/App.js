@@ -15,7 +15,8 @@ import CreateCaptain from './pages/CreateCaptain';
 import StudentDetails from './pages/StudentDetails';
 import CaptainsAndTeams from "./pages/CaptainsAndTeams";
 import AllStudents from './pages/AllStudents';
-import AttendanceDashboard from './pages/AttendanceDashboard';
+import GymAttendanceDashboard from './pages/GymAttendanceDashboard';
+import SwimmingAttendanceDashboard from './pages/SwimmingAttendanceDashboard';
 import AdminAssignPosition from './pages/AdminAssignPosition';
 import AssignPosition from './pages/AssignPosition';
 import StudentExport from './pages/Export';
@@ -34,10 +35,19 @@ function App() {
 <Route path="/admin/captains" element={<CaptainsAndTeams />} />
 <Route path="/admin/student/:id" element={<StudentDetails />} />
         <Route
-          path="/admin/attendance"
+          path="/admin/gym-attendance"
           element={
             <ProtectedRoute role="admin">
-              <AttendanceDashboard />
+              <GymAttendanceDashboard />
+            </ProtectedRoute>
+          }
+          
+        />
+                <Route
+          path="/admin/swimming-attendance"
+          element={
+            <ProtectedRoute role="admin">
+              <SwimmingAttendanceDashboard />
             </ProtectedRoute>
           }
           
