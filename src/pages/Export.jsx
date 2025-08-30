@@ -569,10 +569,11 @@ const StudentExport = () => {
                         ?.map((e) => `${e.activity}: ${e.position}`)
                         .join(", ")}
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                 </tr>
+        ))
+      )}
+    </tbody>
+  </table>
           </div>
 
           {/* 🔹 Export Buttons */}
