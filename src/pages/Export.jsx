@@ -326,16 +326,26 @@ const StudentExport = () => {
     setSelectedStudents((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleSelectAll = (e) => {
-    const isChecked = e.target.checked;
-    const newSelection = { ...selectedStudents };
-    
-    filteredStudents.forEach(student => {
+ const handleSelectAll = (e) => {
+  const isChecked = e.target.checked;
+  const newSelection = { ...selectedStudents };
+
+  students
+    .filter((s) => {
+      const activityText = s.sports?.join(", ").toLowerCase() || "";
+      return (
+        (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
+        (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
+        (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
+      );
+    })
+    .forEach((student) => {
       newSelection[student._id] = isChecked;
     });
-    
-    setSelectedStudents(newSelection);
-  };
+
+  setSelectedStudents(newSelection);
+};
+
 
   const filteredStudents = students.filter((s) => {
     const activityText = s.sports?.join(", ").toLowerCase() || "";
