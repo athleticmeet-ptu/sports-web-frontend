@@ -1,4 +1,4 @@
-// src/pages/AttendanceDashboard.jsx
+// src/components/AttendanceDashboard.jsx
 import { useState, useEffect } from "react";
 import API from "../services/api";
 
@@ -63,7 +63,10 @@ const AttendanceDashboard = () => {
 
   const loadAttendance = async (selectedDate, sessionId) => {
     try {
-      const res = await API.get(`/attendance/${selectedDate}?sessionId=${sessionId}`);
+      const res = await API.get(
+        `/attendance/${selectedDate}?sessionId=${sessionId}`
+      );
+
       const records = {};
       res.data.forEach((r) => {
         const studentId = r.student?._id || r.studentId || r._id;
@@ -75,6 +78,7 @@ const AttendanceDashboard = () => {
           };
         }
       });
+
       setAttendance(records);
     } catch (err) {
       console.error("Failed to fetch attendance", err);
@@ -122,9 +126,14 @@ const AttendanceDashboard = () => {
         markedBy: "ADMIN_ID",
         date: forDate,
       });
+
       setAttendance({
         ...attendance,
-        [studentId]: { status, sessionId: selectedSession, date: forDate },
+        [studentId]: {
+          status,
+          sessionId: selectedSession,
+          date: forDate,
+        },
       });
     } catch (err) {
       console.error("Failed to mark attendance", err);
@@ -379,6 +388,7 @@ const AttendanceDashboard = () => {
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="border p-2 rounded"
               />
+
               <div className="flex justify-end gap-2 mt-3">
                 <button
                   type="button"
