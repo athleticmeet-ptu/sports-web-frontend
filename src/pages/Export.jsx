@@ -322,9 +322,12 @@ const StudentExport = () => {
     loadStudents();
   }, [selectedSession]);
 
-  const handleCheckboxChange = (id) => {
-    setSelectedStudents((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+const handleCheckboxChange = (id) => {
+  setSelectedStudents((prev) => {
+    return { ...prev, [id]: !prev[id] };
+  });
+};
+
 
  const handleSelectAll = (e) => {
   const isChecked = e.target.checked;
@@ -442,10 +445,11 @@ const StudentExport = () => {
               <tr key={stu._id} className="hover:bg-gray-50">
                 <td className="border p-2 text-center">
                   <input
-                    type="checkbox"
-                    checked={!!selectedStudents[stu._id]}
-                    onChange={() => handleCheckboxChange(stu._id)}
-                  />
+  type="checkbox"
+  checked={selectedStudents[stu._id] === true}
+  onChange={() => handleCheckboxChange(stu._id)}
+/>
+
                 </td>
                 <td className="border p-2">{stu.name}</td>
                 <td className="border p-2">{stu.fatherName}</td>
