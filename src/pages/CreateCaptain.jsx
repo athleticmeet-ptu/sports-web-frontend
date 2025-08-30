@@ -10,6 +10,27 @@ export default function CreateCaptain() {
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  // Selected captain for viewing/editing
+const [selectedCaptain, setSelectedCaptain] = useState(null);
+const [isEditing, setIsEditing] = useState(false);
+const [editForm, setEditForm] = useState({});
+
+// Function to start editing captain
+const startEditing = (captain) => {
+  setIsEditing(true);
+  setEditForm({
+    name: captain.name || '',
+    branch: captain.branch || '',
+    year: captain.year || '',
+    urn: captain.urn || '',
+    sport: captain.sport || '',
+    email: captain.email || '',
+    phone: captain.phone || '',
+    teamMemberCount: captain.teamMemberCount || '',
+  });
+  setSelectedCaptain(captain);
+};
+
 
 
   const [form, setForm] = useState({
@@ -236,54 +257,151 @@ export default function CreateCaptain() {
         </div>
       )}
 
-      {/* Captains List Block */}
-      <div className="mt-8 bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-        <h3 className="text-lg font-semibold mb-4">All Captains</h3>
-        {captains.length === 0 ? (
-          <p className="text-gray-500">Captain data will appear here after API integration.</p>
-        ) : (
-          <ul className="space-y-2">
-  {captains.map((c) => (
-    <li
-      key={c._id}
-      className="border p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center hover:bg-orange-50"
-    >
-      {/* Captain Info */}
-      <div className="mb-2 md:mb-0">
-        <p><b>Name:</b> {c.name}</p>
-        <p><b>Sport:</b> {c.sport}</p>
-        <p><b>Branch:</b> {c.branch}</p>
-        <p><b>Year:</b> {c.year}</p>
-        <p><b>URN:</b> {c.urn}</p>
-        <p><b>Email:</b> {c.email || "N/A"}</p>
-        <p><b>Phone:</b> {c.phone || "N/A"}</p>
-        <p><b>Team Members:</b> {c.teamMembers?.length || 0}</p>
-      </div>
+     {/* Captains List Block */}
+<div className="mt-8 bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+  <h3 className="text-lg font-semibold mb-4">All Captains</h3>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col md:flex-row gap-2">
-        <button
-          onClick={() => setSelectedCaptain(c)}
-          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+  {captains.length === 0 ? (
+    <p className="text-gray-500">Captain data will appear here after API integration.</p>
+  ) : (
+    <ul className="space-y-2">
+      {captains.map((c) => (
+        <li
+          key={c._id}
+          className="border p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center hover:bg-orange-50"
         >
-          View Team Members
-        </button>
-        <button
-          onClick={() => {
-            startEditing(c);
-            setSelectedCaptain(c); // optional if you want to open modal with details
-          }}
-          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
-        >
-          Edit Captain
-        </button>
-      </div>
-    </li>
-  ))}
-</ul>
+          {/* Captain Info */}
+          <div className="mb-2 md:mb-0">
+            <p><b>Name:</b> {c.name}</p>
+            <p><b>Sport:</b> {c.sport}</p>
+            <p><b>Branch:</b> {c.branch}</p>
+            <p><b>Year:</b> {c.year}</p>
+            <p><b>URN:</b> {c.urn}</p>
+            <p><b>Email:</b> {c.email || "N/A"}</p>
+            <p><b>Phone:</b> {c.phone || "N/A"}</p>
+            <p><b>Team Members:</b> {c.teamMembers?.length || 0}</p>
+          </div>
 
-        )}
-      </div>
+          {/* Action Buttons */}
+          <div className="flex flex-col md:flex-row gap-2">
+            <button
+              onClick={() => setSelectedCaptain(c)}
+              className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+            >
+              View Team Members
+            </button>
+            <button
+              onClick={() => startEditing(c)}
+              className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+            >
+              Edit Captain
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+{/* Popup Modal for View/Edit */}
+{selectedCaptain && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl relative">
+      <button
+        onClick={() => setSelectedCaptain(null)}
+        className="absolute top-2 right-2 text-gray-600 text-lg font-bold"
+      >
+        ✕
+      </button>
+
+      {/* Editing Modal */}
+      {isEditing ? (
+        <>
+          <h3 className="text-xl font-bold mb-4">Edit Captain</h3>
+          <div className="grid grid-cols-2 gap-4">
+            {Object.keys(editForm).map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium capitalize">{field}</label>
+                <input
+                  type={field === "email" ? "email" : "text"}
+                  name={field}
+                  value={editForm[field]}
+                  onChange={(e) => setEditForm({ ...editForm, [e.target.name]: e.target.value })}
+                  className="border rounded p-2 w-full"
+                  required={field !== "phone" && field !== "email"} 
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex justify-between">
+            <button
+              onClick={() => setIsEditing(false)}
+              className="bg-gray-500 text-white px-4 py-2 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await API.put(`/admin/captains/${selectedCaptain._id}`, editForm);
+                  setCaptains(
+                    captains.map(c => c._id === res.data._id ? res.data : c)
+                  );
+                  setSelectedCaptain(res.data);
+                  setIsEditing(false);
+                } catch (err) {
+                  alert("Failed to update captain");
+                }
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Save Changes
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h3 className="text-xl font-bold mb-4">Captain Details</h3>
+          <p><b>Name:</b> {selectedCaptain.name}</p>
+          <p><b>Sport:</b> {selectedCaptain.sport}</p>
+          <p><b>Branch:</b> {selectedCaptain.branch}</p>
+          <p><b>Year:</b> {selectedCaptain.year}</p>
+          <p><b>URN:</b> {selectedCaptain.urn}</p>
+          <p><b>Email:</b> {selectedCaptain.email || "N/A"}</p>
+          <p><b>Phone:</b> {selectedCaptain.phone || "N/A"}</p>
+
+          <h4 className="mt-4 font-semibold">Team Members</h4>
+          {selectedCaptain.teamMembers.length > 0 ? (
+            <ul className="list-disc list-inside ml-4">
+              {selectedCaptain.teamMembers.map((m, idx) => (
+                <li key={idx}>
+                  {m.name} ({m.branch}, Year {m.year}) – URN: {m.urn}, Email: {m.email || "N/A"}, Phone: {m.phone || "N/A"}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No team members added.</p>
+          )}
+
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              onClick={() => setSelectedCaptain(null)}
+              className="bg-gray-500 text-white px-4 py-2 rounded"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => startEditing(selectedCaptain)}
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Edit Captain
+            </button>
+          </div>
+        </>
+      )}
     </div>
+  </div>
+)}
+
   );
 }
