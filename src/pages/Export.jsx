@@ -15,8 +15,6 @@ import {
 import API from "../services/api";
 
 // 🔹 Helper functions
-
-
 const fetchImageBuffer = async (url) => {
   try {
     const response = await fetch(url);
@@ -48,25 +46,11 @@ const exportToExcel = async (students) => {
 
   // Column widths
   worksheet.columns = [
-    { width: 8 },
-    { width: 20 },
-    { width: 20 },
-    { width: 15 },
-    { width: 20 },
-    { width: 25 },
-    { width: 10 },
-    { width: 10 },
-    { width: 22 },
-    { width: 18 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 15 },
-    { width: 20 },
-    { width: 30 },
-    { width: 20 },
-    { width: 15 },
-    { width: 10 },
+    { width: 8 }, { width: 20 }, { width: 20 }, { width: 15 },
+    { width: 20 }, { width: 25 }, { width: 10 }, { width: 10 },
+    { width: 22 }, { width: 18 }, { width: 12 }, { width: 12 },
+    { width: 12 }, { width: 15 }, { width: 20 }, { width: 30 },
+    { width: 20 }, { width: 15 }, { width: 10 },
   ];
 
   // Merge header cells
@@ -118,10 +102,8 @@ const exportToExcel = async (students) => {
       cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.font = { bold: true };
       cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
+        top: { style: "thin" }, left: { style: "thin" },
+        bottom: { style: "thin" }, right: { style: "thin" },
       };
     });
   });
@@ -133,25 +115,13 @@ const exportToExcel = async (students) => {
     const position = s.events?.map((e) => e.position).join(", ") || "";
 
     const row = worksheet.addRow([
-      i + 1,
-      s.name || "",
-      s.fatherName || "",
-      s.dob || "",
-      s.universityRegNo || "",
-      s.branchYear || "",
-      s.matricYear || "",
-      s.plusTwoYear || "",
-      s.firstAdmissionYear || "",
-      s.lastExam || "",
-      s.lastExamYear || "",
-      s.interCollegeGraduateYears || "",
-      s.interCollegePgYears || "",
-      s.interVarsityYears || "",
-      "",
-      s.addressWithPhone || "",
-      "",
-      activity,
-      position,
+      i + 1, s.name || "", s.fatherName || "", s.dob || "",
+      s.universityRegNo || "", s.branchYear || "",
+      s.matricYear || "", s.plusTwoYear || "",
+      s.firstAdmissionYear || "", s.lastExam || "",
+      s.lastExamYear || "", s.interCollegeGraduateYears || "",
+      s.interCollegePgYears || "", s.interVarsityYears || "",
+      "", s.addressWithPhone || "", "", activity, position,
     ]);
 
     row.height = 90;
@@ -182,10 +152,8 @@ const exportToExcel = async (students) => {
     row.eachCell((cell) => {
       cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
+        top: { style: "thin" }, left: { style: "thin" },
+        bottom: { style: "thin" }, right: { style: "thin" },
       };
     });
   });
@@ -194,10 +162,8 @@ const exportToExcel = async (students) => {
   saveAs(new Blob([buffer]), "students.xlsx");
 };
 
-const safeText = (val) => {
-  if (!val) return "";
-  return val.toString();
-};
+// 🔹 Word export helpers
+const safeText = (val) => (!val ? "" : val.toString());
 const formatDate = (val) => {
   if (!val) return "";
   if (/^\d{4}$/.test(val)) return val;
@@ -242,24 +208,17 @@ const exportToWord = async (students) => {
 
     const cells = [
       (i+1).toString(),
-      safeText(s.name),
-      safeText(s.fatherName),
-      safeText(s.dob),
-      safeText(s.universityRegNo),
-      safeText(s.branchYear),
-      safeText(s.matricYear),
-      safeText(s.plusTwoYear),
+      safeText(s.name), safeText(s.fatherName), safeText(s.dob),
+      safeText(s.universityRegNo), safeText(s.branchYear),
+      safeText(s.matricYear), safeText(s.plusTwoYear),
       formatDate(s.firstAdmissionYear),
-      safeText(s.lastExam),
-      safeText(s.lastExamYear),
+      safeText(s.lastExam), safeText(s.lastExamYear),
       safeText(s.interCollegeGraduateYears),
-      safeText(s.interCollegePgYears),
-      safeText(s.interVarsityYears),
+      safeText(s.interCollegePgYears), safeText(s.interVarsityYears),
       signatureImage ? new ImageRun({ data:signatureImage, transformation:{ width:60, height:30 } }) : "",
       safeText(s.addressWithPhone),
       passportImage ? new ImageRun({ data:passportImage, transformation:{ width:60, height:60 } }) : "",
-      activity,
-      position
+      activity, position
     ];
 
     tableRows.push(
@@ -284,14 +243,14 @@ const exportToWord = async (students) => {
   saveAs(buffer, "students.docx");
 };
 
-
+// 🔹 Main Component
 const StudentExport = () => {
   const [students, setStudents] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("");
   const [filterName, setFilterName] = useState("");
   const [filterURN, setFilterURN] = useState("");
-  const [selectedStudents, setSelectedStudents] = useState({}); // track checkboxes
+  const [selectedStudents, setSelectedStudents] = useState({});
   const [filterActivity, setFilterActivity] = useState("");
   const selectAllRef = useRef(null);
 
@@ -316,7 +275,7 @@ const StudentExport = () => {
         const res = await API.get(`/admin/export?session=${selectedSession}`);
         setStudents(res.data);
         const obj = {};
-        res.data.forEach((s) => { obj[s._id] = false; }); // initialize all as unchecked
+        res.data.forEach((s) => { obj[s.universityRegNo] = false; });
         setSelectedStudents(obj);
       } catch (err) {
         console.error(err);
@@ -325,60 +284,60 @@ const StudentExport = () => {
     loadStudents();
   }, [selectedSession]);
 
-const handleCheckboxChange = (id) => {
-  setSelectedStudents((prev) => ({
-    ...prev,
-    [id]: !prev[id],
-  }));
-};
+  const handleCheckboxChange = (urn) => {
+    setSelectedStudents((prev) => ({
+      ...prev,
+      [urn]: !prev[urn],
+    }));
+  };
 
+  const handleSelectAll = (e) => {
+    const isChecked = e.target.checked;
+    const newSelection = { ...selectedStudents };
 
-const handleSelectAll = (e) => {
-  const isChecked = e.target.checked;
-  const newSelection = { ...selectedStudents };
+    students
+      .filter((s) => {
+        const activityText = s.sports?.join(", ").toLowerCase() || "";
+        return (
+          (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
+          (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
+          (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
+        );
+      })
+      .forEach((student) => {
+        newSelection[student.universityRegNo] = isChecked;
+      });
 
-  students
-    .filter((s) => {
+    setSelectedStudents(newSelection);
+  };
+
+  // update select all state
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+
+    const visibleStudents = students.filter((s) => {
       const activityText = s.sports?.join(", ").toLowerCase() || "";
       return (
         (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
         (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
         (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
       );
-    })
-    .forEach((student) => {
-      newSelection[student._id] = isChecked;
     });
 
-  setSelectedStudents(newSelection);
-};
-  useEffect(() => {
-  if (!selectAllRef.current) return;
+    const total = visibleStudents.length;
+    const selectedCount = visibleStudents.filter((s) => selectedStudents[s.universityRegNo]).length;
 
-  const visibleStudents = students.filter((s) => {
-    const activityText = s.sports?.join(", ").toLowerCase() || "";
-    return (
-      (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
-      (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
-      (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
-    );
-  });
-
-  const total = visibleStudents.length;
-  const selectedCount = visibleStudents.filter((s) => selectedStudents[s._id]).length;
-
-  if (selectedCount === 0) {
-    selectAllRef.current.checked = false;
-    selectAllRef.current.indeterminate = false;
-  } else if (selectedCount === total) {
-    selectAllRef.current.checked = true;
-    selectAllRef.current.indeterminate = false;
-  } else {
-    selectAllRef.current.checked = false;
-    selectAllRef.current.indeterminate = true;
-  }
-}, [students, filterName, filterURN, filterActivity, selectedStudents]);
-
+    if (selectedCount === 0) {
+      selectAllRef.current.checked = false;
+      selectAllRef.current.indeterminate = false;
+    } else if (selectedCount === total) {
+      selectAllRef.current.checked = true;
+      selectAllRef.current.indeterminate = false;
+    } else {
+      selectAllRef.current.checked = false;
+      selectAllRef.current.indeterminate = true;
+    }
+  }, [students, filterName, filterURN, filterActivity, selectedStudents]);
 
   const filteredStudents = students.filter((s) => {
     const activityText = s.sports?.join(", ").toLowerCase() || "";
@@ -390,13 +349,8 @@ const handleSelectAll = (e) => {
   });
 
   const getSelectedStudents = () => {
-    return filteredStudents.filter((student) => selectedStudents[student._id]);
+    return filteredStudents.filter((student) => selectedStudents[student.universityRegNo]);
   };
-
-  // Check if all filtered students are selected
-  const allSelected = filteredStudents.length > 0 && 
-    filteredStudents.every(student => selectedStudents[student._id]);
-
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Export Students</h1>
@@ -472,14 +426,14 @@ const handleSelectAll = (e) => {
           </thead>
           <tbody>
             {filteredStudents.map((stu) => (
-              <tr key={stu._id} className="hover:bg-gray-50">
-                <td className="border p-2 text-center">
-  <input
-    type="checkbox"
-    checked={!!selectedStudents[stu._id]}
-    onChange={() => handleCheckboxChange(stu._id)}
-  />
-</td>
+              <tr key={stu.universityRegNo} className="hover:bg-gray-50">
+  <td className="border p-2 text-center">
+    <input
+      type="checkbox"
+      checked={!!selectedStudents[stu.universityRegNo]}
+      onChange={() => handleCheckboxChange(stu.universityRegNo)}
+    />
+  </td>
 
 
 
