@@ -402,6 +402,8 @@ const startEditing = (captain) => {
     </div>
   </div>
 )}
+      </div>
+
 
   );
 }
