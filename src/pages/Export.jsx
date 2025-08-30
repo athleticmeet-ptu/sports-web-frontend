@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom"; 
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
@@ -330,19 +331,26 @@ const StudentExport = () => {
   const [selectedStudents, setSelectedStudents] = useState({});
   const [filterActivity, setFilterActivity] = useState("");
   const selectAllRef = useRef(null);
+   const navigate = useNavigate(); // ✅ yeh add karo
+  const [loading, setLoading] = useState(true); // ✅ yeh add karo
+
+ 
 
   // Load sessions
-  useEffect(() => {
-    const loadSessions = async () => {
-      try {
-        const res = await API.get(`/admin/sessions`);
-        setSessions(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    loadSessions();
-  }, []);
+ useEffect(() => {
+  const loadSessions = async () => {
+    try {
+      const res = await API.get(`/admin/sessions`);
+      setSessions(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false); // ✅ yaha pe
+    }
+  };
+  loadSessions();
+}, []);
+
 
   // Load all students for selected session
   useEffect(() => {
@@ -491,6 +499,7 @@ const StudentExport = () => {
               className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-orange-400"
             />
           </div>
+          
 
           {/* 🔹 Table */}
           <div className="overflow-auto border rounded-xl max-h-[450px]">
@@ -524,20 +533,22 @@ const StudentExport = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredStudents.map((stu) => (
-                  <tr
-                    key={stu.universityRegNo}
-                    className="hover:bg-orange-50 transition"
-                  >
-                    <td className="border p-2 text-center">
-                      <input
-                        type="checkbox"
-                        checked={!!selectedStudents[stu.universityRegNo]}
-                        onChange={() =>
-                          handleCheckboxChange(stu.universityRegNo)
-                        }
-                      />
-                    </td>
+  {filteredStudents.length === 0 ? (
+    <tr>
+      <td colSpan="17" className="text-center p-4 text-gray-500">
+        No students found 🚫
+      </td>
+    </tr>
+  ) : (
+    filteredStudents.map((stu) => (
+      <tr key={stu.universityRegNo} className="hover:bg-orange-50 transition">
+        <td className="border p-2 text-center">
+          <input
+            type="checkbox"
+            checked={!!selectedStudents[stu.universityRegNo]}
+            onChange={() => handleCheckboxChange(stu.universityRegNo)}
+          />
+        </td>
                     <td className="border p-2">{stu.name}</td>
                     <td className="border p-2">{stu.fatherName}</td>
                     <td className="border p-2">{stu.dob}</td>
