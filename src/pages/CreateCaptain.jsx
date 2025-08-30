@@ -9,6 +9,8 @@ export default function CreateCaptain() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const [form, setForm] = useState({
     name: '',
@@ -71,8 +73,8 @@ export default function CreateCaptain() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+       <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -94,7 +96,7 @@ export default function CreateCaptain() {
       {/* Create Captain Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="mb-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-lg font-semibold shadow-lg hover:scale-[1.02] transition transform"
+        className="mb-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-lg font-semibold shadow-lg hover:scale-[1.02] transition transform"
       >
         + Create Captain
       </button>
@@ -121,7 +123,7 @@ export default function CreateCaptain() {
               <input
                 name="name"
                 placeholder="Full Name"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.name}
                 onChange={handleChange}
                 required
@@ -130,24 +132,33 @@ export default function CreateCaptain() {
                 name="email"
                 type="email"
                 placeholder="Email"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.email}
                 onChange={handleChange}
                 required
               />
-              <input
-                name="password"
-                type="password"
-                placeholder="Password"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
+             <div className="relative">
+  <input
+    name="password"
+    type={showPassword ? 'text' : 'password'}
+    placeholder="Password"
+    className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none pr-10"
+    value={form.password}
+    onChange={handleChange}
+    required
+  />
+  <span
+    className="absolute right-3 top-3 cursor-pointer select-none text-gray-500 hover:text-gray-700"
+    onClick={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? '🙈' : '👁️'}
+  </span>
+</div>
+
               <input
                 name="branch"
                 placeholder="Branch"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.branch}
                 onChange={handleChange}
                 required
@@ -155,7 +166,7 @@ export default function CreateCaptain() {
               <input
                 name="urn"
                 placeholder="URN"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.urn}
                 onChange={handleChange}
                 required
@@ -164,7 +175,7 @@ export default function CreateCaptain() {
                 name="year"
                 type="number"
                 placeholder="Year"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+               className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.year}
                 onChange={handleChange}
                 required
@@ -172,7 +183,7 @@ export default function CreateCaptain() {
               <input
                 name="sport"
                 placeholder="Sport"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.sport}
                 onChange={handleChange}
                 required
@@ -181,7 +192,7 @@ export default function CreateCaptain() {
                 name="teamMemberCount"
                 type="number"
                 placeholder="Team Member Count"
-                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 value={form.teamMemberCount}
                 onChange={handleChange}
                 required
@@ -201,7 +212,7 @@ export default function CreateCaptain() {
                     {sessions.map(s => (
                       <div
                         key={s._id}
-                        className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                        className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
                         onClick={() => { setForm({ ...form, sessionId: s._id }); setSessionOpen(false); }}
                       >
                         {s.session}
@@ -211,10 +222,10 @@ export default function CreateCaptain() {
                 )}
               </div>
 
-              <button
+             <button
                 type="submit"
                 disabled={submitLoading}
-                className={`w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold shadow-lg transition transform hover:scale-[1.02] ${
+                className={`w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg transition transform hover:scale-[1.02] ${
                   submitLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -233,7 +244,7 @@ export default function CreateCaptain() {
         ) : (
           <ul className="space-y-2">
             {captains.map(c => (
-              <li key={c._id} className="border p-2 rounded-lg flex justify-between items-center hover:bg-blue-50">
+              <li key={c._id} className="border p-2 rounded-lg flex justify-between items-center hover:bg-orange-50">
                 <span>{c.name} ({c.sport}) - {c.branch}</span>
                 <span className="text-gray-500 text-sm">URN: {c.urn}</span>
               </li>
