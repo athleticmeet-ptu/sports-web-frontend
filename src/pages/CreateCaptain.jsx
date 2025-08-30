@@ -371,7 +371,7 @@ const startEditing = (captain) => {
           <p><b>Phone:</b> {selectedCaptain.phone || "N/A"}</p>
 
           <h4 className="mt-4 font-semibold">Team Members</h4>
-          {selectedCaptain.teamMembers.length > 0 ? (
+          {selectedCaptain.teamMembers?.length > 0 ? (
             <ul className="list-disc list-inside ml-4">
               {selectedCaptain.teamMembers.map((m, idx) => (
                 <li key={idx}>
