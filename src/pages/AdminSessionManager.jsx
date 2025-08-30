@@ -7,6 +7,7 @@ function AdminSessionManager() {
   const [endMonth, setEndMonth] = useState('July');
   const [year, setYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [err, setErr] = useState('');
 
   const months = [
@@ -14,8 +15,12 @@ function AdminSessionManager() {
     'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
   ];
 
-  // year list banayenge (current year -10 se +10 tak)
   const years = Array.from({ length: 21 }, (_, i) => new Date().getFullYear() - 10 + i);
+
+  // Dropdown open states
+  const [startOpen, setStartOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
+  const [yearOpen, setYearOpen] = useState(false);
 
   const fetchSessions = async () => {
     try {
@@ -29,7 +34,7 @@ function AdminSessionManager() {
   const createSession = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
+      setSubmitLoading(true);
       setErr('');
 
       await API.post('/session/create', {
@@ -45,7 +50,7 @@ function AdminSessionManager() {
     } catch (error) {
       setErr('Creation failed. Are you logged in as admin?');
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
@@ -72,71 +77,117 @@ function AdminSessionManager() {
     fetchSessions();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Manage Sessions</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Manage Sessions</h2>
 
-      <form onSubmit={createSession} className="bg-white shadow-md p-4 rounded mb-6">
-        <h3 className="font-semibold mb-2">Create New Session</h3>
-        {err && <p className="text-red-500">{err}</p>}
-        <div className="flex gap-2 mb-2">
-          {/* Start Month Picker */}
-          <select
-            value={startMonth}
-            onChange={(e) => setStartMonth(e.target.value)}
-            className="p-2 border w-full"
-            required
-          >
-            {months.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+      <form onSubmit={createSession} className="bg-white shadow-md p-6 rounded-2xl mb-6">
+        <h3 className="font-semibold mb-4">Create New Session</h3>
+        {err && <p className="text-red-500 mb-3">{err}</p>}
 
-          {/* End Month Picker */}
-          <select
-            value={endMonth}
-            onChange={(e) => setEndMonth(e.target.value)}
-            className="p-2 border w-full"
-            required
-          >
-            {months.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+        <div className="flex gap-2 mb-4">
+          {/* Start Month Custom Dropdown */}
+          <div className="relative w-1/3">
+            <div
+              className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
+              onClick={() => setStartOpen(!startOpen)}
+            >
+              <span>{startMonth}</span>
+              <span className="text-gray-500">{startOpen ? '▲' : '▼'}</span>
+            </div>
+            {startOpen && (
+              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                {months.map(m => (
+                  <div
+                    key={m}
+                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                    onClick={() => { setStartMonth(m); setStartOpen(false); }}
+                  >
+                    {m}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* Year Picker */}
-          <select
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            className="p-2 border w-full"
-            required
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          {/* End Month Custom Dropdown */}
+          <div className="relative w-1/3">
+            <div
+              className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
+              onClick={() => setEndOpen(!endOpen)}
+            >
+              <span>{endMonth}</span>
+              <span className="text-gray-500">{endOpen ? '▲' : '▼'}</span>
+            </div>
+            {endOpen && (
+              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                {months.map(m => (
+                  <div
+                    key={m}
+                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                    onClick={() => { setEndMonth(m); setEndOpen(false); }}
+                  >
+                    {m}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Year Custom Dropdown */}
+          <div className="relative w-1/3">
+            <div
+              className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
+              onClick={() => setYearOpen(!yearOpen)}
+            >
+              <span>{year}</span>
+              <span className="text-gray-500">{yearOpen ? '▲' : '▼'}</span>
+            </div>
+            {yearOpen && (
+              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                {years.map(y => (
+                  <div
+                    key={y}
+                    className="px-3 py-2 hover:bg-orange-100 cursor-pointer"
+                    onClick={() => { setYear(y); setYearOpen(false); }}
+                  >
+                    {y}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Preview */}
-        <p className="text-sm text-gray-600 mb-2">
+        <p className="text-sm text-gray-600 mb-4">
           Preview: <strong>{startMonth}–{endMonth} {year}</strong>
         </p>
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-          disabled={loading}
+          disabled={submitLoading}
+          className={`w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg transition transform hover:scale-[1.02] ${
+            submitLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          {loading ? 'Creating...' : 'Create'}
+          {submitLoading ? 'Creating...' : 'Create Session'}
         </button>
       </form>
 
       <h3 className="font-semibold mb-2">Existing Sessions</h3>
       <div className="space-y-3">
         {sessions.map((s) => (
-          <div key={s._id} className="border p-3 rounded flex justify-between items-center">
+          <div key={s._id} className="border p-4 rounded-lg flex justify-between items-center hover:bg-orange-50 transition">
             <div>
-              <p>
+              <p className="font-medium">
                 <strong>{s.session}</strong>{' '}
                 {s.isActive && <span className="text-green-600">(Active)</span>}
               </p>
@@ -148,14 +199,14 @@ function AdminSessionManager() {
               {!s.isActive && (
                 <button
                   onClick={() => setActive(s._id)}
-                  className="text-sm bg-green-600 text-white px-3 py-1 rounded"
+                  className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
                 >
                   Set Active
                 </button>
               )}
               <button
                 onClick={() => deleteSession(s._id)}
-                className="text-sm bg-red-600 text-white px-3 py-1 rounded"
+                className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
               >
                 Delete
               </button>
