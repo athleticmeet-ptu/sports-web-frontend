@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, role }) => {
   }, [role]);
 
   if (loading) return <div>Loading...</div>;
-  return authorized ? children : <Navigate to="/unauthorized" />; // better UX
+  return authorized ? children : <Navigate to="/" />; // better UX
 };
 
 export default ProtectedRoute;

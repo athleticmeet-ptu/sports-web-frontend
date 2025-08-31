@@ -5,6 +5,7 @@ import API from "../services/api";
 const AttendanceDashboard = ({defaultSport}) => {
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
+  const [attendanceCounts, setAttendanceCounts] = useState({});
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [showForm, setShowForm] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
@@ -17,6 +18,7 @@ const AttendanceDashboard = ({defaultSport}) => {
 
   useEffect(() => { loadSessions(); loadStudents(); }, []);
   useEffect(() => { if (selectedSession) loadAttendance(date, selectedSession); }, [date, selectedSession]);
+  useEffect(() => { calculateAttendanceCounts(); }, [attendance, selectedSession]);
 
   const normalizeDate = (d) => new Date(d).toISOString().split("T")[0];
 
@@ -57,12 +59,40 @@ const AttendanceDashboard = ({defaultSport}) => {
     } catch (err) { console.error("Failed to fetch attendance", err); }
   };
 
+  const calculateAttendanceCounts = () => {
+    const counts = {};
+    
+    // Count present records for each student in the current session
+    Object.entries(attendance).forEach(([key, record]) => {
+      // Check if this record belongs to the current session
+      if (record.sessionId === selectedSession && record.status === "Present") {
+        const studentId = key.split('_')[0]; // Extract student ID from key
+        counts[studentId] = (counts[studentId] || 0) + 1;
+      }
+    });
+    
+    setAttendanceCounts(counts);
+  };
+
   const handleSaveStudent = async () => {
     try {
-      if (editStudent) await API.put(`/gym-swimming/${editStudent._id}`, form);
-      else await API.post("/gym-swimming/add", form);
-      setShowForm(false); setForm({ name: "", branch: "", urn: "", crn: "", year: "", sport: "Gym", email: "", phone: "" });
-      setEditStudent(null); loadStudents();
+      const studentData = {
+        ...form,
+        session: selectedSession // Add the current session
+      };
+      
+      if (editStudent) {
+        await API.put(`/gym-swimming/${editStudent._id}`, studentData);
+      } else {
+        await API.post("/gym-swimming/add", studentData);
+      }
+      
+      setShowForm(false); 
+      setForm({ name: "", branch: "", urn: "", crn: "", year: "", sport: defaultSport || "Gym", email: "", phone: "" });
+      setEditStudent(null); 
+      loadStudents();
+      // Refresh attendance to get counts for new student
+      loadAttendance(date, selectedSession);
     } catch (err) { console.error("Failed to save student", err); }
   };
 
@@ -75,58 +105,84 @@ const AttendanceDashboard = ({defaultSport}) => {
 
   const handleAttendance = async (studentId, status, forDate) => {
     try {
-      const res = await API.post("/attendance/mark", { studentId, status, sessionId: selectedSession, markedBy: "ADMIN_ID", date: forDate });
+      const res = await API.post("/attendance/mark", { 
+        studentId, 
+        status, 
+        sessionId: selectedSession, 
+        markedBy: "ADMIN_ID", 
+        date: forDate 
+      });
+      
       const record = res.data.record;
       const key = `${studentId}_${selectedSession}`;
-      setAttendance({ ...attendance, [key]: { status: record.status, sessionId: record.session, date: normalizeDate(record.date) } });
+      
+      setAttendance({ 
+        ...attendance, 
+        [key]: { 
+          status: record.status, 
+          sessionId: record.session, 
+          date: normalizeDate(record.date) 
+        } 
+      });
+      
+      // Recalculate attendance counts
+      calculateAttendanceCounts();
     } catch (err) { console.error("Failed to mark attendance", err); }
   };
 
-// Months mapping
-const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","July","Aug","Sep","Oct","Nov","Dec"];
+  // Months mapping
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","July","Aug","Sep","Oct","Nov","Dec"];
 
+  // Get date block within session range
+  const getDateBlock = () => {
+    const days = [];
+    if (!selectedSession) return days;
 
-// Get date block within session range
-const getDateBlock = () => {
-  const days = [];
-  if (!selectedSession) return days;
+    const sessionObj = sessions.find(s => s._id === selectedSession);
+    if (!sessionObj) return days;
 
-  const sessionObj = sessions.find(s => s._id === selectedSession);
-  if (!sessionObj) return days;
+    // Assume sessionObj.session format: "May–Dec 2025"
+    const [range, yearStr] = sessionObj.session.split(" "); // ["May–Dec", "2025"]
+    const [startMonthStr, endMonthStr] = range.split("–"); // ["May", "Dec"]
+    const year = parseInt(yearStr);
 
-  // Assume sessionObj.session format: "May–Dec 2025"
-  const [range, yearStr] = sessionObj.session.split(" "); // ["May–Dec", "2025"]
-  const [startMonthStr, endMonthStr] = range.split("–"); // ["May", "Dec"]
-  const year = parseInt(yearStr);
+    const startMonth = monthNames.indexOf(startMonthStr);
+    const endMonth = monthNames.indexOf(endMonthStr);
 
-  const startMonth = monthNames.indexOf(startMonthStr);
-  const endMonth = monthNames.indexOf(endMonthStr);
+    // Current date offset logic (10-day block)
+    let current = new Date(year, startMonth, 1);
+    current.setDate(current.getDate() + dateOffset * 10);
 
-  // Current date offset logic (10-day block)
-  let current = new Date(year, startMonth, 1);
-  current.setDate(current.getDate() + dateOffset * 10);
+    for (let i = 0; i < 10; i++) {
+      // Stop if we cross end month
+      if (current.getMonth() > endMonth || current.getFullYear() > year) break;
+      days.push(current.toISOString().split("T")[0]);
+      current.setDate(current.getDate() + 1);
+    }
 
-  for (let i = 0; i < 10; i++) {
-    // Stop if we cross end month
-    if (current.getMonth() > endMonth || current.getFullYear() > year) break;
-    days.push(current.toISOString().split("T")[0]);
-    current.setDate(current.getDate() + 1);
-  }
-
-  return days;
-};
-
-
+    return days;
+  };
 
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Gym & Swimming Attendance</h2>
-      <div className="mb-4">
-        <label className="mr-2 font-semibold">Select Session:</label>
-        <select value={selectedSession} onChange={(e) => setSelectedSession(e.target.value)} className="border p-2 rounded">
-          {sessions.map((s) => (<option key={s._id} value={s._id}>{s.session} {s.isActive ? "(Active)" : ""}</option>))}
-        </select>
+      
+      {/* Add Student Button and Session Selector */}
+      <div className="mb-4 flex justify-between items-center">
+        <div>
+          <label className="mr-2 font-semibold">Select Session:</label>
+          <select value={selectedSession} onChange={(e) => setSelectedSession(e.target.value)} className="border p-2 rounded">
+            {sessions.map((s) => (<option key={s._id} value={s._id}>{s.session} {s.isActive ? "(Active)" : ""}</option>))}
+          </select>
+        </div>
+        <button 
+          onClick={() => setShowForm(true)} 
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          + Add Student
+        </button>
       </div>
+      
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <button onClick={() => setDateOffset(dateOffset - 1)} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">⬅ Prev 10 days</button>
         {getDateBlock().map((d) => (
@@ -141,7 +197,16 @@ const getDateBlock = () => {
       <table className="w-full border rounded-lg shadow">
         <thead className="bg-gray-100">
           <tr>
-            <th className="p-2">Name</th><th className="p-2">URN</th><th className="p-2">CRN</th><th className="p-2">Branch</th><th className="p-2">Year</th><th className="p-2">Sport</th><th className="p-2">Email</th><th className="p-2">Phone</th><th className="p-2">Attendance</th><th className="p-2">Actions</th>
+            <th className="p-2">Name</th>
+            <th className="p-2">URN</th>
+            <th className="p-2">CRN</th>
+            <th className="p-2">Branch</th>
+            <th className="p-2">Year</th>
+            <th className="p-2">Sport</th>
+            <th className="p-2">Email</th>
+            <th className="p-2">Phone</th>
+            <th className="p-2">Attendance</th>
+            <th className="p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -179,6 +244,9 @@ const getDateBlock = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow w-96">
             <h3 className="text-lg font-bold mb-4">{editStudent ? "Edit Student" : "Add Student"}</h3>
+            <div className="mb-3 text-sm text-gray-600">
+              Session: {sessions.find(s => s._id === selectedSession)?.session}
+            </div>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveStudent(); }} className="flex flex-col gap-3">
               <input name="name" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="border p-2 rounded"/>
               <input name="branch" placeholder="Branch" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} required className="border p-2 rounded"/>

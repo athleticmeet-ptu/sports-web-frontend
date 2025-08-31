@@ -1,4 +1,3 @@
-// src/components/StudentProfileForm.jsx
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
@@ -7,8 +6,8 @@ const StudentProfileForm = () => {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSessionIsActive, setSelectedSessionIsActive] = useState(false);
   const [profile, setProfile] = useState(null);
-  const [history, setHistory] = useState(null); // 🔥 Added
-  const [loadingHistory, setLoadingHistory] = useState(false); // 🔥 Added
+  const [history, setHistory] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [formData, setFormData] = useState({
     dob: "",
     gender: "",
@@ -25,8 +24,8 @@ const StudentProfileForm = () => {
     lastExamYear: "",
     yearsOfParticipation: "",
     signaturePhoto: "",
-    interCollegeGraduateCourse:"",   // ✅ NEW
-    interCollegePgCourse:""
+    interCollegeGraduateCourse: "",
+    interCollegePgCourse: ""
   });
 
   const [adminSports, setAdminSports] = useState([]);
@@ -37,6 +36,7 @@ const StudentProfileForm = () => {
   const [sportsSubmitting, setSportsSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
+  const [hasShownCloneMessage, setHasShownCloneMessage] = useState(false);
 
   // New state variables for the three sports categories
   const [ptuIntercollegeSport, setPtuIntercollegeSport] = useState("");
@@ -66,7 +66,7 @@ const StudentProfileForm = () => {
     }
   };
   
-  const fetchHistory = async (urn,sessionId) => {
+  const fetchHistory = async (urn, sessionId) => {
     setLoadingHistory(true);
     try {
       const res = await API.get(`/student/history/${urn}/${sessionId}`, { withCredentials: true });
@@ -78,7 +78,7 @@ const StudentProfileForm = () => {
     }
   };
   
-  // fetch profile
+  // fetch profile (removed clone message logic from here)
   const fetchProfile = async (sessionId) => {
     if (!sessionId) return;
     setLoading(true);
@@ -90,7 +90,7 @@ const StudentProfileForm = () => {
       const data = res.data;
       setProfile(data);
       if (data?.urn) {
-        fetchHistory(data.urn,data.sessionId);
+        fetchHistory(data.urn, data.sessionId);
       }
       const adminSportList = data?.sports || [];
       setAdminSports(adminSportList);
@@ -111,12 +111,10 @@ const StudentProfileForm = () => {
         yearsOfParticipation: data?.yearsOfParticipation || "",
         signaturePhoto: data?.signaturePhoto || "",
         sports: Array.from(new Set([...(data?.studentSports || [])])),
-        interCollegeGraduateCourse: data?.interCollegeGraduateCourse || 0, // ✅ NEW
+        interCollegeGraduateCourse: data?.interCollegeGraduateCourse || 0,
         interCollegePgCourse: data?.interCollegePgCourse || 0,   
       });
-      if (data?.isCloned) {
-        alert("This profile has been cloned from your last approved session. Please review and update if needed.");
-      }
+      
       const sessionInfo = sessions.find((s) => s._id === sessionId);
       setSelectedSessionIsActive(sessionInfo?.isActive || false);
     } catch {
@@ -207,12 +205,15 @@ const StudentProfileForm = () => {
     }
   };
 
-  // Updated sport handlers for the three categories
+  // Fixed sport handlers - properly manage the sports array
   const handleAddPtuIntercollegeSport = () => {
     if (!ptuIntercollegeSport.trim()) return;
     const prefixed = `PTU Intercollege ${ptuIntercollegeSport.trim()}`;
     if (!formData.sports.includes(prefixed)) {
-      setFormData((prev) => ({ ...prev, sports: [...prev.sports, prefixed] }));
+      setFormData((prev) => ({ 
+        ...prev, 
+        sports: [...prev.sports, prefixed] 
+      }));
     }
     setPtuIntercollegeSport("");
   };
@@ -221,7 +222,10 @@ const StudentProfileForm = () => {
     if (!nationalLevelSport.trim()) return;
     const prefixed = `National Level ${nationalLevelSport.trim()}`;
     if (!formData.sports.includes(prefixed)) {
-      setFormData((prev) => ({ ...prev, sports: [...prev.sports, prefixed] }));
+      setFormData((prev) => ({ 
+        ...prev, 
+        sports: [...prev.sports, prefixed] 
+      }));
     }
     setNationalLevelSport("");
   };
@@ -230,7 +234,10 @@ const StudentProfileForm = () => {
     if (!internationalLevelSport.trim()) return;
     const prefixed = `International Level ${internationalLevelSport.trim()}`;
     if (!formData.sports.includes(prefixed)) {
-      setFormData((prev) => ({ ...prev, sports: [...prev.sports, prefixed] }));
+      setFormData((prev) => ({ 
+        ...prev, 
+        sports: [...prev.sports, prefixed] 
+      }));
     }
     setInternationalLevelSport("");
   };
@@ -275,10 +282,26 @@ const StudentProfileForm = () => {
   useEffect(() => {
     fetchSessions();
   }, []);
-  
+
+  // Reset clone message flag when session changes
   useEffect(() => {
-    if (selectedSession) fetchProfile(selectedSession);
+    setHasShownCloneMessage(false);
   }, [selectedSession]);
+
+  // Fetch profile when session changes
+  useEffect(() => {
+    if (selectedSession) {
+      fetchProfile(selectedSession);
+    }
+  }, [selectedSession]);
+
+  // Handle clone message after profile is loaded
+  useEffect(() => {
+    if (profile?.isCloned && !hasShownCloneMessage) {
+      alert("This profile has been cloned from your last approved session. Please review and update if needed.");
+      setHasShownCloneMessage(true);
+    }
+  }, [profile, hasShownCloneMessage]);
 
   if (loading && !profile) return <p className="text-center">Loading...</p>;
 
@@ -291,11 +314,8 @@ const StudentProfileForm = () => {
   const sportsApproved = profile?.status?.sports === "approved";
 
   // ---- Disable conditions ----
-  const readOnlyPersonal =
-    !selectedSessionIsActive || personalPending || personalApproved;
-
-  const disableSports =
-    !personalApproved || sportsPending || sportsApproved;
+  const readOnlyPersonal = !selectedSessionIsActive || personalPending || personalApproved;
+  const disableSports = !personalApproved || sportsPending || sportsApproved;
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white shadow rounded">
@@ -340,14 +360,14 @@ const StudentProfileForm = () => {
         <>
           {!personalApproved ? (
             <form className="space-y-4 mb-4">
-              {/* Inputs */}
+              {/* Inputs - all disabled if session is expired */}
               <input
                 name="crn"
                 placeholder="CRN"
                 value={formData.crn}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending || profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
 
               <input
@@ -356,7 +376,7 @@ const StudentProfileForm = () => {
                 value={formData.dob}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
 
               <select
@@ -364,7 +384,7 @@ const StudentProfileForm = () => {
                 value={formData.gender}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -377,7 +397,7 @@ const StudentProfileForm = () => {
                 value={formData.fatherName}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
 
               <input
@@ -385,7 +405,7 @@ const StudentProfileForm = () => {
                 name="yearOfPassingMatric"
                 value={formData.yearOfPassingMatric}
                 onChange={handleChange}
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
                 className="w-full border p-2 rounded"
               />
 
@@ -394,7 +414,7 @@ const StudentProfileForm = () => {
                 name="yearOfPassingPlusTwo"
                 value={formData.yearOfPassingPlusTwo}
                 onChange={handleChange}
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
                 className="w-full border p-2 rounded"
               />
 
@@ -404,7 +424,7 @@ const StudentProfileForm = () => {
                 value={formData.firstAdmissionDate}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
 
               <input
@@ -413,7 +433,7 @@ const StudentProfileForm = () => {
                 value={formData.lastExamName}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending}
+                disabled={!selectedSessionIsActive || personalPending}
               />
 
               <input
@@ -422,7 +442,7 @@ const StudentProfileForm = () => {
                 value={formData.lastExamYear}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending}
+                disabled={!selectedSessionIsActive || personalPending}
               />
 
               <input
@@ -430,7 +450,7 @@ const StudentProfileForm = () => {
                 name="yearsOfParticipation"
                 value={formData.yearsOfParticipation}
                 onChange={handleChange}
-                disabled={personalPending}
+                disabled={!selectedSessionIsActive || personalPending}
                 className="w-full border p-2 rounded"
               />
 
@@ -440,7 +460,7 @@ const StudentProfileForm = () => {
                 value={formData.contact}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
               
               <input
@@ -449,7 +469,7 @@ const StudentProfileForm = () => {
                 value={formData.interCollegeGraduateCourse}
                 onChange={handleChange}
                 placeholder="Inter-College Graduate Course Count"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
                 className="w-full border p-2 rounded"
               />
 
@@ -459,7 +479,7 @@ const StudentProfileForm = () => {
                 value={formData.interCollegePgCourse}
                 onChange={handleChange}
                 placeholder="Inter-College PG Course Count"
-                disabled={personalPending|| profile?.isCloned}
+                disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
                 className="w-full border p-2 rounded"
               />
               
@@ -469,7 +489,7 @@ const StudentProfileForm = () => {
                 value={formData.address}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
-                disabled={personalPending}
+                disabled={!selectedSessionIsActive || personalPending}
               />
 
               {/* Uploads */}
@@ -479,7 +499,7 @@ const StudentProfileForm = () => {
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleUpload(e, "photo")}
-                  disabled={personalPending || uploading|| profile?.isCloned}
+                  disabled={!selectedSessionIsActive || personalPending || uploading || profile?.isCloned}
                 />
                 {formData.photo && (
                   <img
@@ -499,7 +519,7 @@ const StudentProfileForm = () => {
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleUpload(e, "signaturePhoto")}
-                  disabled={personalPending || uploading|| profile?.isCloned}
+                  disabled={!selectedSessionIsActive || personalPending || uploading || profile?.isCloned}
                 />
                 {formData.signaturePhoto && (
                   <img
@@ -515,8 +535,8 @@ const StudentProfileForm = () => {
                 <button
                   type="button"
                   onClick={handleSavePersonal}
-                  disabled={personalPending || submitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                  disabled={!selectedSessionIsActive || personalPending || submitting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {submitting ? "Saving..." : "Save Personal Details"}
                 </button>
@@ -524,13 +544,9 @@ const StudentProfileForm = () => {
                   type="button"
                   onClick={handleSubmitPersonalForApproval}
                   disabled={
-                    personalPending || personalApproved || submittingForApproval
+                    !selectedSessionIsActive || personalPending || personalApproved || submittingForApproval
                   }
-                  className={`py-2 px-4 rounded text-white ${
-                    personalPending || personalApproved || submittingForApproval
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700"
-                  }`}
+                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {submittingForApproval
                     ? "Submitting..."
@@ -603,7 +619,7 @@ const StudentProfileForm = () => {
 
             {profile?.positions?.length > 0 && (
               <div className="space-y-2 mb-3">
-                <h3 className="font-semibold text-green-700">�� Achievements</h3>
+                <h3 className="font-semibold text-green-700">🏆 Achievements</h3>
                 <ul className="list-disc list-inside text-gray-700">
                   {profile.positions.map((p, idx) => (
                     <li key={idx}>
@@ -637,6 +653,7 @@ const StudentProfileForm = () => {
                           type="button"
                           onClick={() => handleRemoveSport(sport)}
                           className="text-red-500 hover:text-red-700"
+                          disabled={!selectedSessionIsActive}
                         >
                           ✕
                         </button>
@@ -657,13 +674,13 @@ const StudentProfileForm = () => {
                         onChange={(e) => setPtuIntercollegeSport(e.target.value)}
                         placeholder="Enter sport name"
                         className="border p-2 rounded flex-1"
-                        disabled={sportsPending}
+                        disabled={!selectedSessionIsActive || sportsPending}
                       />
                       <button
                         type="button"
                         onClick={handleAddPtuIntercollegeSport}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        disabled={sportsPending}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!selectedSessionIsActive || sportsPending}
                       >
                         +
                       </button>
@@ -680,19 +697,18 @@ const StudentProfileForm = () => {
                         onChange={(e) => setNationalLevelSport(e.target.value)}
                         placeholder="Enter sport name"
                         className="border p-2 rounded flex-1"
-                        disabled={sportsPending}
+                        disabled={!selectedSessionIsActive || sportsPending}
                       />
                       <button
                         type="button"
                         onClick={handleAddNationalLevelSport}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                        disabled={sportsPending}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!selectedSessionIsActive || sportsPending}
                       >
                         +
                       </button>
                     </div>
                   </div>
-
                   {/* International Level Sports */}
                   <div className="border p-3 rounded bg-purple-50">
                     <h4 className="font-semibold text-purple-800 mb-2">🌍 International Level Sports</h4>
@@ -703,13 +719,13 @@ const StudentProfileForm = () => {
                         onChange={(e) => setInternationalLevelSport(e.target.value)}
                         placeholder="Enter sport name"
                         className="border p-2 rounded flex-1"
-                        disabled={sportsPending}
+                        disabled={!selectedSessionIsActive || sportsPending}
                       />
                       <button
                         type="button"
                         onClick={handleAddInternationalLevelSport}
-                        className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-                        disabled={sportsPending}
+                        className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!selectedSessionIsActive || sportsPending}
                       >
                         +
                       </button>
@@ -721,8 +737,8 @@ const StudentProfileForm = () => {
                   <button
                     type="button"
                     onClick={handleSubmitSports}
-                    disabled={sportsPending || sportsSubmitting}
-                    className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                    disabled={!selectedSessionIsActive || sportsPending || sportsSubmitting}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {sportsSubmitting
                       ? "Submitting..."
@@ -735,7 +751,7 @@ const StudentProfileForm = () => {
 
           {/* ---- Student History Section ---- */}
           <div className="mt-6">
-            <h3 className="text-xl font-bold mb-2">�� Student History</h3>
+            <h3 className="text-xl font-bold mb-2">📚 Student History</h3>
             {loadingHistory && <p>Loading history...</p>}
             {history && (
               <div className="space-y-4">
@@ -759,7 +775,7 @@ const StudentProfileForm = () => {
                   {history.captainRecords?.length > 0 ? (
                     history.captainRecords.map((c, i) => (
                       <div key={i} className="border-b py-1">
-                        <p>�� Sport: {c.sport}</p>
+                        <p>👑 Sport: {c.sport}</p>
                         <p>📅 Session: {c.session?.session}</p>
                         <p>👥 Team Members: {c.teamMembers?.length || 0}</p>
                       </div>

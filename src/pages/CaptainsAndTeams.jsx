@@ -8,6 +8,17 @@ function CaptainsAndTeams() {
   const [selectedCaptain, setSelectedCaptain] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [editingMemberIndex, setEditingMemberIndex] = useState(null);
+  const [memberForm, setMemberForm] = useState({
+    name: "",
+    branch: "",
+    year: "",
+    urn: "",
+    email: "",
+    phone: "",
+    sport: "",
+    position: "",
+  });
 
   useEffect(() => {
     const fetchCaptains = async () => {
@@ -41,10 +52,10 @@ function CaptainsAndTeams() {
     }
   };
 
-  const handleDeleteMember = async (captainId, memberIndex) => {
+  const handleDeleteMember = async (captainId, sessionId, memberIndex) => {
     if (!window.confirm("Delete this team member?")) return;
     try {
-      await fetch(`/api/admin/captains/${captainId}/members/${memberIndex}`, {
+      await fetch(`/api/admin/${captainId}/${sessionId}/members/${memberIndex}`, {
         method: "DELETE",
       });
       setSelectedCaptain({
@@ -58,6 +69,45 @@ function CaptainsAndTeams() {
     }
   };
 
+  // --- MEMBER EDIT ---
+  const startEditingMember = (member, index) => {
+    setEditingMemberIndex(index);
+    setMemberForm(member);
+  };
+
+  const handleMemberChange = (e) => {
+    setMemberForm({ ...memberForm, [e.target.name]: e.target.value });
+  };
+
+  const handleMemberSubmit = async () => {
+    try {
+      const res = await fetch(
+        `/api/admin/${selectedCaptain.captainId}/${selectedCaptain.sessionId}/members/${editingMemberIndex}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(memberForm),
+
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update member");
+
+      const updatedData = await res.json();
+
+      // update state
+          setSelectedCaptain({
+      ...selectedCaptain,
+      teamMembers: updatedData.teamMembers,
+    });
+    
+      setEditingMemberIndex(null);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  // --- CAPTAIN EDIT ---
   const startEditing = (captain) => {
     setIsEditing(true);
     setEditForm({
@@ -86,7 +136,6 @@ function CaptainsAndTeams() {
 
       const updatedCaptain = await res.json();
 
-      // update state
       setCaptains(
         captains.map((c) => (c._id === updatedCaptain._id ? updatedCaptain : c))
       );
@@ -136,13 +185,17 @@ function CaptainsAndTeams() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl relative">
             <button
-              onClick={() => setSelectedCaptain(null)}
+              onClick={() => {
+                setSelectedCaptain(null);
+                setEditingMemberIndex(null);
+              }}
               className="absolute top-2 right-2 text-gray-600"
             >
               ✕
             </button>
 
-            {!isEditing ? (
+            {/* Show captain details */}
+            {!isEditing && editingMemberIndex === null ? (
               <>
                 <h3 className="text-xl font-bold mb-4">Captain Details</h3>
                 <p><b>Name:</b> {selectedCaptain.name}</p>
@@ -154,7 +207,7 @@ function CaptainsAndTeams() {
                 <p><b>Phone:</b> {selectedCaptain.phone || "N/A"}</p>
 
                 <h4 className="mt-4 font-semibold">Team Members</h4>
-                {selectedCaptain.teamMembers.length > 0 ? (
+                {selectedCaptain.teamMembers && selectedCaptain.teamMembers.length > 0 ? (
                   <ul className="list-disc list-inside ml-4">
                     {selectedCaptain.teamMembers.map((member, index) => (
                       <li key={index} className="flex justify-between">
@@ -162,14 +215,24 @@ function CaptainsAndTeams() {
                           {member.name} ({member.branch}, {member.year}) – URN:{" "}
                           {member.urn}, Email: {member.email}, Phone: {member.phone}
                         </span>
-                        <button
-                          onClick={() =>
-                            handleDeleteMember(selectedCaptain._id, index)
-                          }
-                          className="text-red-600 ml-2"
-                        >
-                          Delete
-                        </button>
+                        <div>
+                          <button
+                            onClick={() =>
+                              startEditingMember(member, index)
+                            }
+                            className="text-blue-600 ml-2"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteMember(selectedCaptain._id, selectedCaptain.sessionId, index)
+                            }
+                            className="text-red-600 ml-2"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -192,7 +255,47 @@ function CaptainsAndTeams() {
                   </button>
                 </div>
               </>
-            ) : (
+            ) : null}
+
+            {/* Member Editing Form */}
+            {editingMemberIndex !== null && (
+              <>
+                <h3 className="text-xl font-bold mb-4">Edit Team Member</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.keys(memberForm).map((field) => (
+                    <div key={field}>
+                      <label className="block text-sm font-medium capitalize">
+                        {field}
+                      </label>
+                      <input
+                        type="text"
+                        name={field}
+                        value={memberForm[field]}
+                        onChange={handleMemberChange}
+                        className="border rounded p-2 w-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex justify-between">
+                  <button
+                    onClick={() => setEditingMemberIndex(null)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleMemberSubmit}
+                    className="bg-green-600 text-white px-4 py-2 rounded"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Captain Editing Form */}
+            {isEditing && editingMemberIndex === null && (
               <>
                 <h3 className="text-xl font-bold mb-4">Edit Captain</h3>
                 <div className="grid grid-cols-2 gap-4">
