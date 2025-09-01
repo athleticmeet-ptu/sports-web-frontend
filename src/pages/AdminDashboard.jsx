@@ -7,6 +7,17 @@ function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [activitiesError, setActivitiesError] = useState(null);
+  
+  // New state for pending positions
+  const [pendingPositions, setPendingPositions] = useState([]);
+  const [pendingPositionsLoading, setPendingPositionsLoading] = useState(true);
+  const [pendingPositionsError, setPendingPositionsError] = useState(null);
+  
+  // New state for pending approvals
+  const [pendingTeams, setPendingTeams] = useState([]);
+  const [pendingProfiles, setPendingProfiles] = useState([]);
+  const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
+  const [pendingApprovalsError, setPendingApprovalsError] = useState(null);
 
   useEffect(() => {
     // Loader simulate (jab API lagoge toh yaha loading control karna)
@@ -14,6 +25,12 @@ function AdminDashboard() {
     
     // Fetch recent activities
     fetchRecentActivities();
+    
+    // Fetch pending positions
+    fetchPendingPositions();
+    
+    // Fetch pending approvals
+    fetchPendingApprovals();
     
     return () => clearTimeout(timer);
   }, []);
@@ -33,6 +50,98 @@ function AdminDashboard() {
       setActivitiesError('Failed to load recent activities');
     } finally {
       setActivitiesLoading(false);
+    }
+  };
+
+  const fetchPendingPositions = async () => {
+    try {
+      setPendingPositionsLoading(true);
+      setPendingPositionsError(null);
+  
+      // Fetch both students and captains
+      const [studentsResponse, captainsResponse] = await Promise.all([
+        API.get('/admin/students'),
+        API.get('/admin/captains')
+      ]);
+  
+      const students = studentsResponse.data || [];
+      const captains = captainsResponse.data || [];
+  
+             // 🔹 Filter students with pending positions
+       const pendingStudents = students.filter(student => {
+         // null/undefined/empty array => pending
+         if (!student.positions || !Array.isArray(student.positions) || student.positions.length === 0) return true;
+   
+         // check if any pos = null/empty/pending
+         return student.positions.some(pos =>
+           !pos || !pos.position || pos.position === "pending" || pos.position === ""
+         );
+       });
+  
+      // 🔹 Filter captains with pending positions
+      const pendingCaptains = captains.filter(captain =>
+        !captain.position || captain.position === "pending" || captain.position === ""
+      );
+  
+      // 🔹 Merge and format the results
+      const mergedPending = [
+        ...pendingStudents.map(student => ({
+          id: student._id,
+          name: student.name,
+          urn: student.urn,
+          type: 'student',
+                     sport: (student.positions && Array.isArray(student.positions) && student.positions.length > 0)
+             ? (student.positions.find(pos =>
+                 pos && (!pos.position || pos.position === "pending" || pos.position === "")
+               )?.sport || 'N/A')
+             : 'N/A',
+          position: 'pending',
+          branch: student.branch,
+          year: student.year
+        })),
+        ...pendingCaptains.map(captain => ({
+          id: captain._id,
+          name: captain.name,
+          urn: captain.urn,
+          type: 'captain',
+          sport: captain.sport || 'N/A',
+          position: captain.position || 'pending',
+          branch: captain.branch,
+          year: captain.year
+        }))
+      ];
+  
+      setPendingPositions(mergedPending);
+    } catch (error) {
+      console.error('Error fetching pending positions:', error);
+      setPendingPositionsError('Failed to load pending positions');
+    } finally {
+      setPendingPositionsLoading(false);
+    }
+  };
+  
+
+  const fetchPendingApprovals = async () => {
+    try {
+      setPendingApprovalsLoading(true);
+      setPendingApprovalsError(null);
+      
+      // Fetch both pending teams and pending profiles
+      const [teamsResponse, profilesResponse] = await Promise.all([
+        API.get('/admin/pending-teams'),
+        API.get('/admin/pending-profiles')
+      ]);
+
+      const teams = teamsResponse.data || [];
+      const profiles = profilesResponse.data || [];
+
+      setPendingTeams(teams);
+      setPendingProfiles(profiles);
+    } catch (error) {
+      console.error('Error fetching pending approvals:', error);
+      setPendingApprovalsError('Failed to load pending approvals');
+    } finally {
+      setPendingApprovalsLoading(false);
     }
   };
 
@@ -120,13 +229,178 @@ function AdminDashboard() {
         {/* Blocks Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold mb-2 text-orange-600">Pending Positions</h3>
-            <p className="text-gray-600">10 positions pending approval</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-orange-600">Pending Positions</h3>
+              <button 
+                onClick={fetchPendingPositions}
+                disabled={pendingPositionsLoading}
+                className="p-1 text-orange-500 hover:text-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh pending positions"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+            {pendingPositionsLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="w-6 h-6 border-2 border-orange-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            ) : pendingPositionsError ? (
+              <div className="text-center text-red-500 py-8">
+                <p className="mb-2">{pendingPositionsError}</p>
+                <button 
+                  onClick={fetchPendingPositions}
+                  className="px-3 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : pendingPositions.length > 0 ? (
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {pendingPositions.map((item, index) => (
+                  <div key={item.id || index} className="p-3 bg-gray-50 rounded-lg border-l-4 border-orange-500">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800 text-sm flex items-center gap-2">
+                          <span>{item.type === 'student' ? '👤' : '👑'}</span>
+                          {item.name}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1">
+                          URN: {item.urn}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1">
+                          Sport: {item.sport}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1">
+                          Position: {item.position}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1">
+                          Branch: {item.branch}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1">
+                          Year: {item.year}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <p>No pending positions available</p>
+              </div>
+            )}
           </div>
 
           <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold mb-2 text-orange-600">Teams Overview</h3>
-            <p className="text-gray-600">5 active teams</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-orange-600">Pending Approvals</h3>
+              <button 
+                onClick={fetchPendingApprovals}
+                disabled={pendingApprovalsLoading}
+                className="p-1 text-orange-500 hover:text-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh pending approvals"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+            {pendingApprovalsLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="w-6 h-6 border-2 border-orange-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            ) : pendingApprovalsError ? (
+              <div className="text-center text-red-500 py-8">
+                <p className="mb-2">{pendingApprovalsError}</p>
+                <button 
+                  onClick={fetchPendingApprovals}
+                  className="px-3 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (pendingTeams.length > 0 || pendingProfiles.length > 0) ? (
+              <div className="space-y-4 max-h-48 overflow-y-auto">
+                {/* Pending Teams Section */}
+                {pendingTeams.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <span>👑</span>
+                      Pending Teams ({pendingTeams.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {pendingTeams.map((team, index) => (
+                        <div key={team._id || index} className="p-2 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                          <p className="font-medium text-gray-800 text-xs flex items-center gap-2">
+                            <span>🏆</span>
+                            {team.captainId?.name || 'Unknown Captain'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Sport: {team.captainId?.sport || 'N/A'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Team: {team.captainId?.teamName || 'N/A'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Session: {team.sessionId?.session || 'N/A'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Members: {team.members?.length || 0}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Pending Profiles Section */}
+                {pendingProfiles.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <span>👤</span>
+                      Pending Profiles ({pendingProfiles.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {pendingProfiles.map((profile, index) => (
+                        <div key={profile._id || index} className="p-2 bg-green-50 rounded-lg border-l-4 border-green-500">
+                          <p className="font-medium text-gray-800 text-xs flex items-center gap-2">
+                            <span>📝</span>
+                            {profile.name || 'Unknown Student'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            URN: {profile.urn || 'N/A'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Branch: {profile.branch || 'N/A'}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Year: {profile.year || 'N/A'}
+                          </p>
+                          <div className="flex gap-2 mt-1">
+                            {profile.pendingPersonal && (
+                              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
+                                Personal
+                              </span>
+                            )}
+                            {profile.pendingSports && (
+                              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                                Sports
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <p>No pending approvals</p>
+              </div>
+            )}
           </div>
 
           <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
