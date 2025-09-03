@@ -1,5 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { 
+  Users, 
+  Crown, 
+  CheckCircle, 
+  Activity, 
+  Swimming, 
+  Target, 
+  Download, 
+  Award, 
+  BarChart3,
+  RefreshCw,
+  TrendingUp,
+  Clock,
+  AlertCircle
+} from "lucide-react";
 import API from "../services/api";
 
 function AdminDashboard() {
@@ -7,7 +24,7 @@ function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [activitiesError, setActivitiesError] = useState(null);
-  
+
   // New state for pending positions
   const [pendingPositions, setPendingPositions] = useState([]);
   const [pendingPositionsLoading, setPendingPositionsLoading] = useState(true);
@@ -57,32 +74,32 @@ function AdminDashboard() {
     try {
       setPendingPositionsLoading(true);
       setPendingPositionsError(null);
-  
+      
       // Fetch both students and captains
       const [studentsResponse, captainsResponse] = await Promise.all([
         API.get('/admin/students'),
         API.get('/admin/captains')
       ]);
-  
+
       const students = studentsResponse.data || [];
       const captains = captainsResponse.data || [];
+
+      // 🔹 Filter students with pending positions
+      const pendingStudents = students.filter(student => {
+        // null/undefined/empty array => pending
+        if (!student.positions || !Array.isArray(student.positions) || student.positions.length === 0) return true;
   
-             // 🔹 Filter students with pending positions
-       const pendingStudents = students.filter(student => {
-         // null/undefined/empty array => pending
-         if (!student.positions || !Array.isArray(student.positions) || student.positions.length === 0) return true;
-   
-         // check if any pos = null/empty/pending
-         return student.positions.some(pos =>
-           !pos || !pos.position || pos.position === "pending" || pos.position === ""
-         );
-       });
-  
+        // check if any pos = null/empty/pending
+        return student.positions.some(pos =>
+          !pos || !pos.position || pos.position === "pending" || pos.position === ""
+        );
+      });
+
       // 🔹 Filter captains with pending positions
       const pendingCaptains = captains.filter(captain =>
         !captain.position || captain.position === "pending" || captain.position === ""
       );
-  
+
       // 🔹 Merge and format the results
       const mergedPending = [
         ...pendingStudents.map(student => ({
@@ -90,11 +107,11 @@ function AdminDashboard() {
           name: student.name,
           urn: student.urn,
           type: 'student',
-                     sport: (student.positions && Array.isArray(student.positions) && student.positions.length > 0)
-             ? (student.positions.find(pos =>
-                 pos && (!pos.position || pos.position === "pending" || pos.position === "")
-               )?.sport || 'N/A')
-             : 'N/A',
+          sport: (student.positions && Array.isArray(student.positions) && student.positions.length > 0)
+            ? (student.positions.find(pos =>
+                pos && (!pos.position || pos.position === "pending" || pos.position === "")
+              )?.sport || 'N/A')
+            : 'N/A',
           position: 'pending',
           branch: student.branch,
           year: student.year
@@ -110,7 +127,7 @@ function AdminDashboard() {
           year: captain.year
         }))
       ];
-  
+
       setPendingPositions(mergedPending);
     } catch (error) {
       console.error('Error fetching pending positions:', error);
@@ -119,8 +136,7 @@ function AdminDashboard() {
       setPendingPositionsLoading(false);
     }
   };
-  
-
+ 
   const fetchPendingApprovals = async () => {
     try {
       setPendingApprovalsLoading(true);
@@ -185,330 +201,377 @@ function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 🔹 Gradient Navbar */}
-      <nav className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white px-6 py-4 shadow-lg">
-        <div className="flex items-center justify-between flex-wrap">
-          {/* Logo */}
-          <h1 className="text-2xl font-bold tracking-wide">Admin Dashboard</h1>
+    <div className="space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="text-3xl font-bold text-foreground">Welcome Admin 👋</h1>
+        <p className="text-muted-foreground mt-2">Manage your sports administration system</p>
+      </motion.div>
 
-          {/* Links */}
-          <div className="flex flex-wrap gap-4 mt-3 md:mt-0">
-            <Link to="/admin/create-student" className="nav-link">Create Student</Link>
-            <Link to="/admin/create-teacher" className="nav-link">Create Teacher</Link>
-            <Link to="/admin/create-captain" className="nav-link">Create Captain</Link>
-            <Link to="/admin/session" className="nav-link">Manage Sessions</Link>
-            <Link to="/admin/approvals" className="nav-link">Approve Teams</Link>
-            <Link to="/admin/captains" className="nav-link">Captains & Teams</Link>
-            <Link to="/admin/students" className="nav-link">Manage Students</Link>
-            <Link to="/admin/gym-attendance" className="nav-link">Gym-Attendance</Link>
-            <Link to="/admin/swimming-attendance" className="nav-link">Swimming-Attendance</Link>
-            <Link to="/admin/assign-position" className="nav-link">Assign Positions</Link>
-            <Link to="/admin/assign-team-position" className="nav-link">Team Position</Link>
-            <Link to="/admin/export" className="nav-link">Export Students</Link>
-            <Link to="/admin/export-captains" className="nav-link">Export Captains</Link>
-            <Link to="/admin/issue-cert" className="nav-link">Certificates</Link>
-            <Link to="/admin/score" className="nav-link">Score Matrix</Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* 🔹 Dashboard Content */}
-      <div className="p-6 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          Welcome Admin 👋
-        </h2>
-
-        {/* Blocks Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-orange-600">Pending Positions</h3>
-              <button 
-                onClick={fetchPendingPositions}
-                disabled={pendingPositionsLoading}
-                className="p-1 text-orange-500 hover:text-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Refresh pending positions"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-            </div>
-            {pendingPositionsLoading ? (
-              <div className="flex items-center justify-center h-48">
-                <div className="w-6 h-6 border-2 border-orange-500 border-dashed rounded-full animate-spin"></div>
-              </div>
-            ) : pendingPositionsError ? (
-              <div className="text-center text-red-500 py-8">
-                <p className="mb-2">{pendingPositionsError}</p>
-                <button 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
+                  Pending Positions
+                </div>
+                <Button 
                   onClick={fetchPendingPositions}
-                  className="px-3 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
+                  disabled={pendingPositionsLoading}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
                 >
-                  Retry
-                </button>
-              </div>
-            ) : pendingPositions.length > 0 ? (
-              <div className="space-y-3 max-h-48 overflow-y-auto">
-                {pendingPositions.map((item, index) => (
-                  <div key={item.id || index} className="p-3 bg-gray-50 rounded-lg border-l-4 border-orange-500">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800 text-sm flex items-center gap-2">
-                          <span>{item.type === 'student' ? '👤' : '👑'}</span>
-                          {item.name}
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          URN: {item.urn}
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          Sport: {item.sport}
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          Position: {item.position}
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          Branch: {item.branch}
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          Year: {item.year}
-                        </p>
+                  <RefreshCw className={`w-4 h-4 ${pendingPositionsLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pendingPositionsLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+                  />
+                </div>
+              ) : pendingPositionsError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                  <p className="text-destructive mb-4">{pendingPositionsError}</p>
+                  <Button 
+                    onClick={fetchPendingPositions}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : pendingPositions.length > 0 ? (
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {pendingPositions.map((item, index) => (
+                    <motion.div
+                      key={item.id || index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-3 bg-muted rounded-lg border-l-4 border-primary"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          {item.type === 'student' ? (
+                            <Users className="w-4 h-4 text-primary" />
+                          ) : (
+                            <Crown className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground text-sm truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-muted-foreground text-xs mt-1">
+                            URN: {item.urn} • {item.branch}, {item.year}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            Sport: {item.sport} • Position: {item.position}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <p>No pending positions available</p>
-              </div>
-            )}
-          </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">No pending positions</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-orange-600">Pending Approvals</h3>
-              <button 
-                onClick={fetchPendingApprovals}
-                disabled={pendingApprovalsLoading}
-                className="p-1 text-orange-500 hover:text-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Refresh pending approvals"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-            </div>
-            {pendingApprovalsLoading ? (
-              <div className="flex items-center justify-center h-48">
-                <div className="w-6 h-6 border-2 border-orange-500 border-dashed rounded-full animate-spin"></div>
-              </div>
-            ) : pendingApprovalsError ? (
-              <div className="text-center text-red-500 py-8">
-                <p className="mb-2">{pendingApprovalsError}</p>
-                <button 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Pending Approvals
+                </div>
+                <Button 
                   onClick={fetchPendingApprovals}
-                  className="px-3 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
+                  disabled={pendingApprovalsLoading}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
                 >
-                  Retry
-                </button>
-              </div>
-            ) : (pendingTeams.length > 0 || pendingProfiles.length > 0) ? (
-              <div className="space-y-4 max-h-48 overflow-y-auto">
-                {/* Pending Teams Section */}
-                {pendingTeams.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <span>👑</span>
-                      Pending Teams ({pendingTeams.length})
-                    </h4>
-                    <div className="space-y-2">
-                      {pendingTeams.map((team, index) => (
-                        <div key={team._id || index} className="p-2 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                          <p className="font-medium text-gray-800 text-xs flex items-center gap-2">
-                            <span>🏆</span>
-                            {team.captainId?.name || 'Unknown Captain'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            Sport: {team.captainId?.sport || 'N/A'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            Team: {team.captainId?.teamName || 'N/A'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            Session: {team.sessionId?.session || 'N/A'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            Members: {team.members?.length || 0}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Pending Profiles Section */}
-                {pendingProfiles.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <span>👤</span>
-                      Pending Profiles ({pendingProfiles.length})
-                    </h4>
-                    <div className="space-y-2">
-                      {pendingProfiles.map((profile, index) => (
-                        <div key={profile._id || index} className="p-2 bg-green-50 rounded-lg border-l-4 border-green-500">
-                          <p className="font-medium text-gray-800 text-xs flex items-center gap-2">
-                            <span>📝</span>
-                            {profile.name || 'Unknown Student'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            URN: {profile.urn || 'N/A'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            Branch: {profile.branch || 'N/A'}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1">
-                            Year: {profile.year || 'N/A'}
-                          </p>
-                          <div className="flex gap-2 mt-1">
-                            {profile.pendingPersonal && (
-                              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-                                Personal
-                              </span>
-                            )}
-                            {profile.pendingSports && (
-                              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
-                                Sports
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <p>No pending approvals</p>
-              </div>
-            )}
-          </div>
-
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold mb-2 text-orange-600">Attendance</h3>
-            <p className="text-gray-600">75% average attendance</p>
-          </div>
-        </div>
-
-        {/* Analytics Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold mb-4 text-orange-600">Performance Analytics</h3>
-            <div className="h-40 flex items-center justify-center text-gray-500">
-              📊 Chart / Graph Placeholder
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-orange-600">Recent Activities</h3>
-                {!activitiesLoading && !activitiesError && (
-                  <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
-                    {recentActivities.length}
-                  </span>
-                )}
-              </div>
-              <button 
-                onClick={fetchRecentActivities}
-                disabled={activitiesLoading}
-                className="p-1 text-orange-500 hover:text-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Refresh activities"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-            </div>
-            {activitiesLoading ? (
-              <div className="flex items-center justify-center h-48">
-                <div className="w-6 h-6 border-2 border-orange-500 border-dashed rounded-full animate-spin"></div>
-              </div>
-            ) : activitiesError ? (
-              <div className="text-center text-red-500 py-8">
-                <p className="mb-2">{activitiesError}</p>
-                <button 
-                  onClick={fetchRecentActivities}
-                  className="px-3 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : recentActivities.length > 0 ? (
-              <div className="space-y-3 max-h-48 overflow-y-auto">
-                {recentActivities.map((activity, index) => (
-                  <div key={activity._id || index} className="p-3 bg-gray-50 rounded-lg border-l-4 border-orange-500">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800 text-sm flex items-center gap-2">
-                          <span>{formatAction(activity.action).icon}</span>
-                          {formatAction(activity.action).text}
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          {activity.description || 'No description available'}
-                        </p>
-                        {activity.targetModel && (
-                          <p className="text-gray-500 text-xs mt-1">
-                            {activity.targetModel}
-                            {activity.targetId && ` • ID: ${activity.targetId}`}
-                          </p>
-                        )}
-                        {activity.admin && (
-                          <p className="text-gray-400 text-xs mt-1">
-                            Admin: {activity.admin.name || activity.admin.email}
-                          </p>
-                        )}
+                  <RefreshCw className={`w-4 h-4 ${pendingApprovalsLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pendingApprovalsLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+                  />
+                </div>
+              ) : pendingApprovalsError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                  <p className="text-destructive mb-4">{pendingApprovalsError}</p>
+                  <Button 
+                    onClick={fetchPendingApprovals}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : (pendingTeams.length > 0 || pendingProfiles.length > 0) ? (
+                <div className="space-y-4 max-h-48 overflow-y-auto">
+                  {/* Pending Teams Section */}
+                  {pendingTeams.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-primary" />
+                        Pending Teams ({pendingTeams.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {pendingTeams.map((team, index) => (
+                          <motion.div
+                            key={team._id || index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Crown className="w-4 h-4 text-blue-600 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-foreground text-sm">
+                                  {team.captainId?.name || 'Unknown Captain'}
+                                </p>
+                                <p className="text-muted-foreground text-xs mt-1">
+                                  Sport: {team.captainId?.sport || 'N/A'} • Team: {team.captainId?.teamName || 'N/A'}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  Session: {team.sessionId?.session || 'N/A'} • Members: {team.members?.length || 0}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
-                      <span className="text-gray-400 text-xs ml-2">
-                        {activity.createdAt ? formatTimestamp(activity.createdAt) : 'No timestamp'}
-                      </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <p>No recent activities</p>
-              </div>
-            )}
-          </div>
-        </div>
+                  )}
+                
+                  {/* Pending Profiles Section */}
+                  {pendingProfiles.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        Pending Profiles ({pendingProfiles.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {pendingProfiles.map((profile, index) => (
+                          <motion.div
+                            key={profile._id || index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Users className="w-4 h-4 text-green-600 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-foreground text-sm">
+                                  {profile.name || 'Unknown Student'}
+                                </p>
+                                <p className="text-muted-foreground text-xs mt-1">
+                                  URN: {profile.urn || 'N/A'} • {profile.branch || 'N/A'}, {profile.year || 'N/A'}
+                                </p>
+                                <div className="flex gap-2 mt-2">
+                                  {profile.pendingPersonal && (
+                                    <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs rounded-full">
+                                      Personal
+                                    </span>
+                                  )}
+                                  {profile.pendingSports && (
+                                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
+                                      Sports
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">No pending approvals</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
       </div>
 
-      {/* Extra Tailwind CSS for nav-link */}
-      <style>
-        {`
-          .nav-link {
-            position: relative;
-            padding: 6px 12px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-          }
-          .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-          }
-        `}
-      </style>
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Performance Analytics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-40 flex items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <BarChart3 className="w-12 h-12 mx-auto mb-2" />
+                  <p>Chart / Graph Placeholder</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Recent Activities
+                  {!activitiesLoading && !activitiesError && (
+                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                      {recentActivities.length}
+                    </span>
+                  )}
+                </div>
+                <Button 
+                  onClick={fetchRecentActivities}
+                  disabled={activitiesLoading}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                >
+                  <RefreshCw className={`w-4 h-4 ${activitiesLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activitiesLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+                  />
+                </div>
+              ) : activitiesError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                  <p className="text-destructive mb-4">{activitiesError}</p>
+                  <Button 
+                    onClick={fetchRecentActivities}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : recentActivities.length > 0 ? (
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {recentActivities.map((activity, index) => (
+                    <motion.div
+                      key={activity._id || index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="p-3 bg-muted rounded-lg border-l-4 border-primary"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground text-sm flex items-center gap-2">
+                            <span className="text-lg">{formatAction(activity.action).icon}</span>
+                            {formatAction(activity.action).text}
+                          </p>
+                          <p className="text-muted-foreground text-xs mt-1">
+                            {activity.description || 'No description available'}
+                          </p>
+                          {activity.targetModel && (
+                            <p className="text-muted-foreground text-xs mt-1">
+                              {activity.targetModel}
+                              {activity.targetId && ` • ID: ${activity.targetId}`}
+                            </p>
+                          )}
+                          {activity.admin && (
+                            <p className="text-muted-foreground text-xs mt-1">
+                              Admin: {activity.admin.name || activity.admin.email}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-muted-foreground text-xs flex-shrink-0">
+                          {activity.createdAt ? formatTimestamp(activity.createdAt) : 'No timestamp'}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">No recent activities</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

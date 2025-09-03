@@ -1,5 +1,6 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
 import LoginPage from './pages/LoginPage';
 import StudentDashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -24,96 +25,42 @@ import CaptainExport from './pages/CaptainExport';
 import Certificate from './pages/Certificate';
 import CaptainListCert from './pages/CaptainListCert';
 import StudentsTable from './pages/Scorematrix';
+import AdminLayout from './components/AdminLayout';
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/admin" element={ <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/students" element={<ProtectedRoute role="admin"><AllStudents /></ProtectedRoute>} />
-<Route path="/admin/captains" element={<CaptainsAndTeams />} />
-<Route path="/admin/student/:id" element={<StudentDetails />} />
-        <Route
-          path="/admin/gym-attendance"
-          element={
-            <ProtectedRoute role="admin">
-              <GymAttendanceDashboard />
-            </ProtectedRoute>
-          }
-          
-        />
-                <Route
-          path="/admin/swimming-attendance"
-          element={
-            <ProtectedRoute role="admin">
-              <SwimmingAttendanceDashboard />
-            </ProtectedRoute>
-          }
-          
-        />
-                <Route
-          path="/admin/export-captains"
-          element={
-            <ProtectedRoute role="admin">
-              <CaptainExport />
-            </ProtectedRoute>
-          }
-          
-        />
-        <Route
-          path="/admin/export"
-          element={
-            <ProtectedRoute role="admin">
-              <StudentExport />
-            </ProtectedRoute>
-          }
-        />
-<Route
-  path="/admin/certificates/:captainId"
-  element={
-    <ProtectedRoute role="admin">
-      <Certificate />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/admin/score"
-  element={
-    <ProtectedRoute role="admin">
-      <StudentsTable />
-    </ProtectedRoute>
-  }
-/>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/teacher" element={<TeacherDashboard />} />
+          <Route path="/captain" element={<CaptainDashboard />} />
 
-                        <Route
-          path="/admin/issue-cert"
-          element={
-            <ProtectedRoute role="admin">
-              <CaptainListCert />
-            </ProtectedRoute>
-          }
-          
-        />
-<Route path="/admin/create-student" element={<ProtectedRoute role="admin"><CreateStudent /></ProtectedRoute>} />
-<Route path="/admin/create-teacher" element={<ProtectedRoute role="admin"><CreateTeacher /></ProtectedRoute>} />
-<Route path="/admin/create-captain" element={<ProtectedRoute role="admin"><CreateCaptain /></ProtectedRoute>} />
- <Route path="/admin/assign-team-position" element={<ProtectedRoute role="admin"><AssignPosition/></ProtectedRoute>} />
-        <Route path="/teacher" element={<TeacherDashboard />} />
-        <Route path="/captain" element={<CaptainDashboard />} />
-        <Route path="/student/profile" element={<ProtectedRoute role="student"><StudentProfileForm /></ProtectedRoute>} />
-<Route path="/admin/approvals" element={<ProtectedRoute role="admin"><AdminApprovalDashboard /></ProtectedRoute>} />
-<Route path="/admin/assign-position" element={<ProtectedRoute role="admin"><AdminAssignPosition /></ProtectedRoute>} />
-       <Route
-  path="/admin/session"
-  element={
-    <ProtectedRoute role="admin">
-      <AdminSessionManager />
-    </ProtectedRoute>
-  }
-/>
-      </Routes>
-    </BrowserRouter>
+          {/* Admin routes with persistent sidebar */}
+          <Route element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/students" element={<AllStudents />} />
+            <Route path="/admin/captains" element={<CaptainsAndTeams />} />
+            <Route path="/admin/student/:id" element={<StudentDetails />} />
+            <Route path="/admin/gym-attendance" element={<GymAttendanceDashboard />} />
+            <Route path="/admin/swimming-attendance" element={<SwimmingAttendanceDashboard />} />
+            <Route path="/admin/export-captains" element={<CaptainExport />} />
+            <Route path="/admin/export" element={<StudentExport />} />
+            <Route path="/admin/certificates/:captainId" element={<Certificate />} />
+            <Route path="/admin/score" element={<StudentsTable />} />
+            <Route path="/admin/issue-cert" element={<CaptainListCert />} />
+            <Route path="/admin/create-student" element={<CreateStudent />} />
+            <Route path="/admin/create-teacher" element={<CreateTeacher />} />
+            <Route path="/admin/create-captain" element={<CreateCaptain />} />
+            <Route path="/admin/assign-team-position" element={<AssignPosition/>} />
+            <Route path="/admin/approvals" element={<AdminApprovalDashboard />} />
+            <Route path="/admin/assign-position" element={<AdminAssignPosition />} />
+            <Route path="/admin/session" element={<AdminSessionManager />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

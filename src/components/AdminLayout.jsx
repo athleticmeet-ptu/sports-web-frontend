@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+
+const SidebarLink = ({ to, children }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+        isActive
+          ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
+          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
+      }`
+    }
+    end
+  >
+    {children}
+  </NavLink>
+);
+
+function AdminLayout() {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Theme toggle
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return document.documentElement.classList.contains('dark');
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  const links = [
+    { to: "/admin", label: "🏠 Home" },
+    { to: "/admin/create-student", label: "Student" },
+    { to: "/admin/create-teacher", label: "Create Teacher" },
+    { to: "/admin/create-captain", label: "Create Captain" },
+    { to: "/admin/session", label: "Manage Sessions" },
+    { to: "/admin/approvals", label: "Approve Teams" },
+    { to: "/admin/captains", label: "Captains & Teams" },
+    { to: "/admin/gym-attendance", label: "Gym-Attendance" },
+    { to: "/admin/swimming-attendance", label: "Swimming-Attendance" },
+    { to: "/admin/assign-position", label: "Assign Positions" },
+    { to: "/admin/assign-team-position", label: "Team Position" },
+    { to: "/admin/export", label: "Export Students" },
+    { to: "/admin/export-captains", label: "Export Captains" },
+    { to: "/admin/issue-cert", label: "Certificates" },
+    { to: "/admin/score", label: "Score Matrix" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
+      {/* Mobile top bar */}
+      <div className="lg:hidden sticky top-0 z-30 bg-white dark:bg-gray-900 border-b dark:border-gray-800 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={() => setOpen(!open)}
+            className="p-2 rounded-md border text-gray-600 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+            aria-label="Toggle sidebar"
+          >
+            ☰
+          </button>
+          <div className="font-semibold text-gray-800 dark:text-gray-100">Admin</div>
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="px-3 py-1 text-sm rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            {isDark ? '🌙 Dark' : '☀️ Light'}
+          </button>
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-sm z-40 overflow-y-auto transition-transform duration-200 ${
+          open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <div className="text-xl font-bold text-orange-600">Admin Panel</div>
+          {/* Desktop theme toggle */}
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="hidden lg:inline-flex px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
+            title="Toggle theme"
+          >
+            {isDark ? '🌙' : '☀️'}
+          </button>
+        </div>
+        <nav className="p-3 space-y-1">
+          {links.map((link) => (
+            <SidebarLink key={link.to} to={link.to}>
+              {link.label}
+            </SidebarLink>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <button
+            onClick={() => navigate("/admin")}
+            className="w-full px-3 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600"
+          >
+            Home
+          </button>
+        </div>
+        <div className="h-6" />
+      </aside>
+
+      {/* Main content: flex container to ensure full width and consistent spacing */}
+      <div className="lg:ml-64">
+        <main className="w-full">
+          <div className="px-4 py-4 lg:px-6 lg:py-6 text-gray-900 dark:text-gray-100">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default AdminLayout;

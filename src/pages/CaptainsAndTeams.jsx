@@ -1,5 +1,12 @@
 // frontend/src/pages/CaptainsAndTeams.jsx
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from "../components/ui/modal";
+import { Crown, Users, Edit, Trash2, Eye, RefreshCw } from "lucide-react";
 
 function CaptainsAndTeams() {
   const [captains, setCaptains] = useState([]);
@@ -158,225 +165,341 @@ const handleEditSubmit = async () => {
 };
 
 
-  if (loading) return <p className="text-center mt-6">Loading captains...</p>;
-  if (error) return <p className="text-center text-red-500 mt-6">{error}</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
 
-return (
-  <div className="p-6 max-w-4xl mx-auto">
-    <h2 className="text-2xl font-bold mb-4">Captains & Teams</h2>
+  if (error) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardContent className="p-6 text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
-    {captains.length === 0 ? (
-      <p className="text-gray-500">No captains found.</p>
-    ) : (
-      captains.map((captain) => (
-        <div
-          key={captain._id}
-          className="border rounded-lg shadow p-4 mb-6 bg-white"
-        >
-          <h3 className="text-lg font-semibold">
-            Captain: {captain.name} ({captain.branch}, {captain.year} Year)
-          </h3>
-          <p>URN: {captain.urn}</p>
-          <p>Sport: {captain.sport}</p>
-          <p>Position: {captain.position || "Not Assigned"}</p>
-
-          <button
-            onClick={() => {
-              setSelectedCaptain(captain);
-              setIsEditing(false);
-            }}
-            className="text-blue-600 underline mt-2 inline-block"
-          >
-            View Full Details
-          </button>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Captains & Teams</h1>
+          <p className="text-muted-foreground mt-2">Manage team captains and their members</p>
         </div>
-      ))
-    )}
+        <Button onClick={() => window.location.reload()} variant="outline">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
 
-    {/* Popup Modal */}
-    {selectedCaptain && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl relative">
-          <button
-            onClick={() => {
-              setSelectedCaptain(null);
-              setEditingMemberIndex(null);
-            }}
-            className="absolute top-2 right-2 text-gray-600"
-          >
-            ✕
-          </button>
+      {captains.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Crown className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Captains Found</h3>
+            <p className="text-muted-foreground">No team captains have been created yet.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {captains.map((captain, index) => (
+            <motion.div
+              key={captain._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-primary" />
+                    {captain?.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Branch:</span> {captain?.branch}</p>
+                    <p><span className="font-medium">Year:</span> {captain?.year}</p>
+                    <p><span className="font-medium">URN:</span> {captain?.urn}</p>
+                    <p><span className="font-medium">Sport:</span> {captain?.sport}</p>
+                    <p><span className="font-medium">Position:</span> 
+                      <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                        captain?.position ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                      }`}>
+                        {captain?.position || "Not Assigned"}
+                      </span>
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button
+                      onClick={() => {
+                        setSelectedCaptain(captain);
+                        setIsEditing(false);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
+      {/* Modal */}
+      <Modal
+        isOpen={!!selectedCaptain}
+        onClose={() => {
+          setSelectedCaptain(null);
+          setEditingMemberIndex(null);
+          setIsEditing(false);
+        }}
+      >
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-primary" />
+            Captain Details
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalContent>
           {/* Show captain details */}
           {!isEditing && editingMemberIndex === null ? (
-            <>
-              <h3 className="text-xl font-bold mb-4">Captain Details</h3>
-              <p><b>Name:</b> {selectedCaptain.name}</p>
-              <p><b>Branch:</b> {selectedCaptain.branch}</p>
-              <p><b>Year:</b> {selectedCaptain.year}</p>
-              <p><b>URN:</b> {selectedCaptain.urn}</p>
-              <p><b>Sport:</b> {selectedCaptain.sport}</p>
-              <p><b>Position:</b> {selectedCaptain.position || "Not Assigned"}</p>
-              <p><b>Email:</b> {selectedCaptain.email || "N/A"}</p>
-              <p><b>Phone:</b> {selectedCaptain.phone || "N/A"}</p>
-
-              <h4 className="mt-4 font-semibold">Team Members</h4>
-              {selectedCaptain.teamMembers && selectedCaptain.teamMembers.length > 0 ? (
-                <ul className="list-disc list-inside ml-4">
-                  {selectedCaptain.teamMembers.map((member, index) => (
-                    <li key={index} className="flex justify-between">
-                      <span>
-                        {member.name} ({member.branch}, {member.year}) – URN:{" "}
-                        {member.urn}, Email: {member.email}, Phone: {member.phone}, Position:{" "}
-                        {member.position || selectedCaptain.position || "N/A"}
-                      </span>
-                      <div>
-                        <button
-                          onClick={() => startEditingMember(member, index)}
-                          className="text-blue-600 ml-2"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDeleteMember(
-                              selectedCaptain._id,
-                              selectedCaptain.sessionId,
-                              index
-                            )
-                          }
-                          className="text-red-600 ml-2"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">No team members added.</p>
-              )}
-
-              <div className="mt-6 flex justify-between">
-                <button
-                  onClick={() => handleDeleteCaptain(selectedCaptain._id)}
-                  className="bg-red-600 text-white px-4 py-2 rounded"
-                >
-                  Delete Captain
-                </button>
-                <button
-                  onClick={() => startEditing(selectedCaptain)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                  Edit Captain
-                </button>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <p className="text-foreground">{selectedCaptain?.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Branch</label>
+                  <p className="text-foreground">{selectedCaptain?.branch}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Year</label>
+                  <p className="text-foreground">{selectedCaptain?.year}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">URN</label>
+                  <p className="text-foreground">{selectedCaptain?.urn}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Sport</label>
+                  <p className="text-foreground">{selectedCaptain?.sport}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Position</label>
+                  <p className="text-foreground">{selectedCaptain?.position || "Not Assigned"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p className="text-foreground">{selectedCaptain?.email || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                  <p className="text-foreground">{selectedCaptain?.phone || "N/A"}</p>
+                </div>
               </div>
-            </>
+
+              <div>
+                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Team Members
+                </h4>
+                {selectedCaptain?.teamMembers && selectedCaptain?.teamMembers?.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedCaptain.teamMembers.map((member, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="font-medium">{member?.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {member?.branch}, {member?.year} • URN: {member?.urn}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Email: {member?.email} • Phone: {member?.phone}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Position: {member?.position || selectedCaptain?.position || "N/A"}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => startEditingMember(member, index)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                onClick={() =>
+                                  handleDeleteMember(
+                                    selectedCaptain._id,
+                                    selectedCaptain.sessionId,
+                                    index
+                                  )
+                                }
+                                variant="destructive"
+                                size="sm"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No team members added yet.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
           ) : null}
 
           {/* Member Editing Form */}
           {editingMemberIndex !== null && (
-            <>
-              <h3 className="text-xl font-bold mb-4">Edit Team Member</h3>
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold">Edit Team Member</h3>
               <div className="grid grid-cols-2 gap-4">
                 {Object.keys(memberForm).map((field) => (
-                  <div key={field}>
-                    <label className="block text-sm font-medium capitalize">
+                  <div key={field} className="space-y-2">
+                    <label className="text-sm font-medium text-foreground capitalize">
                       {field}
                     </label>
                     {field === "position" ? (
-                      <input
+                      <Input
                         type="text"
                         name={field}
                         value={selectedCaptain.position || ""}
                         disabled
-                        className="border rounded p-2 w-full bg-gray-100"
+                        className="bg-muted"
                       />
                     ) : (
-                      <input
+                      <Input
                         type="text"
                         name={field}
                         value={memberForm[field]}
                         onChange={handleMemberChange}
-                        className="border rounded p-2 w-full"
                       />
                     )}
                   </div>
                 ))}
               </div>
-              <div className="mt-6 flex justify-between">
-                <button
-                  onClick={() => setEditingMemberIndex(null)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleMemberSubmit}
-                  className="bg-green-600 text-white px-4 py-2 rounded"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </>
+            </div>
           )}
 
           {/* Captain Editing Form */}
           {isEditing && editingMemberIndex === null && (
-            <>
-              <h3 className="text-xl font-bold mb-4">Edit Captain</h3>
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold">Edit Captain</h3>
               <div className="grid grid-cols-2 gap-4">
                 {Object.keys(editForm).map((field) => (
-                  <div key={field}>
-                    <label className="block text-sm font-medium capitalize">
+                  <div key={field} className="space-y-2">
+                    <label className="text-sm font-medium text-foreground capitalize">
                       {field}
                     </label>
                     {field === "position" ? (
-                      <select
+                      <Select
                         name="position"
                         value={editForm.position || ""}
                         onChange={handleEditChange}
-                        className="border rounded p-2 w-full"
                       >
                         <option value="">Select Position</option>
                         <option value="1st">1st</option>
                         <option value="2nd">2nd</option>
                         <option value="3rd">3rd</option>
                         <option value="Participated">Participated</option>
-                      </select>
+                      </Select>
                     ) : (
-                      <input
+                      <Input
                         type="text"
                         name={field}
                         value={editForm[field]}
                         onChange={handleEditChange}
-                        className="border rounded p-2 w-full"
                       />
                     )}
                   </div>
                 ))}
               </div>
-              <div className="mt-6 flex justify-between">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditSubmit}
-                  className="bg-green-600 text-white px-4 py-2 rounded"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </>
+            </div>
           )}
-        </div>
-      </div>
-    )}
-  </div>
-);
+        </ModalContent>
+
+        <ModalFooter>
+          {!isEditing && editingMemberIndex === null ? (
+            <div className="flex justify-between w-full">
+              <Button
+                onClick={() => handleDeleteCaptain(selectedCaptain._id)}
+                variant="destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Captain
+              </Button>
+              <Button
+                onClick={() => startEditing(selectedCaptain)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Captain
+              </Button>
+            </div>
+          ) : editingMemberIndex !== null ? (
+            <div className="flex justify-end gap-2 w-full">
+              <Button
+                onClick={() => setEditingMemberIndex(null)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleMemberSubmit}
+              >
+                Save Changes
+              </Button>
+            </div>
+          ) : (
+            <div className="flex justify-end gap-2 w-full">
+              <Button
+                onClick={() => setIsEditing(false)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditSubmit}
+              >
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </ModalFooter>
+      </Modal>
+    </div>
+  );
 
 
 }

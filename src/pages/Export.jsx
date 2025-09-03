@@ -1,5 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "../components/ui/modal";
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Users,
+  Search,
+  Filter,
+  ArrowLeft,
+  RefreshCw,
+  AlertCircle,
+  CheckSquare,
+  Square,
+  Eye,
+  Calendar,
+  User,
+  GraduationCap,
+  MapPin,
+  Trophy
+} from "lucide-react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
@@ -331,32 +356,37 @@ const StudentExport = () => {
   const [selectedStudents, setSelectedStudents] = useState({});
   const [filterActivity, setFilterActivity] = useState("");
   const selectAllRef = useRef(null);
-   const navigate = useNavigate(); // ✅ yeh add karo
-  const [loading, setLoading] = useState(true); // ✅ yeh add karo
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
- 
+  // 🔹 Preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState(null); // 'excel' | 'word' | null
 
   // Load sessions
- useEffect(() => {
-  const loadSessions = async () => {
-    try {
-      const res = await API.get(`/admin/sessions`);
-      setSessions(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false); // ✅ yaha pe
-    }
-  };
-  loadSessions();
-}, []);
-
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        setError(null);
+        const res = await API.get(`/admin/sessions`);
+        setSessions(res.data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load sessions");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSessions();
+  }, []);
 
   // Load all students for selected session
   useEffect(() => {
     const loadStudents = async () => {
       if (!selectedSession) return;
       try {
+        setError(null);
         const res = await API.get(`/admin/export?session=${selectedSession}`);
         setStudents(res.data);
         const obj = {};
@@ -366,6 +396,7 @@ const StudentExport = () => {
         setSelectedStudents(obj);
       } catch (err) {
         console.error(err);
+        setError("Failed to load students");
       }
     };
     loadStudents();
@@ -434,171 +465,500 @@ const StudentExport = () => {
     return filteredStudents.filter((student) => selectedStudents[student.universityRegNo]);
   };
 
- return (
-  <>
-    {loading ? (
-      // 🔄 Loader
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-      </div>
-    ) : (
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-2xl p-6">
-          
-          {/* 🔙 Dashboard Button */}
-          <div className="mb-4">
-            <button
-              onClick={() => navigate("/admin")}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium shadow transition"
-            >
-              &larr; Dashboard
-            </button>
-          </div>
+  const openPreview = (mode) => {
+    if (getSelectedStudents().length === 0) return;
+    setPreviewMode(mode);
+    setIsPreviewOpen(true);
+  };
 
-          {/* 🔹 Title */}
-          <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-            📤 Export Students
-          </h1>
+  const handleConfirmExport = async () => {
+    const data = getSelectedStudents();
+    if (previewMode === "excel") {
+      await exportToExcel(data);
+    } else if (previewMode === "word") {
+      await exportToWord(data);
+    }
+    setIsPreviewOpen(false);
+    setPreviewMode(null);
+  };
 
-          {/* 🔹 Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <select
-              value={selectedSession}
-              onChange={(e) => setSelectedSession(e.target.value)}
-              className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="">-- Select Session --</option>
-              {sessions.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.session}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="text"
-              placeholder="🔍 Search by Name"
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
-              className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-orange-400"
-            />
-
-            <input
-              type="text"
-              placeholder="🔍 Search by URN"
-              value={filterURN}
-              onChange={(e) => setFilterURN(e.target.value)}
-              className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-orange-400"
-            />
-
-            <input
-              type="text"
-              placeholder="🔍 Search by Activity"
-              value={filterActivity}
-              onChange={(e) => setFilterActivity(e.target.value)}
-              className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-orange-400"
-            />
-          </div>
-          
-
-          {/* 🔹 Table */}
-          <div className="overflow-auto border rounded-xl max-h-[450px]">
-            <table className="min-w-full border-collapse">
-              <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white sticky top-0 shadow">
-                <tr>
-                  <th className="border p-2">
-                    <input
-                      type="checkbox"
-                      ref={selectAllRef}
-                      onChange={handleSelectAll}
-                    />{" "}
-                    Select All
-                  </th>
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Father's Name</th>
-                  <th className="border p-2">DOB</th>
-                  <th className="border p-2">Reg No</th>
-                  <th className="border p-2">Branch/Year</th>
-                  <th className="border p-2">Matric</th>
-                  <th className="border p-2">+2</th>
-                  <th className="border p-2">First Admission</th>
-                  <th className="border p-2">Last Exam</th>
-                  <th className="border p-2">Last Exam Year</th>
-                  <th className="border p-2">Graduate Years</th>
-                  <th className="border p-2">PG Years</th>
-                  <th className="border p-2">Inter Varsity Years</th>
-                  <th className="border p-2">Address</th>
-                  <th className="border p-2">Activity</th>
-                  <th className="border p-2">Position</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-  {filteredStudents.length === 0 ? (
-    <tr>
-      <td colSpan="17" className="text-center p-4 text-gray-500">
-        No students found 🚫
-      </td>
-    </tr>
-  ) : (
-    filteredStudents.map((stu) => (
-      <tr key={stu.universityRegNo} className="hover:bg-orange-50 transition">
-        <td className="border p-2 text-center">
-          <input
-            type="checkbox"
-            checked={!!selectedStudents[stu.universityRegNo]}
-            onChange={() => handleCheckboxChange(stu.universityRegNo)}
-          />
-        </td>
-                    <td className="border p-2">{stu.name}</td>
-                    <td className="border p-2">{stu.fatherName}</td>
-                    <td className="border p-2">{stu.dob}</td>
-                    <td className="border p-2">{stu.universityRegNo}</td>
-                    <td className="border p-2">{stu.branchYear}</td>
-                    <td className="border p-2">{stu.matricYear}</td>
-                    <td className="border p-2">{stu.plusTwoYear}</td>
-                    <td className="border p-2">{stu.firstAdmissionYear}</td>
-                    <td className="border p-2">{stu.lastExam}</td>
-                    <td className="border p-2">{stu.lastExamYear}</td>
-                    <td className="border p-2">{stu.interCollegeGraduateYears}</td>
-                    <td className="border p-2">{stu.interCollegePgYears}</td>
-                    <td className="border p-2">{stu.interVarsityYears}</td>
-                    <td className="border p-2">{stu.addressWithPhone}</td>
-                    <td className="border p-2">{stu.sports?.join(", ")}</td>
-                    <td className="border p-2">
-                      {stu.events
-                        ?.map((e) => `${e.activity}: ${e.position}`)
-                        .join(", ")}
-                    </td>
-                 </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-          </div>
-
-          {/* 🔹 Export Buttons */}
-          <div className="flex flex-wrap gap-4 mt-6">
-            <button
-              onClick={() => exportToExcel(getSelectedStudents())}
-              disabled={getSelectedStudents().length === 0}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-lg shadow-md hover:from-green-600 hover:to-green-700 transition disabled:opacity-50"
-            >
-              📊 Export to Excel ({getSelectedStudents().length})
-            </button>
-            <button
-              onClick={() => exportToWord(getSelectedStudents())}
-              disabled={getSelectedStudents().length === 0}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-2 rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 transition disabled:opacity-50"
-            >
-              📄 Export to Word ({getSelectedStudents().length})
-            </button>
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+            <span className="text-lg text-muted-foreground">Loading export data...</span>
           </div>
         </div>
       </div>
-    )}
-  </>
-);
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">Error Loading Data</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center gap-4">
+          <Button onClick={() => navigate("/admin")} variant="outline" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Export Students</h1>
+            <p className="text-muted-foreground mt-1">Export student data in Excel or Word format</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-primary" />
+              Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Session
+                </label>
+                <Select
+                  value={selectedSession}
+                  onChange={(e) => setSelectedSession(e.target.value)}
+                >
+                  <option value="">-- Select Session --</option>
+                  {sessions.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {s.session}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  Search by Name
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={filterName}
+                  onChange={(e) => setFilterName(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Search by URN
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Search by URN..."
+                  value={filterURN}
+                  onChange={(e) => setFilterURN(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Trophy className="w-4 h-4" />
+                  Search by Activity
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Search by activity..."
+                  value={filterActivity}
+                  onChange={(e) => setFilterActivity(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+            
+      {/* Students List */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Students ({filteredStudents.length})
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="flex items-center gap-2"
+                >
+                  {filteredStudents.every(s => selectedStudents[s.universityRegNo]) ? (
+                    <CheckSquare className="w-4 h-4" />
+                  ) : (
+                    <Square className="w-4 h-4" />
+                  )}
+                  Select All
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {filteredStudents.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Students Found</h3>
+                <p className="text-muted-foreground">No students available for the selected session and filters.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                {filteredStudents.map((stu, index) => (
+                  <motion.div
+                    key={stu.universityRegNo}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors ${
+                      selectedStudents[stu.universityRegNo] ? "ring-2 ring-primary" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={!!selectedStudents[stu.universityRegNo]}
+                          onChange={() => handleCheckboxChange(stu.universityRegNo)}
+                          className="w-4 h-4 text-primary"
+                        />
+                      </div>
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{stu.name}</h3>
+                          <p className="text-sm text-muted-foreground">Father: {stu.fatherName}</p>
+                          <p className="text-sm text-muted-foreground">DOB: {stu.dob}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">URN: {stu.universityRegNo}</p>
+                          <p className="text-sm text-muted-foreground">Branch/Year: {stu.branchYear}</p>
+                          <p className="text-sm text-muted-foreground">First Admission: {stu.firstAdmissionYear}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Matric: {stu.matricYear}</p>
+                          <p className="text-sm text-muted-foreground">+2: {stu.plusTwoYear}</p>
+                          <p className="text-sm text-muted-foreground">Last Exam: {stu.lastExam} ({stu.lastExamYear})</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Graduate Years: {stu.interCollegeGraduateYears}</p>
+                          <p className="text-sm text-muted-foreground">PG Years: {stu.interCollegePgYears}</p>
+                          <p className="text-sm text-muted-foreground">Inter Varsity: {stu.interVarsityYears}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Address: {stu.addressWithPhone}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Activity: {stu.sports?.join(", ")}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Position: {stu.events?.map((e) => `${e.activity}: ${e.position}`).join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Export Buttons */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="w-5 h-5 text-primary" />
+              Export Options
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                onClick={() => openPreview("excel")}
+                disabled={getSelectedStudents().length === 0}
+                className="flex items-center gap-2 flex-1"
+                variant="outline"
+              >
+                <Eye className="w-4 h-4" />
+                Preview Excel ({getSelectedStudents().length})
+              </Button>
+              <Button
+                onClick={() => openPreview("word")}
+                disabled={getSelectedStudents().length === 0}
+                className="flex items-center gap-2 flex-1"
+                variant="outline"
+              >
+                <Eye className="w-4 h-4" />
+                Preview Word ({getSelectedStudents().length})
+              </Button>
+            </div>
+            
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-primary" />
+                <span className="font-medium text-foreground">Export includes:</span>
+              </div>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Complete student information (personal, academic, contact details)</li>
+                <li>• Sports activities and position assignments</li>
+                <li>• Academic history and examination records</li>
+                <li>• Student signatures and passport photos (if available)</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Preview Modal */}
+      <Modal isOpen={isPreviewOpen} onClose={() => { setIsPreviewOpen(false); setPreviewMode(null); }}>
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-primary" />
+            {previewMode === "excel" ? "Preview for Excel Export" : "Preview for Word Export"}
+          </ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+            <div className="p-4 overflow-auto space-y-4">
+              {previewMode === "word" && (
+                <>
+                  <div className="text-2xl font-bold">Student List</div>
+                  <div className="text-sm font-semibold">Session: {getSelectedStudents().length>0 && getSelectedStudents()[0].session ? getSelectedStudents()[0].session : "N/A"}</div>
+                </>
+              )}
+
+              {previewMode === "excel" && (
+                <div className="w-full overflow-auto">
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      {/* Session header row (A1:S1) */}
+                      <tr>
+                        <th colSpan={19} className="border p-2 text-center font-bold">Session: {getSelectedStudents().length>0 && getSelectedStudents()[0].session ? getSelectedStudents()[0].session : "N/A"}</th>
+                      </tr>
+                      {/* Row 2 headers with merges like Excel */}
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <th className="border p-2" rowSpan={2}>Sr. No</th>
+                        <th className="border p-2" rowSpan={2}>Name</th>
+                        <th className="border p-2" rowSpan={2}>Father's Name</th>
+                        <th className="border p-2" rowSpan={2}>Date of Birth</th>
+                        <th className="border p-2" rowSpan={2}>University Reg. No</th>
+                        <th className="border p-2" rowSpan={2}>Present Branch/Year</th>
+                        <th className="border p-2" colSpan={2}>Year of Passing</th>
+                        <th className="border p-2" rowSpan={2}>Date of First Admission</th>
+                        <th className="border p-2" colSpan={2}>Last Examination</th>
+                        <th className="border p-2" colSpan={2}>No of years of</th>
+                        <th className="border p-2" rowSpan={2}>No of participation in Inter Varsity Tournament</th>
+                        <th className="border p-2" rowSpan={2}>Signature of Student</th>
+                        <th className="border p-2" rowSpan={2}>Home Address with Phone No</th>
+                        <th className="border p-2" rowSpan={2}>Passport Size Photograph</th>
+                        <th className="border p-2" rowSpan={2}>Activity</th>
+                        <th className="border p-2" rowSpan={2}>Position</th>
+                      </tr>
+                      {/* Row 3 subheaders */}
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <th className="border p-2">Matric</th>
+                        <th className="border p-2">+2</th>
+                        <th className="border p-2">Name</th>
+                        <th className="border p-2">Year</th>
+                        <th className="border p-2">Graduate</th>
+                        <th className="border p-2">PG</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {getSelectedStudents().length === 0 ? (
+                        <tr>
+                          <td colSpan={19} className="text-center p-4 text-gray-500">No rows selected</td>
+                        </tr>
+                      ) : (
+                        getSelectedStudents().map((s, idx) => (
+                          <tr key={s.universityRegNo} className="hover:bg-orange-50 transition">
+                            <td className="border p-2 text-center">{idx+1}</td>
+                            <td className="border p-2">{s.name || ""}</td>
+                            <td className="border p-2">{s.fatherName || ""}</td>
+                            <td className="border p-2">{s.dob || ""}</td>
+                            <td className="border p-2">{s.universityRegNo || ""}</td>
+                            <td className="border p-2">{s.branchYear || ""}</td>
+                            <td className="border p-2">{s.matricYear || ""}</td>
+                            <td className="border p-2">{s.plusTwoYear || ""}</td>
+                            <td className="border p-2">{s.firstAdmissionYear || ""}</td>
+                            <td className="border p-2">{s.lastExam || ""}</td>
+                            <td className="border p-2">{s.lastExamYear || ""}</td>
+                            <td className="border p-2">{s.interCollegeGraduateYears || ""}</td>
+                            <td className="border p-2">{s.interCollegePgYears || ""}</td>
+                            <td className="border p-2">{s.interVarsityYears || ""}</td>
+                            <td className="border p-2 text-center">
+                              {s.signatureUrl ? <img src={s.signatureUrl} alt="signature" className="inline-block" style={{ width: 100, height: 40, objectFit: 'contain' }} /> : ""}
+                            </td>
+                            <td className="border p-2">{s.addressWithPhone || ""}</td>
+                            <td className="border p-2 text-center">
+                              {s.passportPhotoUrl ? <img src={s.passportPhotoUrl} alt="passport" className="inline-block" style={{ width: 70, height: 80, objectFit: 'cover' }} /> : ""}
+                            </td>
+                            <td className="border p-2">{s.sports?.join(", ") || ""}</td>
+                            <td className="border p-2">{s.events?.map(e=>e.position).join(", ") || ""}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {previewMode === "word" && (
+                <div className="w-full overflow-auto">
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      {/* First header row matching Word export */}
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <th className="border p-2" rowSpan={2}>Sr. No</th>
+                        <th className="border p-2" rowSpan={2}>Name</th>
+                        <th className="border p-2" rowSpan={2}>Father’s Name</th>
+                        <th className="border p-2" rowSpan={2}>DOB</th>
+                        <th className="border p-2" rowSpan={2}>Reg No</th>
+                        <th className="border p-2" rowSpan={2}>Branch/Year</th>
+                        <th className="border p-2" colSpan={2}>Year of Passing</th>
+                        <th className="border p-2" rowSpan={2}>First Admission</th>
+                        <th className="border p-2" colSpan={2}>Last Exam</th>
+                        <th className="border p-2" colSpan={3}>Years of Participation</th>
+                        <th className="border p-2" rowSpan={2}>Signature</th>
+                        <th className="border p-2" rowSpan={2}>Address</th>
+                        <th className="border p-2" rowSpan={2}>Passport</th>
+                        <th className="border p-2" rowSpan={2}>Activity</th>
+                        <th className="border p-2" rowSpan={2}>Position</th>
+                      </tr>
+                      {/* Second header row */}
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <th className="border p-2">Matric</th>
+                        <th className="border p-2">+2</th>
+                        <th className="border p-2">Name</th>
+                        <th className="border p-2">Year</th>
+                        <th className="border p-2">Graduate</th>
+                        <th className="border p-2">PG</th>
+                        <th className="border p-2">Inter-Varsity</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {getSelectedStudents().length === 0 ? (
+                        <tr>
+                          <td colSpan={19} className="text-center p-4 text-gray-500">No rows selected</td>
+                        </tr>
+                      ) : (
+                        getSelectedStudents().map((s, idx) => (
+                          <tr key={s.universityRegNo} className="hover:bg-orange-50 transition">
+                            <td className="border p-2 text-center">{idx+1}</td>
+                            <td className="border p-2">{s.name || ""}</td>
+                            <td className="border p-2">{s.fatherName || ""}</td>
+                            <td className="border p-2">{s.dob || ""}</td>
+                            <td className="border p-2">{s.universityRegNo || ""}</td>
+                            <td className="border p-2">{s.branchYear || ""}</td>
+                            <td className="border p-2">{s.matricYear || ""}</td>
+                            <td className="border p-2">{s.plusTwoYear || ""}</td>
+                            <td className="border p-2">{formatDate(s.firstAdmissionYear) || ""}</td>
+                            <td className="border p-2">{s.lastExam || ""}</td>
+                            <td className="border p-2">{s.lastExamYear || ""}</td>
+                            <td className="border p-2">{s.interCollegeGraduateYears || ""}</td>
+                            <td className="border p-2">{s.interCollegePgYears || ""}</td>
+                            <td className="border p-2">{s.interVarsityYears || ""}</td>
+                            <td className="border p-2 text-center">
+                              {s.signatureUrl ? <img src={s.signatureUrl} alt="signature" className="inline-block" style={{ width: 60, height: 30, objectFit: 'contain' }} /> : ""}
+                            </td>
+                            <td className="border p-2">{s.addressWithPhone || ""}</td>
+                            <td className="border p-2 text-center">
+                              {s.passportPhotoUrl ? <img src={s.passportPhotoUrl} alt="passport" className="inline-block" style={{ width: 60, height: 60, objectFit: 'cover' }} /> : ""}
+                            </td>
+                            <td className="border p-2">{s.sports?.join(", ") || ""}</td>
+                            <td className="border p-2">{s.events?.map(e=>`${e.activity} : ${e.position}`).join(", ") || ""}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+        </ModalContent>
+        <ModalFooter>
+          <div className="flex items-center justify-between w-full">
+            <div className="text-sm text-muted-foreground">
+              {getSelectedStudents().length} row(s) selected
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => { setIsPreviewOpen(false); setPreviewMode(null); }}
+              >
+                Close
+              </Button>
+              <Button
+                onClick={handleConfirmExport}
+                className="flex items-center gap-2"
+              >
+                {previewMode === "excel" ? (
+                  <>
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Export to Excel
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4" />
+                    Export to Word
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </ModalFooter>
+      </Modal>
+    </div>
+  );
 };
 
 export default StudentExport;

@@ -1,4 +1,23 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
+import { 
+  Target, 
+  Users, 
+  CheckCircle, 
+  AlertCircle,
+  RefreshCw,
+  Trophy,
+  User,
+  GraduationCap,
+  Search,
+  Filter,
+  CheckSquare,
+  Square
+} from "lucide-react";
 import API from "../services/api";
 
 const AdminAssignPosition = () => {
@@ -10,10 +29,14 @@ const AdminAssignPosition = () => {
   const [bulkPosition, setBulkPosition] = useState("");
   const [bulkSport, setBulkSport] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const res = await API.get("/admin/students");
         // Filter out students who have all positions assigned
         const pendingStudents = res.data.filter(student => 
@@ -26,6 +49,9 @@ const AdminAssignPosition = () => {
         setStudents(pendingStudents);
       } catch (err) {
         console.error("Error fetching students", err);
+        setError("Failed to fetch students");
+      } finally {
+        setLoading(false);
       }
     };
     fetchStudents();
@@ -219,214 +245,297 @@ const AdminAssignPosition = () => {
 
   const availableSports = getAvailableSports();
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardContent className="p-6 text-center">
+          <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-4" />
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-indigo-100">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-              Assign Sport Positions
-            </h2>
-            <p className="text-gray-600">
-              Manage pending position assignments for students
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Assign Sport Positions</h1>
+          <p className="text-muted-foreground mt-1">Manage pending position assignments for students</p>
+        </div>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </motion.div>
 
-          {message && (
-            <div className={`mb-6 p-4 rounded-xl text-center font-medium ${
-              message.includes("✅") 
-                ? "bg-emerald-100 text-emerald-700 border border-emerald-300" 
-                : "bg-rose-100 text-rose-700 border border-rose-300"
-            }`}>
-              {message}
-            </div>
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-4 rounded-lg flex items-center gap-2 ${
+            message.includes("✅") 
+              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800" 
+              : "bg-destructive/10 text-destructive border border-destructive/20"
+          }`}
+        >
+          {message.includes("✅") ? (
+            <CheckCircle className="w-5 h-5" />
+          ) : (
+            <AlertCircle className="w-5 h-5" />
           )}
+          <span className="font-medium">{message}</span>
+        </motion.div>
+      )}
 
-          {/* Filters and Bulk Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Filter by Sport
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Basketball, Football..."
-                value={sportFilter}
-                onChange={(e) => setSportFilter(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
+      {/* Filters and Bulk Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <Card>
+          <CardContent className="p-4">
+            <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filter by Sport
+            </label>
+            <Input
+              type="text"
+              placeholder="e.g. Basketball, Football..."
+              value={sportFilter}
+              onChange={(e) => setSportFilter(e.target.value)}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Filter by Name
+            </label>
+            <Input
+              type="text"
+              placeholder="Search student name..."
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Bulk Assign Position
+            </label>
+            <div className="space-y-2">
+              <Select
+                value={bulkSport}
+                onChange={(e) => setBulkSport(e.target.value)}
+              >
+                <option value="">Select Sport</option>
+                {availableSports.map(sport => (
+                  <option key={sport} value={sport}>{sport}</option>
+                ))}
+              </Select>
+              <Select
+                value={bulkPosition}
+                onChange={(e) => setBulkPosition(e.target.value)}
+              >
+                <option value="">Select Position</option>
+                <option value="1st">1st</option>
+                <option value="2nd">2nd</option>
+                <option value="3rd">3rd</option>
+              </Select>
+              <Button
+                onClick={handleBulkAssign}
+                disabled={!bulkPosition || !bulkSport || selectedStudents.size === 0}
+                className="w-full"
+              >
+                Assign to Selected
+              </Button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Filter by Name
-              </label>
-              <input
-                type="text"
-                placeholder="Search student name..."
-                value={nameFilter}
-                onChange={(e) => setNameFilter(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-200">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bulk Assign Position
-              </label>
-              <div className="space-y-2">
-                <select
-                  value={bulkSport}
-                  onChange={(e) => setBulkSport(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Select Sport</option>
-                  {availableSports.map(sport => (
-                    <option key={sport} value={sport}>{sport}</option>
-                  ))}
-                </select>
-                <select
-                  value={bulkPosition}
-                  onChange={(e) => setBulkPosition(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Select Position</option>
-                  <option value="1st">1st</option>
-                  <option value="2nd">2nd</option>
-                  <option value="3rd">3rd</option>
-                </select>
-                <button
-                  onClick={handleBulkAssign}
-                  disabled={!bulkPosition || !bulkSport || selectedStudents.size === 0}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Assign to Selected
-                </button>
-              </div>
-            </div>
-            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex flex-col justify-center">
-              <div className="text-center">
-                <span className="block text-amber-800 font-semibold">
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 flex flex-col justify-center">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                {selectedStudents.size === filteredStudents.length ? (
+                  <CheckSquare className="w-5 h-5 text-primary" />
+                ) : (
+                  <Square className="w-5 h-5 text-muted-foreground" />
+                )}
+                <span className="font-semibold text-foreground">
                   {selectedStudents.size} selected
                 </span>
-                <button
-                  onClick={toggleSelectAll}
-                  className="text-amber-700 hover:text-amber-900 font-medium text-sm mt-1"
+              </div>
+              <Button
+                onClick={toggleSelectAll}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                {selectedStudents.size === filteredStudents.length ? "Deselect All" : "Select All"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Student Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        {filteredStudents.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Pending Students</h3>
+              <p className="text-muted-foreground">No pending students found matching your filters.</p>
+              <p className="text-muted-foreground text-sm mt-2">All position assignments are complete!</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredStudents.map((student, index) => {
+              const pendingSports = (student.sports || []).filter(sport => 
+                !student.positions?.some(p => p.sport === sport)
+              );
+
+              return (
+                <motion.div
+                  key={student._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`border rounded-lg overflow-hidden ${
+                    pendingSports.length === 0 ? "border-green-200" : "border-yellow-200"
+                  } ${selectedStudents.has(student._id) ? "ring-2 ring-primary" : ""}`}
                 >
-                  {selectedStudents.size === filteredStudents.length ? "Deselect All" : "Select All"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Student Cards */}
-          {filteredStudents.length === 0 ? (
-            <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-              <p className="text-gray-500 text-lg">No pending students found matching your filters.</p>
-              <p className="text-gray-400 text-sm mt-2">All position assignments are complete!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredStudents.map((student) => {
-                const pendingSports = (student.sports || []).filter(sport => 
-                  !student.positions?.some(p => p.sport === sport)
-                );
-
-                return (
-                  <div
-                    key={student._id}
-                    className={`bg-white rounded-2xl shadow-md overflow-hidden border-l-4 ${
-                      pendingSports.length === 0 ? "border-emerald-500" : "border-amber-500"
-                    } ${selectedStudents.has(student._id) ? "ring-2 ring-indigo-500" : ""}`}
-                  >
-                    <div className="p-5">
+                  <Card className="h-full">
+                    <CardContent className="p-5">
                       <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
                             checked={selectedStudents.has(student._id)}
                             onChange={() => toggleStudentSelection(student._id)}
-                            className="h-5 w-5 text-indigo-600 rounded mr-3"
+                            className="h-5 w-5 text-primary rounded"
                           />
-                          <img
-                            src={
-                              student.photo ||
-                              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                            }
-                            alt={student.name}
-                            className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
-                          />
+                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-border">
+                            <img
+                              src={
+                                student.photo ||
+                                "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                              }
+                              alt={student.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           pendingSports.length === 0 
-                            ? "bg-emerald-100 text-emerald-800" 
-                            : "bg-amber-100 text-amber-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" 
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
                         }`}>
                           {pendingSports.length === 0 ? "All Assigned" : `${pendingSports.length} Pending`}
                         </span>
                       </div>
 
                       <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-gray-800">
+                        <h3 className="text-lg font-semibold text-foreground mb-1">
                           {student.name}
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          URN: {student.urn || "-"} • {student.branch || "-"} • {student.year || "-"}
-                        </p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <GraduationCap className="w-4 h-4" />
+                          <span>URN: {student.urn || "-"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <User className="w-4 h-4" />
+                          <span>{student.branch || "-"} • Year {student.year || "-"}</span>
+                        </div>
                       </div>
 
                       {pendingSports.length > 0 ? (
                         <div className="space-y-3">
-                          <h4 className="text-sm font-medium text-gray-700">Pending Assignments:</h4>
+                          <h4 className="text-sm font-medium text-foreground">Pending Assignments:</h4>
                           {pendingSports.map((sport, idx) => {
-                            const currentSelection =
-                              positionData[student._id]?.[sport] || "";
+                            const currentSelection = positionData[student._id]?.[sport] || "";
 
                             return (
-                              <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                <span className="font-medium text-gray-700">
-                                  {sport}
-                                </span>
+                              <div key={idx} className="flex items-center justify-between bg-muted p-3 rounded-lg">
                                 <div className="flex items-center gap-2">
-                                  <select
+                                  <Trophy className="w-4 h-4 text-primary" />
+                                  <span className="font-medium text-foreground">{sport}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Select
                                     value={currentSelection}
-                                    onChange={(e) =>
-                                      handlePositionChange(student._id, sport, e.target.value)
-                                    }
-                                    className="p-1.5 border border-gray-300 rounded text-sm"
+                                    onChange={(e) => handlePositionChange(student._id, sport, e.target.value)}
+                                    className="w-20"
                                   >
                                     <option value="">Position</option>
                                     <option value="1st">1st</option>
                                     <option value="2nd">2nd</option>
                                     <option value="3rd">3rd</option>
-                                  </select>
-                                  <button
+                                  </Select>
+                                  <Button
                                     onClick={() => handleAssign(student._id, sport)}
-                                    className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1.5 rounded text-sm hover:from-indigo-600 hover:to-purple-600"
+                                    size="sm"
+                                    disabled={!currentSelection}
                                   >
                                     Assign
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
                             );
                           })}
                         </div>
                       ) : (
-                        <p className="text-emerald-700 text-sm text-center py-2 bg-emerald-100 rounded-lg">
-                          All positions assigned ✓
-                        </p>
+                        <div className="text-center py-4 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 mx-auto mb-2" />
+                          <p className="text-green-700 dark:text-green-300 text-sm font-medium">
+                            All positions assigned ✓
+                          </p>
+                        </div>
                       )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 };

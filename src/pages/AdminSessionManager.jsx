@@ -1,4 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
+import { 
+  Calendar, 
+  Plus, 
+  Trash2, 
+  CheckCircle, 
+  ArrowLeft, 
+  RefreshCw,
+  AlertCircle,
+  Clock,
+  CalendarDays
+} from 'lucide-react';
 import API from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,12 +34,10 @@ function AdminSessionManager() {
   ];
   const years = Array.from({ length: 21 }, (_, i) => new Date().getFullYear() - 10 + i);
 
-  const [startOpen, setStartOpen] = useState(false);
-  const [endOpen, setEndOpen] = useState(false);
-  const [yearOpen, setYearOpen] = useState(false);
-
   const fetchSessions = async () => {
     try {
+      setLoading(true);
+      setErr('');
       const res = await API.get('/session');
       setSessions(res.data);
     } catch (error) {
@@ -39,7 +53,9 @@ function AdminSessionManager() {
       setSubmitLoading(true);
       setErr('');
       await API.post('/session/create', { startMonth, endMonth, year: Number(year) });
-      setStartMonth('Jan'); setEndMonth('July'); setYear(new Date().getFullYear());
+      setStartMonth('Jan'); 
+      setEndMonth('July'); 
+      setYear(new Date().getFullYear());
       fetchSessions();
     } catch (error) {
       setErr('Creation failed. Are you logged in as admin?');
@@ -49,131 +65,244 @@ function AdminSessionManager() {
   };
 
   const setActive = async (id) => {
-    try { await API.put(`/session/set-active/${id}`); fetchSessions(); }
-    catch { setErr('Failed to set active'); }
+    try { 
+      await API.put(`/session/set-active/${id}`); 
+      fetchSessions(); 
+    } catch (error) {
+      setErr('Failed to set active');
+    }
   };
 
   const deleteSession = async (id) => {
     if (!window.confirm('Delete this session?')) return;
-    try { await API.delete(`/session/${id}`); fetchSessions(); }
-    catch { setErr('Failed to delete session'); }
+    try { 
+      await API.delete(`/session/${id}`); 
+      fetchSessions(); 
+    } catch (error) {
+      setErr('Failed to delete session');
+    }
   };
 
   useEffect(() => { fetchSessions(); }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto min-h-screen bg-gray-50">
-      {/* Dashboard Button */}
-      <div className="mb-4">
-        <button
-          onClick={() => navigate('/admin')}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium shadow transition"
-        >
-          &larr; Dashboard
-        </button>
-      </div>
-
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Manage Sessions</h2>
-
-      <form onSubmit={createSession} className="bg-white shadow-md p-6 rounded-2xl mb-6">
-        <h3 className="font-semibold mb-4">Create New Session</h3>
-        {err && <p className="text-red-500 mb-3">{err}</p>}
-
-        <div className="flex gap-2 mb-4">
-          {/* Start Month Custom Dropdown */}
-          <div className="relative w-1/3">
-            <div
-              className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
-              onClick={() => setStartOpen(!startOpen)}
-            >
-              <span>{startMonth}</span>
-              <span className="text-gray-500">{startOpen ? '▲' : '▼'}</span>
-            </div>
-            {startOpen && (
-              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
-                {months.map(m => (
-                  <div key={m} className="px-3 py-2 hover:bg-orange-100 cursor-pointer" onClick={() => { setStartMonth(m); setStartOpen(false); }}>{m}</div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* End Month Custom Dropdown */}
-          <div className="relative w-1/3">
-            <div
-              className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
-              onClick={() => setEndOpen(!endOpen)}
-            >
-              <span>{endMonth}</span>
-              <span className="text-gray-500">{endOpen ? '▲' : '▼'}</span>
-            </div>
-            {endOpen && (
-              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
-                {months.map(m => (
-                  <div key={m} className="px-3 py-2 hover:bg-orange-100 cursor-pointer" onClick={() => { setEndMonth(m); setEndOpen(false); }}>{m}</div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Year Custom Dropdown */}
-          <div className="relative w-1/3">
-            <div
-              className="w-full border p-3 rounded-lg cursor-pointer flex justify-between items-center"
-              onClick={() => setYearOpen(!yearOpen)}
-            >
-              <span>{year}</span>
-              <span className="text-gray-500">{yearOpen ? '▲' : '▼'}</span>
-            </div>
-            {yearOpen && (
-              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
-                {years.map(y => (
-                  <div key={y} className="px-3 py-2 hover:bg-orange-100 cursor-pointer" onClick={() => { setYear(y); setYearOpen(false); }}>{y}</div>
-                ))}
-              </div>
-            )}
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={() => navigate('/admin')}
+            variant="outline"
+            size="sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Session Management</h1>
+            <p className="text-muted-foreground mt-1">Create and manage academic sessions</p>
           </div>
         </div>
+        <Button onClick={fetchSessions} variant="outline" disabled={loading}>
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </motion.div>
 
-        <p className="text-sm text-gray-600 mb-4">
-          Preview: <strong>{startMonth}–{endMonth} {year}</strong>
-        </p>
+      {/* Create Session Form */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              Create New Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {err && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-lg mb-6 bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-2"
+              >
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">{err}</span>
+              </motion.div>
+            )}
 
-        <button
-          type="submit"
-          disabled={submitLoading}
-          className={`w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg transition transform hover:scale-[1.02] ${submitLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {submitLoading ? 'Creating...' : 'Create Session'}
-        </button>
-      </form>
+            <form onSubmit={createSession} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Start Month</label>
+                  <Select
+                    value={startMonth}
+                    onChange={(e) => setStartMonth(e.target.value)}
+                    required
+                  >
+                    {months.map(month => (
+                      <option key={month} value={month}>{month}</option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">End Month</label>
+                  <Select
+                    value={endMonth}
+                    onChange={(e) => setEndMonth(e.target.value)}
+                    required
+                  >
+                    {months.map(month => (
+                      <option key={month} value={month}>{month}</option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Year</label>
+                  <Select
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                    required
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
 
-      <h3 className="font-semibold mb-2">Existing Sessions</h3>
-      <div className="space-y-3">
-        {sessions.map((s) => (
-          <div key={s._id} className="border p-4 rounded-lg flex justify-between items-center hover:bg-orange-50 transition">
-            <div>
-              <p className="font-medium">
-                <strong>{s.session}</strong>{' '}
-                {s.isActive && <span className="text-green-600">(Active)</span>}
-              </p>
-              <p className="text-sm text-gray-500">{new Date(s.startDate).toLocaleDateString()} - {new Date(s.endDate).toLocaleDateString()}</p>
-            </div>
-            <div className="flex gap-2">
-              {!s.isActive && <button onClick={() => setActive(s._id)} className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">Set Active</button>}
-              <button onClick={() => deleteSession(s._id)} className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Preview: <strong className="text-foreground">{startMonth}–{endMonth} {year}</strong>
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={submitLoading}
+                className="w-full flex items-center gap-2"
+              >
+                {submitLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    Create Session
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Existing Sessions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              Existing Sessions ({sessions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {sessions.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Sessions Found</h3>
+                <p className="text-muted-foreground">Create your first session to get started</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sessions.map((session, index) => (
+                  <motion.div
+                    key={session._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <CalendarDays className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground">{session.session}</h3>
+                            {session.isActive && (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs rounded-full flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(session.startDate).toLocaleDateString()} - {new Date(session.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {!session.isActive && (
+                          <Button
+                            onClick={() => setActive(session._id)}
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Set Active
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => deleteSession(session._id)}
+                          variant="destructive"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

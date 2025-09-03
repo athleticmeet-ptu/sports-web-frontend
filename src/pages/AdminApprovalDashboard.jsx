@@ -1,4 +1,23 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { 
+  CheckCircle, 
+  XCircle, 
+  Users, 
+  UserCheck, 
+  AlertCircle,
+  RefreshCw,
+  Clock,
+  Trophy,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  GraduationCap
+} from "lucide-react";
 import API from "../services/api";
 
 const AdminApprovalDashboard = () => {
@@ -84,218 +103,368 @@ const AdminApprovalDashboard = () => {
     }
   };
 
-  if (loading) return <p className="p-6">Loading pending approvals...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Pending Approvals</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Pending Approvals</h1>
+          <p className="text-muted-foreground mt-1">Review and approve student profiles and teams</p>
+        </div>
+        <Button onClick={fetchAllData} variant="outline" disabled={loading}>
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </motion.div>
 
-      {/* 🔹 Pending Students */}
-      <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-3">Pending Student Profiles</h2>
-        {pendingStudents.length === 0 ? (
-          <p className="text-gray-500">No pending student profiles.</p>
-        ) : (
-          <div className="space-y-4">
-            {pendingStudents.map((student) => (
-              <div
-                key={student._id}
-                className="border rounded shadow p-4 bg-white"
-              >
-                <div className="flex justify-between">
-                  <div>
-                    {student.photo && (
-                      <img
-                        src={student.photo}
-                        alt={student.name}
-                        className="w-24 h-24 object-cover rounded mb-2 border"
-                      />
-                    )}
-                    {student.signaturePhoto && (
-                      <img
-                        src={student.signaturePhoto}
-                        alt="Signature"
-                        className="w-24 h-12 object-contain rounded mb-2 border"
-                      />
-                    )}
-  <p><strong>Name:</strong> {student.name || "N/A"}</p>
-  <p><strong>Email:</strong> {student.email || "N/A"}</p>
-  <p><strong>URN:</strong> {student.urn || "N/A"}</p>
-  <p><strong>CRN:</strong> {student.crn || "N/A"}</p>
-  <p><strong>Branch:</strong> {student.branch || "N/A"}</p>
-  <p><strong>Year:</strong> {student.year || "N/A"}</p>
-  <p><strong>DOB:</strong> {student.dob || "N/A"}</p>
-  <p><strong>Gender:</strong> {student.gender || "N/A"}</p>
-  <p><strong>Address:</strong> {student.address || "N/A"}</p>
-  <p><strong>Phone:</strong> {student.phone || "N/A"}</p>
-  <p><strong>Father's Name:</strong> {student.fatherName || "N/A"}</p>
-  <p><strong>Year of Passing (Matric):</strong> {student.yearOfPassingMatric || "N/A"}</p>
-  <p><strong>Year of Passing (Plus Two):</strong> {student.yearOfPassingPlusTwo || "N/A"}</p>
-  <p><strong>Years of Participation:</strong> {student.yearsOfParticipation || 0}</p>
-  <p><strong>First Admission Date:</strong> {student.firstAdmissionDate || "N/A"}</p>
-  <p><strong>Last Exam Name:</strong> {student.lastExamName || "N/A"}</p>
-  <p><strong>Last Exam Year:</strong> {student.lastExamYear || "N/A"}</p>
-  <p><strong>Inter College Graduate Course:</strong> {student.interCollegeGraduateCourse }</p>
-  <p><strong>Inter College PG Years:</strong> {student.interCollegePgCourse}</p>
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-2"
+        >
+          <AlertCircle className="w-5 h-5" />
+          <span className="font-medium">{error}</span>
+        </motion.div>
+      )}
 
-                    <p>
-                      <strong>Sports:</strong>{" "}
-                      {student.sports?.length > 0
-                        ? student.sports.join(", ")
-                        : "N/A"}
-                    </p>
-                    <p>
-                      <strong>Pending Personal:</strong>{" "}
-                      {student.pendingPersonal ? "Yes" : "No"} |{" "}
-                      <strong>Pending Sports:</strong>{" "}
-                      {student.pendingSports ? "Yes" : "No"}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    {student.pendingPersonal && (
-                      <div className="space-x-2">
-                        <button
-                          className="bg-green-600 text-white px-3 py-1 rounded"
-                          onClick={() =>
-                            updateStudentStatus(
-                              student._id,
-                              "personal",
-                              "approved"
-                            )
-                          }
-                        >
-                          Approve Personal
-                        </button>
-                        <button
-                          className="bg-red-600 text-white px-3 py-1 rounded"
-                          onClick={() =>
-                            updateStudentStatus(
-                              student._id,
-                              "personal",
-                              "rejected"
-                            )
-                          }
-                        >
-                          Reject Personal
-                        </button>
-                      </div>
-                    )}
-                    {student.pendingSports && (
-                      <div className="space-x-2">
-                        <button
-                          className="bg-green-600 text-white px-3 py-1 rounded"
-                          onClick={() =>
-                            updateStudentStatus(
-                              student._id,
-                              "sports",
-                              "approved"
-                            )
-                          }
-                        >
-                          Approve Sports
-                        </button>
-                        <button
-                          className="bg-red-600 text-white px-3 py-1 rounded"
-                          onClick={() =>
-                            updateStudentStatus(
-                              student._id,
-                              "sports",
-                              "rejected"
-                            )
-                          }
-                        >
-                          Reject Sports
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      {/* Pending Students */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-primary" />
+              Pending Student Profiles ({pendingStudents.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendingStudents.length === 0 ? (
+              <div className="text-center py-12">
+                <UserCheck className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Pending Profiles</h3>
+                <p className="text-muted-foreground">All student profiles have been reviewed</p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 🔹 Pending Teams */}
-<section className="mb-10">
-  <h2 className="text-xl font-semibold mb-3">Pending Teams</h2>
-  {pendingTeams.length === 0 ? (
-    <p className="text-gray-500">No pending teams for approval.</p>
-  ) : (
-    <div className="overflow-x-auto">
-      {pendingTeams.map((team) => {
-        // Captain info captains API से निकालना
-        const captain = captains.find((c) => c.captainId === team.captainId);
-
-        return (
-          <div
-            key={team._id}
-            className="mb-6 border rounded shadow p-4 bg-white"
-          >
-            <div className="flex justify-between items-center mb-2">
-              <div>
-                <h2 className="text-lg font-semibold">
-                  {captain?.teamName || "Unnamed Team"}
-                </h2>
-                <p>
-                  <strong>Sport:</strong> {captain?.sport || "N/A"}
-                </p>
-                <p>
-                  <strong>Captain:</strong> {captain?.name || "Unknown"}
-                </p>
-                <p>
-                  <strong>Status:</strong> {team.status?.toUpperCase()}
-                </p>
-              </div>
-              <div className="space-x-2">
-                <button
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                  onClick={() => updateTeamStatus(team._id, "approved")}
-                >
-                  Approve
-                </button>
-                <button
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={() => updateTeamStatus(team._id, "rejected")}
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-
-            {team.members?.length > 0 ? (
-              <table className="table-auto w-full border-collapse border border-gray-300 mt-2">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border px-2 py-1">#</th>
-                    <th className="border px-2 py-1">Name</th>
-                    <th className="border px-2 py-1">URN</th>
-                    <th className="border px-2 py-1">Branch</th>
-                    <th className="border px-2 py-1">Year</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {team.members.map((m, i) => (
-                    <tr key={i}>
-                      <td className="border px-2 py-1">{i + 1}</td>
-                      <td className="border px-2 py-1">{m.name}</td>
-                      <td className="border px-2 py-1">{m.urn}</td>
-                      <td className="border px-2 py-1">{m.branch}</td>
-                      <td className="border px-2 py-1">{m.year}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             ) : (
-              <p className="text-gray-500 mt-2">No members listed</p>
+              <div className="space-y-6">
+                {pendingStudents.map((student, index) => (
+                  <motion.div
+                    key={student._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="border border-border rounded-lg p-6 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex gap-6">
+                      {/* Photos */}
+                      <div className="flex-shrink-0 space-y-3">
+                        {student.photo && (
+                          <div className="w-24 h-24 border border-border rounded-lg overflow-hidden">
+                            <img
+                              src={student.photo}
+                              alt={student.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        {student.signaturePhoto && (
+                          <div className="w-24 h-12 border border-border rounded-lg overflow-hidden">
+                            <img
+                              src={student.signaturePhoto}
+                              alt="Signature"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Student Info */}
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium text-foreground">{student.name || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{student.email || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">URN: {student.urn || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">CRN: {student.crn || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{student.branch || "N/A"} • Year {student.year || "N/A"}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">DOB: {student.dob || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Gender: {student.gender || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{student.phone || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{student.address || "N/A"}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Father: {student.fatherName || "N/A"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex-shrink-0 space-y-3">
+                        <div className="space-y-2">
+                          {student.pendingPersonal && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => updateStudentStatus(student._id, "personal", "approved")}
+                                className="flex items-center gap-2"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                Approve Personal
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateStudentStatus(student._id, "personal", "rejected")}
+                                className="flex items-center gap-2"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                Reject Personal
+                              </Button>
+                            </div>
+                          )}
+                          {student.pendingSports && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => updateStudentStatus(student._id, "sports", "approved")}
+                                className="flex items-center gap-2"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                Approve Sports
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateStudentStatus(student._id, "sports", "rejected")}
+                                className="flex items-center gap-2"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                Reject Sports
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Status Indicators */}
+                        <div className="space-y-1">
+                          {student.pendingPersonal && (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Personal Pending
+                            </span>
+                          )}
+                          {student.pendingSports && (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1">
+                              <Trophy className="w-3 h-3" />
+                              Sports Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-foreground">Academic Info:</span>
+                          <p className="text-muted-foreground">Matric: {student.yearOfPassingMatric || "N/A"}</p>
+                          <p className="text-muted-foreground">+2: {student.yearOfPassingPlusTwo || "N/A"}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground">Participation:</span>
+                          <p className="text-muted-foreground">Years: {student.yearsOfParticipation || 0}</p>
+                          <p className="text-muted-foreground">Admission: {student.firstAdmissionDate || "N/A"}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground">Sports:</span>
+                          <p className="text-muted-foreground">
+                            {student.sports?.length > 0 ? student.sports.join(", ") : "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             )}
-          </div>
-        );
-      })}
-    </div>
-  )}
-</section>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Pending Teams */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Pending Teams ({pendingTeams.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendingTeams.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Pending Teams</h3>
+                <p className="text-muted-foreground">All teams have been reviewed</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {pendingTeams.map((team, index) => {
+                  const captain = captains.find((c) => c.captainId === team.captainId);
+
+                  return (
+                    <motion.div
+                      key={team._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border border-border rounded-lg p-6 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                              <Trophy className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {captain?.teamName || "Unnamed Team"}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Sport: {captain?.sport || "N/A"} • Captain: {captain?.name || "Unknown"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 text-xs rounded-full">
+                              Status: {team.status?.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => updateTeamStatus(team._id, "approved")}
+                            className="flex items-center gap-2"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => updateTeamStatus(team._id, "rejected")}
+                            className="flex items-center gap-2"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+
+                      {team.members?.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b border-border">
+                                <th className="text-left p-3 font-medium text-foreground">#</th>
+                                <th className="text-left p-3 font-medium text-foreground">Name</th>
+                                <th className="text-left p-3 font-medium text-foreground">URN</th>
+                                <th className="text-left p-3 font-medium text-foreground">Branch</th>
+                                <th className="text-left p-3 font-medium text-foreground">Year</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {team.members.map((member, i) => (
+                                <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
+                                  <td className="p-3 text-muted-foreground">{i + 1}</td>
+                                  <td className="p-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                        <User className="w-3 h-3 text-primary" />
+                                      </div>
+                                      <span className="font-medium text-foreground">{member.name}</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-3 text-muted-foreground">{member.urn}</td>
+                                  <td className="p-3">
+                                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                                      {member.branch}
+                                    </span>
+                                  </td>
+                                  <td className="p-3 text-muted-foreground">{member.year}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">No members listed</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
 
 
