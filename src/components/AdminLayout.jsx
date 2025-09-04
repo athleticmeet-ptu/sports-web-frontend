@@ -27,7 +27,7 @@ const handleLogout = () => {
     localStorage.removeItem("user");
     sessionStorage.clear();
   } catch {}
-  window.location.href = "/login";
+  window.location.href = "/";
 };
 
 function AdminLayout() {
