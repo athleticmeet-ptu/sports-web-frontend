@@ -53,8 +53,30 @@ export default function Students() {
   const [yearOpen, setYearOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
 
-  const courses = ['B.Tech CSE', 'B.Tech IT', 'MBA'];
-  const years = Array.from({ length: 10 }, (_, i) => 2020 + i);
+ const courses = [
+  "B.Tech.(Civil Engineering)",
+  "B.Tech.(Computer Science and Engineering)",
+  "B.Tech.(Electrical Engineering)",
+  "B.Tech.(Electronics and Communication Engineering)",
+  "B.Tech.(Information Technology)",
+  "B.Tech.(Mechanical Engineering)",
+  "B.Tech.(Robotics and Artificial Intelligence)",
+  "M.Tech.(Electronics and Communication Engineering)",
+  "M.Tech.(Environmental Science and Engineering)",
+  "M.Tech.(Computer Science and Information Technology)",
+  "M.Tech.(Power Engineering)",
+  "M.Tech.(Production Engineering)",
+  "M.Tech.(Structural Engineering)",
+  "M.Tech.(Computer Science and Engineering)",
+  "MBA (Masters in Business Administration)",
+  "MCA (Masters in Computer Application)",
+  "BCA (Bachelor of Computer Applications)",
+  "BBA (Bachelor of Business Administration)",
+  "B.Voc.(Interior Design)",
+  "B.Com.(Entrepreneurship)"
+];
+const years = ['D1', 'D2', 'D3', 'D4', 'D5'];
+
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
