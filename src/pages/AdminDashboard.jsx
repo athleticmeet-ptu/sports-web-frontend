@@ -351,13 +351,9 @@ if (loading) {
             </CardHeader>
             <CardContent>
               {pendingPositionsLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
-                  />
-                </div>
+                <div className="flex items-center justify-center h-64">
+      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+    </div>
               ) : pendingPositionsError ? (
                 <div className="text-center py-8">
                   <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
