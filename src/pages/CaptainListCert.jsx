@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { AlertCircle, Send, FileBadge2 } from "lucide-react";
 
 const CaptainListCert = () => {
   const [captains, setCaptains] = useState([]);
@@ -41,90 +45,112 @@ const CaptainListCert = () => {
   const sent = captains.filter((c) => c.certificateAvailable);
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Captains with Position</h2>
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Captains with Position</h1>
+          <p className="text-muted-foreground mt-1">Issue or send certificates to captains</p>
+        </div>
+      </motion.div>
 
-      {/* Pending Section */}
-      <h3 className="text-lg font-semibold mb-2 text-red-600">⏳ Pending</h3>
-      <table className="w-full border mb-6">
-        <thead>
-          <tr>
-            <th className="border px-4 py-2">Captain ID</th>
-            <th className="border px-4 py-2">Name</th>
-            <th className="border px-4 py-2">Position</th>
-            <th className="border px-4 py-2">Session</th>
-            <th className="border px-4 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pending.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="text-center p-4">
-                🎉 No Pending Certificates
-              </td>
-            </tr>
-          ) : (
-            pending.map((cap) => (
-              <tr key={cap._id}>
-                <td className="border px-4 py-2">{cap.captainId}</td>
-                <td className="border px-4 py-2">{cap.name}</td>
-                <td className="border px-4 py-2">{cap.position}</td>
-                <td className="border px-4 py-2">
-                  {cap.session ? cap.session.name : "—"}
-                </td>
-                <td className="border px-4 py-2 flex gap-2">
-                  <button
-                    className="bg-blue-600 text-white px-3 py-1 rounded"
-                    onClick={() => navigate(`/admin/certificates/${cap._id}`)}
-                  >
-                    Issue
-                  </button>
-                  <button
-                    className="bg-green-600 text-white px-3 py-1 rounded"
-                    onClick={() => sendToCaptain(cap._id)}
-                  >
-                    Send
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="mb-2">
+          <CardHeader>
+            <CardTitle className="text-red-600 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" /> Pending
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border rounded-lg">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="border px-4 py-2 text-left">Captain ID</th>
+                    <th className="border px-4 py-2 text-left">Name</th>
+                    <th className="border px-4 py-2 text-left">Position</th>
+                    <th className="border px-4 py-2 text-left">Session</th>
+                    <th className="border px-4 py-2 text-left">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pending.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center p-4 text-muted-foreground">
+                        No Pending Certificates
+                      </td>
+                    </tr>
+                  ) : (
+                    pending.map((cap) => (
+                      <tr key={cap._id} className="hover:bg-muted/50">
+                        <td className="border px-4 py-2">{cap.captainId}</td>
+                        <td className="border px-4 py-2">{cap.name}</td>
+                        <td className="border px-4 py-2">{cap.position}</td>
+                        <td className="border px-4 py-2">{cap.session ? cap.session.name : "—"}</td>
+                        <td className="border px-4 py-2">
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => navigate(`/admin/certificates/${cap._id}`)}>
+                              <FileBadge2 className="w-4 h-4 mr-2" /> Issue
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => sendToCaptain(cap._id)}>
+                              <Send className="w-4 h-4 mr-2" /> Send
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      {/* Sent Section */}
-      <h3 className="text-lg font-semibold mb-2 text-green-600">✅ Sent</h3>
-      <table className="w-full border">
-        <thead>
-          <tr>
-            <th className="border px-4 py-2">Captain ID</th>
-            <th className="border px-4 py-2">Name</th>
-            <th className="border px-4 py-2">Position</th>
-            <th className="border px-4 py-2">Session</th>
-            <th className="border px-4 py-2">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sent.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="text-center p-4">
-                No Certificates Sent Yet
-              </td>
-            </tr>
-          ) : (
-            sent.map((cap) => (
-              <tr key={cap._id}>
-                <td className="border px-4 py-2">{cap.captainId}</td>
-                <td className="border px-4 py-2">{cap.name}</td>
-                <td className="border px-4 py-2">{cap.position}</td>
-                <td className="border px-4 py-2">
-                  {cap.session ? cap.session.name : "—"}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-green-600">Sent</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border rounded-lg">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="border px-4 py-2 text-left">Captain ID</th>
+                    <th className="border px-4 py-2 text-left">Name</th>
+                    <th className="border px-4 py-2 text-left">Position</th>
+                    <th className="border px-4 py-2 text-left">Session</th>
+                    <th className="border px-4 py-2 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sent.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center p-4 text-muted-foreground">
+                        No Certificates Sent Yet
+                      </td>
+                    </tr>
+                  ) : (
+                    sent.map((cap) => (
+                      <tr key={cap._id} className="hover:bg-muted/50">
+                        <td className="border px-4 py-2">{cap.captainId}</td>
+                        <td className="border px-4 py-2">{cap.name}</td>
+                        <td className="border px-4 py-2">{cap.position}</td>
+                        <td className="border px-4 py-2">{cap.session ? cap.session.name : "—"}</td>
+                        <td className="border px-4 py-2 text-muted-foreground">Sent</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };

@@ -3,6 +3,10 @@ import { useParams } from "react-router-dom";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import API from "../services/api";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { AlertCircle, Download, Send, ArrowLeftRight } from "lucide-react";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -161,73 +165,83 @@ const Certificate = () => {
     }
   };
 
-  const btnStyle = {
-    marginTop: "10px",
-    padding: "8px 16px",
-    fontSize: "16px",
-    cursor: "pointer",
-    color: "white",
-    borderRadius: "6px",
-    border: "none",
-  };
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h2 className="text-xl font-bold mb-4">Certificate Management</h2>
-
-      {selectedCaptain && students.length > 0 && (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
         <div>
-          <h3 className="text-lg font-semibold mb-2">Certificate Preview</h3>
-          <Swiper
-            spaceBetween={50}
-            slidesPerView={1}
-            navigation={true}
-            modules={[Navigation]}
-            style={{ width: "1050px", margin: "auto" }}
-          >
-            {students.map((stu, index) => (
-              <SwiperSlide key={index}>
-                <CertificateCard
-                  ref={certRefs.current[index]}
-                  student={stu}
-                  captainPosition={captainPosition} // ✅ pass captain position
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          <div style={{ textAlign: "center", marginTop: "20px" }}>
-            <button
-              onClick={generateAllPDFs}
-              style={{ ...btnStyle, backgroundColor: "#2563eb" }}
-            >
-              Download All
-            </button>
-            <button
-              onClick={() => sendToCaptain(captainId)}
-              style={{
-                ...btnStyle,
-                backgroundColor: "#16a34a",
-                marginLeft: "10px",
-              }}
-            >
-              Send to Captain
-            </button>
-            <button
-              onClick={() => {
-                setSelectedCaptain(null);
-                setStudents([]);
-              }}
-              style={{
-                ...btnStyle,
-                backgroundColor: "#6b7280",
-                marginLeft: "10px",
-              }}
-            >
-              Back to List
-            </button>
-          </div>
+          <h1 className="text-3xl font-bold text-foreground">Certificate Management</h1>
+          <p className="text-muted-foreground mt-1">Preview and export certificates for the selected captain</p>
         </div>
+      </motion.div>
+
+      {selectedCaptain && students.length > 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Certificate Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full overflow-x-auto">
+                <Swiper
+                  spaceBetween={50}
+                  slidesPerView={1}
+                  navigation={true}
+                  modules={[Navigation]}
+                  style={{ width: "1050px", margin: "auto" }}
+                >
+                  {students.map((stu, index) => (
+                    <SwiperSlide key={index}>
+                      <CertificateCard
+                        ref={certRefs.current[index]}
+                        student={stu}
+                        captainPosition={captainPosition}
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+                <Button onClick={generateAllPDFs} className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Download All
+                </Button>
+                <Button onClick={() => sendToCaptain(captainId)} variant="outline" className="flex items-center gap-2">
+                  <Send className="w-4 h-4" />
+                  Send to Captain
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    setSelectedCaptain(null);
+                    setStudents([]);
+                  }}
+                >
+                  <ArrowLeftRight className="w-4 h-4" />
+                  Back to List
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="flex items-center justify-center gap-3 text-muted-foreground">
+              <AlertCircle className="w-5 h-5" />
+              <span>No certificates found for this captain.</span>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

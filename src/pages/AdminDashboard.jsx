@@ -36,6 +36,11 @@ function AdminDashboard() {
   const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
   const [pendingApprovalsError, setPendingApprovalsError] = useState(null);
 
+  // Stats: session-wise and sport-level position counts
+  const [positionStats, setPositionStats] = useState({ session: {}, levels: { international: {"1st":0,"2nd":0,"3rd":0}, national: {"1st":0,"2nd":0,"3rd":0}, state:{"1st":0,"2nd":0,"3rd":0}, ptu:{"1st":0,"2nd":0,"3rd":0} } });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+
   useEffect(() => {
     // Loader simulate (jab API lagoge toh yaha loading control karna)
     const timer = setTimeout(() => setLoading(false), 1500);
@@ -48,6 +53,7 @@ function AdminDashboard() {
     
     // Fetch pending approvals
     fetchPendingApprovals();
+    fetchPositionStats();
     
     return () => clearTimeout(timer);
   }, []);
@@ -67,6 +73,46 @@ function AdminDashboard() {
       setActivitiesError('Failed to load recent activities');
     } finally {
       setActivitiesLoading(false);
+    }
+  };
+
+  const classifyLevel = (sport) => {
+    if (!sport) return 'ptu';
+    const s = String(sport);
+    if (/international/i.test(s)) return 'international';
+    if (/national|inter\s*university/i.test(s)) return 'national';
+    if (/state|inter\s*college|ptu|university/i.test(s)) return 'ptu';
+  };
+
+  const fetchPositionStats = async () => {
+    try {
+      setStatsLoading(true);
+      setStatsError(null);
+      const res = await API.get('/admin/students');
+      const students = res.data || [];
+      const sessionMap = {};
+      const levels = { international: {"1st":0,"2nd":0,"3rd":0}, national: {"1st":0,"2nd":0,"3rd":0},ptu:{"1st":0,"2nd":0,"3rd":0} };
+
+      students.forEach(st => {
+        const sessionName = st.session?.session || 'Unknown';
+        if (!sessionMap[sessionName]) sessionMap[sessionName] = {"1st":0,"2nd":0,"3rd":0, participated:0};
+        (st.positions || []).forEach(pos => {
+          const p = (pos?.position || '').toLowerCase();
+          const norm = p.includes('1')? '1st' : p.includes('2')? '2nd' : p.includes('3')? '3rd' : p.includes('particip')? 'participated' : '';
+          if (!norm) return;
+          sessionMap[sessionName][norm] = (sessionMap[sessionName][norm] || 0) + 1;
+          const lvl = classifyLevel(pos?.sport || '');
+          if (norm !== 'participated' && levels[lvl] && levels[lvl][norm] !== undefined) {
+            levels[lvl][norm] += 1;
+          }
+        });
+      });
+
+      setPositionStats({ session: sessionMap, levels });
+    } catch (e) {
+      setStatsError('Failed to load position stats');
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -452,6 +498,73 @@ function AdminDashboard() {
 
       {/* Analytics Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Position Stats Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" />
+                  Students - Positions Overview
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchPositionStats} disabled={statsLoading}>
+                  <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              ) : statsError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                  <p className="text-destructive">{statsError}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Session-wise */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Session-wise</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {Object.entries(positionStats.session).map(([sess, counts]) => (
+                        <div key={sess} className="flex items-center justify-between bg-muted p-2 rounded-md">
+                          <span className="text-sm font-medium text-foreground">{sess}</span>
+                          <div className="text-xs text-muted-foreground flex items-center gap-2">
+                            <span>1st: <span className="text-foreground font-semibold">{counts['1st']||0}</span></span>
+                            <span>2nd: <span className="text-foreground font-semibold">{counts['2nd']||0}</span></span>
+                            <span>3rd: <span className="text-foreground font-semibold">{counts['3rd']||0}</span></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Sport level */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">By Level (PTU Intercollege, National, International)</h4>
+                    <div className="space-y-2">
+                      {['ptu','national','international'].map(level => (
+                        <div key={level} className="flex items-center justify-between bg-muted p-2 rounded-md">
+                          <span className="text-sm font-medium capitalize text-foreground">{level}</span>
+                          <div className="text-xs text-muted-foreground flex items-center gap-2">
+                            <span>1st: <span className="text-foreground font-semibold">{positionStats.levels[level]?.['1st']||0}</span></span>
+                            <span>2nd: <span className="text-foreground font-semibold">{positionStats.levels[level]?.['2nd']||0}</span></span>
+                            <span>3rd: <span className="text-foreground font-semibold">{positionStats.levels[level]?.['3rd']||0}</span></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

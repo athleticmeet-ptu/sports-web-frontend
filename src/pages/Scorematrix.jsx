@@ -1,9 +1,54 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Select } from "../components/ui/select";
+import { AlertCircle, BarChart, Download, FileSpreadsheet, FileText } from "lucide-react";
+import * as XLSX from 'xlsx';
+import { Document, Packer, Paragraph, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 
 export default function StudentsTable() {
   const [students, setStudents] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const exportExcel = () => {
+    const rows = students.map((s, i) => ({
+      Index: i+1,
+      Name: s.name,
+      URN: s.urn,
+      Branch: s.branch,
+      Year: s.year,
+      Sports: Array.isArray(s.sports) ? s.sports.join(', ') : '',
+      Positions: Array.isArray(s.positions) ? s.positions.map(p => (typeof p === 'string'? p : `${p.sport} (${p.position||'pending'})`)).join(', ') : '',
+      Score: getScore(s)
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ScoreMatrix');
+    XLSX.writeFile(wb, 'score_matrix.xlsx');
+  };
+
+  const exportWord = async () => {
+    const header = new DocxTableRow({
+      children: ['#','Name','URN','Branch','Year','Sports','Positions','Score'].map(t => new DocxTableCell({ children:[ new Paragraph({ children:[ new TextRun({ text: t, bold: true }) ] }) ] }))
+    });
+    const body = students.map((s, i) => new DocxTableRow({
+      children: [
+        i+1+'', s.name||'', s.urn||'', s.branch||'', s.year||'',
+        Array.isArray(s.sports)? s.sports.join(', '):'',
+        Array.isArray(s.positions)? s.positions.map(p => (typeof p==='string'? p : `${p.sport} (${p.position||'pending'})`)).join(', '):'',
+        String(getScore(s))
+      ].map(val => new DocxTableCell({ children:[ new Paragraph(String(val)) ] }))
+    }));
+
+    const table = new DocxTable({ rows: [header, ...body] });
+    const doc = new Document({ sections: [{ children: [ new Paragraph({ children:[ new TextRun({ text: 'Score Matrix', bold: true, size: 28 }) ] }), table ] }] });
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, 'score_matrix.docx');
+  };
 
   // Selected sessions
   const [selectedSession1, setSelectedSession1] = useState("");
@@ -16,7 +61,11 @@ export default function StudentsTable() {
         if (!res.data) return;
         setSessions(res.data);
       })
-      .catch((err) => console.error("Error fetching sessions:", err));
+      .catch((err) => {
+        console.error("Error fetching sessions:", err);
+        setError("Failed to load sessions");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   // 🔹 Fetch students when either session changes
@@ -25,6 +74,7 @@ export default function StudentsTable() {
 
     const fetchStudents = async () => {
       try {
+        setError(null);
         const promises = [];
         if (selectedSession1)
           promises.push(
@@ -68,6 +118,7 @@ export default function StudentsTable() {
         setStudents(Object.values(merged));
       } catch (err) {
         console.error("Error fetching students:", err);
+        setError("Failed to load students");
       }
     };
 
@@ -129,76 +180,118 @@ export default function StudentsTable() {
   return total;
 };
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">Loading score matrix...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center min-h-[300px]">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="w-5 h-5" />
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Students (Merged Sessions)</h1>
+    <div className="space-y-6">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="flex items-center gap-2">
+          <BarChart className="w-6 h-6 text-primary" />
+          <h1 className="text-3xl font-bold text-foreground">Students (Merged Sessions)</h1>
+        </div>
+      </motion.div>
 
-      {/* 🔹 Two Session Selectors */}
-      <div className="flex gap-6 mb-4">
-        {[1, 2].map((num) => (
-          <div key={num}>
-            <label className="block font-medium mb-1">Session {num}</label>
-            <select
-              value={num === 1 ? selectedSession1 : selectedSession2}
-              onChange={(e) =>
-                num === 1
-                  ? setSelectedSession1(e.target.value)
-                  : setSelectedSession2(e.target.value)
-              }
-              className="border px-3 py-2 rounded-md"
-            >
-              <option value="">Select Session</option>
-              {sessions.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {new Date(s.startDate).toLocaleString("default", { month: "short" })}–
-                  {new Date(s.endDate).toLocaleString("default", { month: "short" })}{" "}
-                  {new Date(s.endDate).getFullYear()}
-                </option>
-              ))}
-            </select>
+      <Card>
+        <CardHeader>
+          <CardTitle>Compare Sessions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-6 mb-2 flex-wrap">
+            {[1, 2].map((num) => (
+              <div key={num}>
+                <label className="block text-sm font-medium text-foreground mb-1">Session {num}</label>
+                <Select
+                  value={num === 1 ? selectedSession1 : selectedSession2}
+                  onChange={(e) =>
+                    num === 1 ? setSelectedSession1(e.target.value) : setSelectedSession2(e.target.value)
+                  }
+                >
+                  <option value="">Select Session</option>
+                  {sessions.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {new Date(s.startDate).toLocaleString("default", { month: "short" })}–
+                      {new Date(s.endDate).toLocaleString("default", { month: "short" })} {new Date(s.endDate).getFullYear()}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* 🔹 Students Table */}
-      <table className="w-full border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border px-2 py-1">#</th>
-            <th className="border px-2 py-1">Name</th>
-            <th className="border px-2 py-1">URN</th>
-            <th className="border px-2 py-1">Branch</th>
-            <th className="border px-2 py-1">Year</th>
-            <th className="border px-2 py-1">Sports</th>
-            <th className="border px-2 py-1">Positions</th>
-            <th className="border px-2 py-1">Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((s, i) => (
-            <tr key={s.urn}>
-              <td className="border px-2 py-1">{i + 1}</td>
-              <td className="border px-2 py-1">{s.name}</td>
-              <td className="border px-2 py-1">{s.urn}</td>
-              <td className="border px-2 py-1">{s.branch}</td>
-              <td className="border px-2 py-1">{s.year}</td>
-              <td className="border px-2 py-1">{Array.isArray(s.sports) ? s.sports.join(", ") : ""}</td>
-              <td className="border px-2 py-1">
-  {Array.isArray(s.positions)
-    ? s.positions
-        .map((p) =>
-          typeof p === "string" ? p : `${p.sport} (${p.position || "pending"})`
-        )
-        .join(", ")
-    : ""}
-</td>
-
-              <td className="border px-2 py-1">{getScore(s)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Students</span>
+            <div className="flex items-center gap-2">
+              <button onClick={exportExcel} className="inline-flex items-center gap-2 text-sm px-3 py-1 border rounded-md hover:bg-muted">
+                <FileSpreadsheet className="w-4 h-4" /> Excel
+              </button>
+              <button onClick={exportWord} className="inline-flex items-center gap-2 text-sm px-3 py-1 border rounded-md hover:bg-muted">
+                <FileText className="w-4 h-4" /> Word
+              </button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border rounded-lg">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="border px-2 py-1 text-left">#</th>
+                  <th className="border px-2 py-1 text-left">Name</th>
+                  <th className="border px-2 py-1 text-left">URN</th>
+                  <th className="border px-2 py-1 text-left">Branch</th>
+                  <th className="border px-2 py-1 text-left">Year</th>
+                  <th className="border px-2 py-1 text-left">Sports</th>
+                  <th className="border px-2 py-1 text-left">Positions</th>
+                  <th className="border px-2 py-1 text-left">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((s, i) => (
+                  <tr key={s.urn} className="hover:bg-muted/50">
+                    <td className="border px-2 py-1">{i + 1}</td>
+                    <td className="border px-2 py-1">{s.name}</td>
+                    <td className="border px-2 py-1">{s.urn}</td>
+                    <td className="border px-2 py-1">{s.branch}</td>
+                    <td className="border px-2 py-1">{s.year}</td>
+                    <td className="border px-2 py-1">{Array.isArray(s.sports) ? s.sports.join(", ") : ""}</td>
+                    <td className="border px-2 py-1">
+                      {Array.isArray(s.positions)
+                        ? s.positions
+                            .map((p) => (typeof p === "string" ? p : `${p.sport} (${p.position || "pending"})`))
+                            .join(", ")
+                        : ""}
+                    </td>
+                    <td className="border px-2 py-1">{getScore(s)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

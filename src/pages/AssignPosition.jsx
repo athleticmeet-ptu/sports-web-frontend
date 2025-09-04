@@ -101,11 +101,14 @@ const AssignPosition = () => {
   };
 
   // Filter captains by sport without re-deduplicating
-  const filteredCaptains = captains.filter(c =>
-    sportFilter
-      ? c.sport && c.sport.toLowerCase().includes(sportFilter.toLowerCase())
-      : true
-  );
+  const filteredCaptains = captains
+    // hide captains already assigned a position
+    .filter(c => !c.assignedPosition)
+    .filter(c =>
+      sportFilter
+        ? c.sport && c.sport.toLowerCase().includes(sportFilter.toLowerCase())
+        : true
+    );
 
   if (loading) {
     return (

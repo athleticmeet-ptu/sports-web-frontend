@@ -12,7 +12,8 @@ import {
   RefreshCw,
   AlertCircle,
   Search,
-  Filter
+  Filter,
+  Trophy
 } from "lucide-react";
 import API from "../services/api";
 
@@ -45,6 +46,18 @@ const AllStudents = () => {
     student.urn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.branch?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Compute achievements
+  const achievement = students.reduce((acc, s) => {
+    (s.positions || []).forEach(pos => {
+      const p = String(pos?.position || '').toLowerCase();
+      if (p.includes('particip')) acc.participated += 1;
+      else if (p.includes('1')) acc.first += 1;
+      else if (p.includes('2')) acc.second += 1;
+      else if (p.includes('3')) acc.third += 1;
+    });
+    return acc;
+  }, { participated: 0, first: 0, second: 0, third: 0 });
 
   if (loading) {
     return (
@@ -113,13 +126,21 @@ const AllStudents = () => {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="w-8 h-8 text-primary" />
+            <div className="flex items-center gap-3 mb-2">
+              <Trophy className="w-8 h-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {new Set(students.map(s => s.branch)).size}
-                </p>
-                <p className="text-sm text-muted-foreground">Branches</p>
+                <p className="text-sm text-muted-foreground">Student Achievements</p>
+                <p className="text-base font-semibold text-foreground">Participated • 1st</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-muted rounded-lg text-center">
+                <div className="text-xl font-bold text-foreground">{achievement.participated}</div>
+                <div className="text-xs text-muted-foreground">Participated</div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg text-center">
+                <div className="text-xl font-bold text-foreground">{achievement.first}</div>
+                <div className="text-xs text-muted-foreground">1st</div>
               </div>
             </div>
           </CardContent>
@@ -127,13 +148,21 @@ const AllStudents = () => {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-primary" />
+            <div className="flex items-center gap-3 mb-2">
+              <Trophy className="w-8 h-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {new Set(students.map(s => s.year)).size}
-                </p>
-                <p className="text-sm text-muted-foreground">Years</p>
+                <p className="text-sm text-muted-foreground">Student Achievements</p>
+                <p className="text-base font-semibold text-foreground">2nd • 3rd</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-muted rounded-lg text-center">
+                <div className="text-xl font-bold text-foreground">{achievement.second}</div>
+                <div className="text-xs text-muted-foreground">2nd</div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg text-center">
+                <div className="text-xl font-bold text-foreground">{achievement.third}</div>
+                <div className="text-xs text-muted-foreground">3rd</div>
               </div>
             </div>
           </CardContent>

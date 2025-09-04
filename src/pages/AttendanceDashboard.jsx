@@ -35,6 +35,8 @@ const AttendanceDashboard = ({defaultSport}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [nameFilter, setNameFilter] = useState("");
+  const [urnFilter, setUrnFilter] = useState("");
 
   // Sessions
   const [sessions, setSessions] = useState([]);
@@ -261,7 +263,7 @@ const AttendanceDashboard = ({defaultSport}) => {
       >
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <label className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 Select Session:
@@ -273,6 +275,15 @@ const AttendanceDashboard = ({defaultSport}) => {
                   </option>
                 ))}
               </Select>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">Filter by Name</label>
+                <Input value={nameFilter} onChange={(e)=>setNameFilter(e.target.value)} placeholder="e.g. John" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">Filter by URN</label>
+                <Input value={urnFilter} onChange={(e)=>setUrnFilter(e.target.value)} placeholder="e.g. 21XXXX" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -364,7 +375,10 @@ const AttendanceDashboard = ({defaultSport}) => {
               </div>
             ) : (
               <div className="space-y-4">
-                {students.map((st, index) => {
+                {students
+                  .filter(st => (nameFilter? (st.name||"").toLowerCase().includes(nameFilter.toLowerCase()):true))
+                  .filter(st => (urnFilter? (st.urn||"").toLowerCase().includes(urnFilter.toLowerCase()):true))
+                  .map((st, index) => {
                   const att = attendance[`${st._id}_${selectedSession}`];
                   const isPresent = att?.status === "Present" && att?.date === date;
                   const isAbsent = att?.status === "Absent" && att?.date === date;

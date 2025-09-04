@@ -66,6 +66,9 @@ const startEditing = (captain) => {
 
   const [sessions, setSessions] = useState([]);
   const [captains, setCaptains] = useState([]);
+  const [filterName, setFilterName] = useState('');
+  const [filterURN, setFilterURN] = useState('');
+  const [filterSport, setFilterSport] = useState('');
 
   useEffect(() => {
     // simulate loading
@@ -357,7 +360,25 @@ const startEditing = (captain) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <CaptainsAndTeams />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="text-sm font-medium text-foreground">Filter by Name</label>
+                <Input value={filterName} onChange={(e)=>setFilterName(e.target.value)} placeholder="e.g. John" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Filter by URN</label>
+                <Input value={filterURN} onChange={(e)=>setFilterURN(e.target.value)} placeholder="URN" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Filter by Sport</label>
+                <Input value={filterSport} onChange={(e)=>setFilterSport(e.target.value)} placeholder="e.g. Football" />
+              </div>
+            </div>
+            <CaptainsAndTeams 
+              nameFilter={filterName}
+              urnFilter={filterURN}
+              sportFilter={filterSport}
+            />
           </CardContent>
         </Card>
       </motion.div>

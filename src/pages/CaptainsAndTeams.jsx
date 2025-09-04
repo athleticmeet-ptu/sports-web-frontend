@@ -8,7 +8,7 @@ import { Select } from "../components/ui/select";
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from "../components/ui/modal";
 import { Crown, Users, Edit, Trash2, Eye, RefreshCw } from "lucide-react";
 
-function CaptainsAndTeams() {
+function CaptainsAndTeams({ nameFilter = "", urnFilter = "", sportFilter = "" }) {
   const [captains, setCaptains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -214,7 +214,11 @@ const handleEditSubmit = async () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {captains.map((captain, index) => (
+          {captains
+            .filter(c => nameFilter ? (c.name||"").toLowerCase().includes(nameFilter.toLowerCase()) : true)
+            .filter(c => urnFilter ? (c.urn||"").toLowerCase().includes(urnFilter.toLowerCase()) : true)
+            .filter(c => sportFilter ? (c.sport||"").toLowerCase().includes(sportFilter.toLowerCase()) : true)
+            .map((captain, index) => (
             <motion.div
               key={captain._id}
               initial={{ opacity: 0, y: 20 }}

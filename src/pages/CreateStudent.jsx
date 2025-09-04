@@ -43,6 +43,10 @@ export default function Students() {
 
   const [students, setStudents] = useState([]); // future API
   const [sessions, setSessions] = useState([]);
+  // Stats: participated and 1st/2nd/3rd counts
+  const [stats, setStats] = useState({ participated: 0, first: 0, second: 0, third: 0 });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
 
   // Custom dropdown states
   const [courseOpen, setCourseOpen] = useState(false);
@@ -62,6 +66,32 @@ export default function Students() {
         }
       })
       .catch(() => setMessage('⚠ No active session found.'));
+
+    // Load stats
+    const loadStats = async () => {
+      try {
+        setStatsError('');
+        setStatsLoading(true);
+        const res = await API.get('/admin/students');
+        const students = res.data || [];
+        let participated = 0, first = 0, second = 0, third = 0;
+        students.forEach(st => {
+          (st.positions || []).forEach(pos => {
+            const p = (pos?.position || '').toLowerCase();
+            if (p.includes('particip')) participated += 1;
+            else if (p.includes('1')) first += 1;
+            else if (p.includes('2')) second += 1;
+            else if (p.includes('3')) third += 1;
+          });
+        });
+        setStats({ participated, first, second, third });
+      } catch (e) {
+        setStatsError('Failed to load stats');
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    loadStats();
   }, []);
 
   const handleChange = (e) => {
@@ -108,14 +138,7 @@ export default function Students() {
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-4">
-          <Button
-            onClick={() => navigate('/admin')}
-            variant="outline"
-            size="sm"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
+
           <div>
             <h1 className="text-3xl font-bold text-foreground">Student Management</h1>
             <p className="text-muted-foreground mt-1">Create and manage student accounts</p>
