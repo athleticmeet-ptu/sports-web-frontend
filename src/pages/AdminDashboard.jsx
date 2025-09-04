@@ -17,6 +17,10 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from "recharts";
+
 import API from "../services/api";
 
 function AdminDashboard() {
@@ -40,6 +44,61 @@ function AdminDashboard() {
   const [positionStats, setPositionStats] = useState({ session: {}, levels: { international: {"1st":0,"2nd":0,"3rd":0}, national: {"1st":0,"2nd":0,"3rd":0}, state:{"1st":0,"2nd":0,"3rd":0}, ptu:{"1st":0,"2nd":0,"3rd":0} } });
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+
+ // New states
+const [sessions, setSessions] = useState([]);
+const [selectedSession, setSelectedSession] = useState("");
+const [students, setStudents] = useState([]);
+const [studentsLoading, setStudentsLoading] = useState(true);
+
+
+
+
+
+  useEffect(() => {
+  const loadSessions = async () => {
+    try {
+      const res = await API.get("/admin/sessions");
+      setSessions(res.data || []);
+    } catch (err) {
+      console.error("Failed to load sessions", err);
+    }
+  };
+  loadSessions();
+}, []);
+
+useEffect(() => {
+  const loadStudents = async () => {
+    try {
+      setStudentsLoading(true);
+      const res = await API.get("/admin/students");
+      setStudents(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch students", err);
+    } finally {
+      setStudentsLoading(false);
+    }
+  };
+  loadStudents();
+}, []);
+
+// Filter + aggregate by selected session
+const genderData = React.useMemo(() => {
+  if (!selectedSession) return [];
+  const filtered = students.filter(st => st.session?._id === selectedSession);
+
+  let male = 0, female = 0;
+  filtered.forEach(st => {
+    if (st.gender?.toLowerCase() === "male") male++;
+    if (st.gender?.toLowerCase() === "female") female++;
+  });
+
+  return [{ name: "Students", Male: male, Female: female }];
+}, [students, selectedSession]);
+
+  
+  
+  
 
   useEffect(() => {
     // Loader simulate (jab API lagoge toh yaha loading control karna)
@@ -570,22 +629,65 @@ function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Performance Analytics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-40 flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-2" />
-                  <p>Chart / Graph Placeholder</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+         <Card className="hover:shadow-lg transition-shadow">
+  <CardHeader>
+    <CardTitle className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <TrendingUp className="w-5 h-5 text-primary" />
+        Performance Analytics
+      </div>
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="mb-4">
+      <select
+        value={selectedSession}
+        onChange={(e) => setSelectedSession(e.target.value)}
+        className="w-full border rounded-md px-3 py-2 bg-background text-foreground"
+      >
+        <option value="">-- Select Session --</option>
+        {sessions.map((s) => (
+          <option key={s._id} value={s._id}>
+            {s.session}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {studentsLoading ? (
+      <div className="flex items-center justify-center h-40">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    ) : !selectedSession ? (
+      <p className="text-muted-foreground text-center h-40 flex items-center justify-center">
+        Please select a session
+      </p>
+    ) : genderData.length > 0 ? (
+      <div className="h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={genderData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="Male" fill="#3b82f6" />
+            <Bar dataKey="Female" fill="#ec4899" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    ) : (
+      <p className="text-muted-foreground text-center h-40 flex items-center justify-center">
+        No student data available for this session
+      </p>
+    )}
+  </CardContent>
+</Card>
+
         </motion.div>
 
         <motion.div
