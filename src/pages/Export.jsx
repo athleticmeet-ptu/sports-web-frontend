@@ -37,7 +37,16 @@ import {
   TextRun,
   HeadingLevel,
   ImageRun,
+  AlignmentType,
+  TableRow,
+  TableBorders,
+  WidthType,
+  TableCell,
+  BorderStyle,
+  TabStopType
 } from "docx";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import API from "../services/api";
 
 // 🔹 Helper functions
@@ -62,14 +71,57 @@ const exportToExcel = async (students) => {
   const sessionName =
     students.length > 0 && students[0].session ? students[0].session : "N/A";
 
-  // Session header
+  // 🔹 Custom Header Start
   worksheet.mergeCells("A1:S1");
-  const sessionCell = worksheet.getCell("A1");
-  sessionCell.value = `Session: ${sessionName}`;
-  sessionCell.alignment = { vertical: "middle", horizontal: "center" };
-  sessionCell.font = { bold: true, size: 14 };
+  const title = worksheet.getCell("A1");
+  title.value = "I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY";
+  title.alignment = { vertical: "middle", horizontal: "center" };
+  title.font = { bold: true, size: 16 };
   worksheet.getRow(1).height = 25;
 
+  worksheet.mergeCells("A2:S2");
+  const dept = worksheet.getCell("A2");
+  dept.value = "Department of Physical Education & Sports";
+  dept.alignment = { vertical: "middle", horizontal: "center" };
+  dept.font = { bold: true, size: 14 };
+
+  worksheet.mergeCells("A3:S3");
+  const proforma = worksheet.getCell("A3");
+  proforma.value = "Eligibility Proforma for University Tournaments";
+  proforma.alignment = { vertical: "middle", horizontal: "center" };
+  proforma.font = { bold: true, underline: true, size: 14 };
+
+  // College | Tournament + Year | Manager
+  worksheet.mergeCells("A4:F4");
+  worksheet.getCell("A4").value =
+    "College: Guru Nanak Dev Engg. College Ludhiana";
+  worksheet.getCell("A4").alignment = { vertical: "middle", horizontal: "left" };
+
+  worksheet.mergeCells("G4:M4");
+  worksheet.getCell("G4").value =
+    "PTU Inter-college Badminton Tournament\nYear: 2024-25";
+  worksheet.getCell("G4").alignment = {
+    vertical: "middle",
+    horizontal: "center",
+    wrapText: true,
+  };
+
+  worksheet.mergeCells("N4:S4");
+  worksheet.getCell("N4").value = "Manager: Dr. Gunjan Bhardwaj";
+  worksheet.getCell("N4").alignment = {
+    vertical: "middle",
+    horizontal: "right",
+  };
+
+  // Category + Session
+  worksheet.mergeCells("A5:S5");
+  worksheet.getCell("A5").value =
+    "Category: Men   |   Session: " + sessionName;
+  worksheet.getCell("A5").alignment = {
+    vertical: "middle",
+    horizontal: "center",
+  };
+  worksheet.getCell("A5").font = { bold: true };
   // Column widths
   worksheet.columns = [
     { width: 8 },
@@ -324,26 +376,330 @@ const exportToWord = async (students) => {
     );
   }
 
-  const doc = new Document({
-    sections: [{
-      properties:{ page:{ size:{ orientation:"landscape" } } },
+const doc = new Document({
+  sections: [
+    {
+      properties: { page: { size: { orientation: "landscape" } } },
       children: [
+        // ====== UNIVERSITY HEADER ======
         new Paragraph({
-          text:"Student List",
-          heading:HeadingLevel.HEADING_1,
-          spacing:{ after:300 }
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({ text: "I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY", bold: true, size: 28 }),
+          ],
         }),
         new Paragraph({
-          children:[ new TextRun({ text:`Session: ${students.length>0 && students[0].session ? students[0].session : "N/A"}`, bold:true, size:26 }) ],
-          spacing:{ after:200 }
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({ text: "Department of Physical Education & Sports", bold: true, size: 24 }),
+          ],
         }),
-        new DocxTable({ rows: tableRows })
-      ]
-    }]
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({ text: "Eligibility Proforma for University Tournaments", bold: true, size: 22 }),
+          ],
+          spacing: { after: 200 },
+        }),
+
+new Paragraph({
+  tabStops: [
+    { type: TabStopType.LEFT, position: 500 },
+    { type: TabStopType.CENTER, position: 5000 },   // Tournament center me
+    { type: TabStopType.CENTER, position: 7500 },   // Year bhi center ke paas
+    { type: TabStopType.RIGHT, position: 8100 },   // Manager bilkul right me
+  ],
+  children: [
+    // Left side → College
+    new TextRun({ text: "College: ", bold: false }),
+    new TextRun({ text: students[0]?.college || "Guru Nanak Dev Engineering College", bold: true }),
+
+    // Category
+    new TextRun({ text: "\tCategory: ", bold: false }),
+    new TextRun({ text: students[0]?.category || "Men", bold: true, italics: true }),
+
+    // Tournament (center-left)
+    new TextRun({
+      text:
+        "\tPTU Inter-college " +
+        (students[0]?.tournament || "________") +
+        " Tournament",
+      bold: true,
+    }),
+
+    // Year (center-right)
+    new TextRun({
+      text: "\tYear: " + (students[0]?.year || "2024-25"),
+      bold: true,
+    }),
+
+    // Manager (right aligned)
+    new TextRun({ text: "\tManager: ", bold: false }),
+    new TextRun({ text: students[0]?.manager || "Dr. Gunjan Bhardawaj", bold: true }),
+  ],
+  spacing: { after: 300 },
+}),
+
+
+
+        // ====== MAIN STUDENT TABLE ======
+        new DocxTable({ rows: tableRows }),
+  new Paragraph({
+            tabStops: [
+              { type: TabStopType.LEFT, position: 1200 },
+              { type: TabStopType.CENTER, position: 4200 },
+              { type: TabStopType.RIGHT, position: 7800 },
+            ],
+            spacing: { before: 300, after: 150 },
+            children: [
+              new TextRun({
+                text: "Certified that particulars given above have been Verified and checked\t",
+                size: 20,
+              }),
+              new TextRun({
+                text: "Certified that the players are not employed anywhere on full time basis.\t",
+                size: 20,
+              }),
+              new TextRun({
+                text: "Certified that the eligibility of the students listed herein has been verified and they are eligible to participate in PTU Inter-College tournament according to the P.T.U. Rules.",
+                size: 20,
+              }),
+            ],
+          }),
+
+          new Paragraph({
+            tabStops: [
+              { type: TabStopType.LEFT, position: 1200 },
+              { type: TabStopType.CENTER, position: 4200 },
+              { type: TabStopType.RIGHT, position: 7800 },
+            ],
+            spacing: { before: 200 },
+            children: [
+              new TextRun({ text: "Date: ____________", bold: false, size: 20 }),
+              new TextRun({ text: "\tSignature of DPE/Lecturer Phy. Edu.\t", bold: false, size: 20 }),
+              new TextRun({ text: "PRINCIPAL ____________", bold: true, size: 20 }),
+              new TextRun({ text: "\t(Seal of the College/Institute)", italics: true, size: 20 }),
+            ],
+          }),
+        ],
+      },
+    ],
   });
 
   const buffer = await Packer.toBlob(doc);
   saveAs(buffer, "students.docx");
+};
+
+// 🔹 PDF export function
+const exportToPDF = async (students, category, sport, year, manager) => {
+  const doc = new jsPDF('landscape', 'pt', 'a4');
+  doc.setFont('times', 'normal');
+
+  // 🔹 Header
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.text(
+    'I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY',
+    doc.internal.pageSize.width / 2,
+    30,
+    { align: 'center' }
+  );
+
+  doc.setFontSize(11);
+  doc.text(
+    'Department of Physical Education & Sports',
+    doc.internal.pageSize.width / 2,
+    50,
+    { align: 'center' }
+  );
+
+  doc.text(
+    'Eligibility Proforma for University Tournaments',
+    doc.internal.pageSize.width / 2,
+    70,
+    { align: 'center' }
+  );
+
+  // 🔹 College Info Row (labels normal, values bold + underline)
+  doc.setFontSize(10);
+  let y = 90;
+  let x = 40;
+
+  // College (fixed, normal)
+  doc.setFont('times', 'normal');
+  const collegeText = 'College: Guru Nanak Dev Engg. College Ludhiana    ';
+  doc.text(collegeText, x, y);
+  x += doc.getTextWidth(collegeText);
+
+  // Category
+  const catLabel = 'Category: ';
+  const catValue = category;
+  doc.setFont('times', 'normal');
+  doc.text(catLabel, x, y);
+  let labelWidth = doc.getTextWidth(catLabel);
+  doc.setFont('times', 'bold');
+  doc.text(catValue, x + labelWidth, y);
+  let valueWidth = doc.getTextWidth(catValue);
+  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
+  x += labelWidth + valueWidth + 20;
+
+  // Sport
+  const sportLabel = 'PTU Inter-college ';
+  const sportValue = `${sport} Tournament`;
+  doc.setFont('times', 'normal');
+  doc.text(sportLabel, x, y);
+  labelWidth = doc.getTextWidth(sportLabel);
+  doc.setFont('times', 'bold');
+  doc.text(sportValue, x + labelWidth, y);
+  valueWidth = doc.getTextWidth(sportValue);
+  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
+  x += labelWidth + valueWidth + 20;
+
+  // Year
+  const yearLabel = 'Year: ';
+  const yearValue = year;
+  doc.setFont('times', 'normal');
+  doc.text(yearLabel, x, y);
+  labelWidth = doc.getTextWidth(yearLabel);
+  doc.setFont('times', 'bold');
+  doc.text(yearValue, x + labelWidth, y);
+  valueWidth = doc.getTextWidth(yearValue);
+  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
+  x += labelWidth + valueWidth + 20;
+
+  // Manager
+  const mgrLabel = 'Manager: ';
+  const mgrValue = manager;
+  doc.setFont('times', 'normal');
+  doc.text(mgrLabel, x, y);
+  labelWidth = doc.getTextWidth(mgrLabel);
+  doc.setFont('times', 'bold');
+  doc.text(mgrValue, x + labelWidth, y);
+  valueWidth = doc.getTextWidth(mgrValue);
+  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
+
+  // 🔹 Table headers
+  const head = [
+    [
+      'Sr. No',
+      'Name',
+      "Father's Name",
+      'Date of Birth',
+      'University Registration No',
+      'Present Branch/Year',
+      { content: 'Year of Passing', colSpan: 2 },
+      'Date of First Admission',
+      { content: 'Last Examination', colSpan: 2 },
+      {
+        content: 'No of years of Participation\n(Inter College)',
+        colSpan: 2,
+      },
+      'No of years of participation\nin Inter Varsity Tournament',
+      'Signature of the Student',
+      'Home Address\nwith Phone No',
+      'Passport Size\nPhotograph',
+    ],
+    [
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      'Matric\n7(a)',
+      '+2 Exam\n7(b)',
+      '8',
+      'Name\n9(a)',
+      'Year\n9(b)',
+      'Graduate\n10(a)',
+      'PG\n10(b)',
+      '11',
+      '12',
+      '13',
+      '14',
+    ],
+  ];
+
+  // 🔹 Student rows
+  const body = students.map((s, index) => [
+    index + 1,
+    s.name || '',
+    s.fatherName || '',
+    s.dob || '',
+    s.universityRegNo || '',
+    s.branchYear || '',
+    s.matricYear || '',
+    s.plusTwoYear || '',
+    s.firstAdmissionYear || '',
+    s.lastExam || '',
+    s.lastExamYear || '',
+    s.interCollegeGraduateYears || '',
+    s.interCollegePgYears || '',
+    s.interVarsityYears || '',
+    '', // Signature placeholder
+    s.addressWithPhone || '',
+    '', // Passport photo placeholder
+  ]);
+
+  autoTable(doc, {
+    head,
+    body,
+    startY: 120,
+    theme: 'grid',
+    styles: {
+      font: 'times',
+      fontSize: 9,
+      halign: 'center',
+      valign: 'middle',
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      font: 'times',
+      fontSize: 8,
+      textColor: 0,
+      fillColor: [255, 255, 255], // white header background
+    },
+    tableWidth: "auto",
+  });
+
+  // 🔹 Footer (certifications with wrapping in 3 columns)
+  const pageHeight = doc.internal.pageSize.height;
+  let certY = pageHeight - 120;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(10);
+
+  const colWidth = doc.internal.pageSize.width / 3 - 40;
+  const col1X = 40;
+  const col2X = col1X + colWidth + 20;
+  const col3X = col2X + colWidth + 20;
+
+  const cert1 =
+    'Certified that particulars given above have been verified and checked';
+  const cert2 =
+    'Certified that the players are not employed anywhere on full time basis.';
+  const cert3 =
+    'Certified that the eligibility of the students listed herein has been verified and they are eligible.';
+
+  const cert1Lines = doc.splitTextToSize(cert1, colWidth);
+  const cert2Lines = doc.splitTextToSize(cert2, colWidth);
+  const cert3Lines = doc.splitTextToSize(cert3, colWidth);
+
+  doc.text(cert1Lines, col1X, certY);
+  doc.text(cert2Lines, col2X, certY);
+  doc.text(cert3Lines, col3X, certY);
+
+  // 🔹 Footer (signatures)
+  let signY = pageHeight - 60;
+  doc.text('Date: ___________', col1X, signY);
+  doc.text('Signature of DPE/Lecturer Physical Edu.', col2X, signY);
+  doc.setFont('times', 'bold');
+  doc.text('PRINCIPAL', col3X, signY);
+  doc.setFont('times', 'normal');
+  doc.text('(Seal of College)', col3X, signY + 15);
+
+  doc.save('Eligibility_Form.pdf');
 };
 
 // 🔹 Main Component
@@ -360,9 +716,15 @@ const StudentExport = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 🔹 PDF customization inputs
+  const [pdfCategory, setPdfCategory] = useState('Men');
+  const [pdfSport, setPdfSport] = useState('Badminton');
+  const [pdfYear, setPdfYear] = useState('2024-25');
+  const [pdfManager, setPdfManager] = useState('Dr. Gunjan Bhardwaj');
+
   // 🔹 Preview state
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewMode, setPreviewMode] = useState(null); // 'excel' | 'word' | null
+  const [previewMode, setPreviewMode] = useState(null); // 'excel' | 'word' | 'pdf' | null
 
   // Load sessions
   useEffect(() => {
@@ -412,18 +774,22 @@ const StudentExport = () => {
   const handleSelectAll = (e) => {
     const isChecked = e.target.checked;
     const newSelection = { ...selectedStudents };
-    students
-      .filter((s) => {
-        const activityText = s.sports?.join(", ").toLowerCase() || "";
-        return (
-          (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
-          (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
-          (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
-        );
-      })
-      .forEach((student) => {
-        newSelection[student.universityRegNo] = isChecked;
-      });
+    
+    // Get filtered students (same logic as in the component)
+    const visibleStudents = students.filter((s) => {
+      const activityText = s.sports?.join(", ").toLowerCase() || "";
+      return (
+        (!filterName || s.name.toLowerCase().includes(filterName.toLowerCase())) &&
+        (!filterURN || s.universityRegNo.toLowerCase().includes(filterURN.toLowerCase())) &&
+        (!filterActivity || activityText.includes(filterActivity.toLowerCase()))
+      );
+    });
+    
+    // Update selection for all visible students
+    visibleStudents.forEach((student) => {
+      newSelection[student.universityRegNo] = isChecked;
+    });
+    
     setSelectedStudents(newSelection);
   };
 
@@ -477,6 +843,8 @@ const StudentExport = () => {
       await exportToExcel(data);
     } else if (previewMode === "word") {
       await exportToWord(data);
+    } else if (previewMode === "pdf") {
+      await exportToPDF(data, pdfCategory, pdfSport, pdfYear, pdfManager);
     }
     setIsPreviewOpen(false);
     setPreviewMode(null);
@@ -624,19 +992,15 @@ const StudentExport = () => {
                 Students ({filteredStudents.length})
               </CardTitle>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="flex items-center gap-2"
-                >
-                  {filteredStudents.every(s => selectedStudents[s.universityRegNo]) ? (
-                    <CheckSquare className="w-4 h-4" />
-                  ) : (
-                    <Square className="w-4 h-4" />
-                  )}
-                  Select All
-                </Button>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                  />
+                  <span className="text-sm font-medium text-foreground">Select All</span>
+                </label>
               </div>
             </div>
           </CardHeader>
@@ -741,6 +1105,70 @@ const StudentExport = () => {
                 <Eye className="w-4 h-4" />
                 Preview Word ({getSelectedStudents().length})
               </Button>
+              <Button
+                onClick={() => openPreview("pdf")}
+                disabled={getSelectedStudents().length === 0}
+                className="flex items-center gap-2 flex-1"
+                variant="outline"
+              >
+                <Eye className="w-4 h-4" />
+                Preview PDF ({getSelectedStudents().length})
+              </Button>
+            </div>
+
+            {/* PDF Customization Inputs */}
+            <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                <span className="font-medium text-foreground">PDF Customization (for Eligibility PDF)</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Category:</label>
+                  <Select
+                    value={pdfCategory}
+                    onChange={(e) => setPdfCategory(e.target.value)}
+                    className="bg-background text-foreground border-border"
+                  >
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Sport:</label>
+                  <Input
+                    type="text"
+                    value={pdfSport}
+                    onChange={(e) => setPdfSport(e.target.value)}
+                    placeholder="e.g., Badminton"
+                    className="bg-background text-foreground border-border placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Year:</label>
+                  <Input
+                    type="text"
+                    value={pdfYear}
+                    onChange={(e) => setPdfYear(e.target.value)}
+                    placeholder="e.g., 2024-25"
+                    className="bg-background text-foreground border-border placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Manager:</label>
+                  <Select
+                    value={pdfManager}
+                    onChange={(e) => setPdfManager(e.target.value)}
+                    className="bg-background text-foreground border-border"
+                  >
+                    <option value="Dr. Gunjan Bhardwaj">Dr. Gunjan Bhardwaj</option>
+                    <option value="Prof. Suminder Singh">Prof. Suminder Singh</option>
+                  </Select>
+                </div>
+              </div>
             </div>
             
             <div className="mt-4 p-4 bg-muted rounded-lg">
@@ -764,7 +1192,9 @@ const StudentExport = () => {
         <ModalHeader>
           <ModalTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-primary" />
-            {previewMode === "excel" ? "Preview for Excel Export" : "Preview for Word Export"}
+            {previewMode === "excel" ? "Preview for Excel Export" : 
+             previewMode === "word" ? "Preview for Word Export" : 
+             "Preview for PDF Export"}
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
@@ -778,6 +1208,61 @@ const StudentExport = () => {
 
               {previewMode === "excel" && (
                 <div className="w-full overflow-auto">
+                 {/* 🔹 Custom Header Start */}
+    <div className="mb-4">
+      {/* Top Center Block */}
+      <div className="text-center">
+        <h2 className="font-bold text-lg uppercase">
+          I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY
+        </h2>
+        <p className="font-semibold">Department of Physical Education &amp; Sports</p>
+        <p className="font-semibold underline">
+          Eligibility Proforma for University Tournaments
+        </p>
+      </div>
+
+      {/* Second Row with Left / Center / Right */}
+      <div className="grid grid-cols-3 text-sm mt-2 items-center">
+        {/* Left */}
+        <div className="text-left">
+          College:{" "}
+          <span className="font-bold">
+            Guru Nanak Dev Engg. College Ludhiana
+          </span>
+        </div>
+
+        {/* Center */}
+        <div className="text-center">
+          PTU Inter-college{" "}
+          <span className="font-bold underline">Badminton</span> Tournament
+          <br />
+          Year: <span className="font-bold underline">2024-25</span>
+        </div>
+
+        {/* Right */}
+        <div className="text-right">
+          Manager:{" "}
+          <span className="font-bold underline">Dr. Gunjan Bhardwaj</span>
+        </div>
+      </div>
+
+      {/* Third Row with Category + Session */}
+      <div className="flex flex-col items-center mt-1 text-sm">
+        <div>
+          Category: <span className="font-bold ml-1">Men</span>
+        </div>
+        <div>
+          Session:{" "}
+          <span className="font-bold ml-1">
+            {getSelectedStudents().length > 0 && getSelectedStudents()[0].session
+              ? getSelectedStudents()[0].session
+              : "N/A"}
+          </span>
+        </div>
+      </div>
+    </div>
+    {/* 🔹 Custom Header End */}
+
                   <table className="min-w-full border-collapse">
                     <thead>
                       {/* Session header row (A1:S1) */}
@@ -820,7 +1305,7 @@ const StudentExport = () => {
                         </tr>
                       ) : (
                         getSelectedStudents().map((s, idx) => (
-                          <tr key={s.universityRegNo} className="hover:bg-orange-50 transition">
+                          <tr key={s.universityRegNo} className="hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
                             <td className="border p-2 text-center">{idx+1}</td>
                             <td className="border p-2">{s.name || ""}</td>
                             <td className="border p-2">{s.fatherName || ""}</td>
@@ -852,8 +1337,173 @@ const StudentExport = () => {
                 </div>
               )}
 
+              {previewMode === "pdf" && (
+                <div className="w-full overflow-auto">
+                  {/* 🔹 Custom Header Section (PDF style) */}
+                  <div className="mb-4">
+                    {/* Top Center */}
+                    <div className="text-center">
+                      <h2 className="font-bold text-lg uppercase">
+                        I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY
+                      </h2>
+                      <p className="font-semibold">Department of Physical Education &amp; Sports</p>
+                      <p className="font-semibold">Eligibility Proforma for University Tournaments</p>
+                    </div>
+
+                    {/* Second Row with College / Tournament / Manager */}
+                    <div className="grid grid-cols-3 text-sm mt-2 items-center">
+                      <div className="text-left">
+                        College:{" "}
+                        <span className="font-bold">
+                          Guru Nanak Dev Engg. College Ludhiana
+                        </span>
+                      </div>
+                      <div className="text-center">
+                        PTU Inter-college{" "}
+                        <span className="font-bold underline">{pdfSport}</span> Tournament
+                        <br />
+                        Year: <span className="font-bold underline">{pdfYear}</span>
+                      </div>
+                      <div className="text-right">
+                        Manager:{" "}
+                        <span className="font-bold underline">{pdfManager}</span>
+                      </div>
+                    </div>
+
+                    {/* Category Row */}
+                    <div className="flex justify-center mt-1 text-sm">
+                      Category: <span className="font-bold ml-1">{pdfCategory}</span>
+                    </div>
+                  </div>
+
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      {/* First header row matching PDF export */}
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <th className="border p-2" rowSpan={2}>Sr. No</th>
+                        <th className="border p-2" rowSpan={2}>Name</th>
+                        <th className="border p-2" rowSpan={2}>Father's Name</th>
+                        <th className="border p-2" rowSpan={2}>Date of Birth</th>
+                        <th className="border p-2" rowSpan={2}>University Registration No</th>
+                        <th className="border p-2" rowSpan={2}>Present Branch/Year</th>
+                        <th className="border p-2" colSpan={2}>Year of Passing</th>
+                        <th className="border p-2" rowSpan={2}>Date of First Admission</th>
+                        <th className="border p-2" colSpan={2}>Last Examination</th>
+                        <th className="border p-2" colSpan={2}>No of years of Participation (Inter College)</th>
+                        <th className="border p-2" rowSpan={2}>No of years of participation in Inter Varsity Tournament</th>
+                        <th className="border p-2" rowSpan={2}>Signature of the Student</th>
+                        <th className="border p-2" rowSpan={2}>Home Address with Phone No</th>
+                        <th className="border p-2" rowSpan={2}>Passport Size Photograph</th>
+                      </tr>
+                      {/* Second header row */}
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <th className="border p-2">Matric</th>
+                        <th className="border p-2">+2 Exam</th>
+                        <th className="border p-2">Name</th>
+                        <th className="border p-2">Year</th>
+                        <th className="border p-2">Graduate</th>
+                        <th className="border p-2">PG</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {getSelectedStudents().length === 0 ? (
+                        <tr>
+                          <td colSpan={17} className="text-center p-4 text-gray-500">No rows selected</td>
+                        </tr>
+                      ) : (
+                        getSelectedStudents().map((s, idx) => (
+                          <tr key={s.universityRegNo} className="hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
+                            <td className="border p-2 text-center">{idx+1}</td>
+                            <td className="border p-2">{s.name || ""}</td>
+                            <td className="border p-2">{s.fatherName || ""}</td>
+                            <td className="border p-2">{s.dob || ""}</td>
+                            <td className="border p-2">{s.universityRegNo || ""}</td>
+                            <td className="border p-2">{s.branchYear || ""}</td>
+                            <td className="border p-2">{s.matricYear || ""}</td>
+                            <td className="border p-2">{s.plusTwoYear || ""}</td>
+                            <td className="border p-2">{s.firstAdmissionYear || ""}</td>
+                            <td className="border p-2">{s.lastExam || ""}</td>
+                            <td className="border p-2">{s.lastExamYear || ""}</td>
+                            <td className="border p-2">{s.interCollegeGraduateYears || ""}</td>
+                            <td className="border p-2">{s.interCollegePgYears || ""}</td>
+                            <td className="border p-2">{s.interVarsityYears || ""}</td>
+                            <td className="border p-2 text-center">
+                              {s.signatureUrl ? <img src={s.signatureUrl} alt="signature" className="inline-block" style={{ width: 100, height: 40, objectFit: 'contain' }} /> : ""}
+                            </td>
+                            <td className="border p-2">{s.addressWithPhone || ""}</td>
+                            <td className="border p-2 text-center">
+                              {s.passportPhotoUrl ? <img src={s.passportPhotoUrl} alt="passport" className="inline-block" style={{ width: 70, height: 80, objectFit: 'cover' }} /> : ""}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+
+                  {/* Footer certifications */}
+                  <div className="mt-6 grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p>Certified that particulars given above have been verified and checked</p>
+                    </div>
+                    <div>
+                      <p>Certified that the players are not employed anywhere on full time basis.</p>
+                    </div>
+                    <div>
+                      <p>Certified that the eligibility of the students listed herein has been verified and they are eligible.</p>
+                    </div>
+                  </div>
+
+                  {/* Footer signatures */}
+                  <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+                    <div>Date: ___________</div>
+                    <div>Signature of DPE/Lecturer Physical Edu.</div>
+                    <div>
+                      <div className="font-bold">PRINCIPAL</div>
+                      <div className="italic">(Seal of College)</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {previewMode === "word" && (
                 <div className="w-full overflow-auto">
+                 {/* 🔹 Custom Header Section (Word style) */}
+    <div className="mb-4">
+      {/* Top Center */}
+      <div className="text-center">
+        <h2 className="font-bold text-lg uppercase">
+          I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY
+        </h2>
+        <p className="font-semibold">Department of Physical Education &amp; Sports</p>
+        <p className="font-semibold">Eligibility Proforma for University Tournaments</p>
+      </div>
+
+      {/* Second Row with College / Tournament / Manager */}
+      <div className="grid grid-cols-3 text-sm mt-2 items-center">
+        <div className="text-left">
+          College:{" "}
+          <span className="font-bold">
+            Guru Nanak Dev Engg. College Ludhiana
+          </span>
+        </div>
+        <div className="text-center">
+          PTU Inter-college{" "}
+          <span className="font-bold underline">Badminton</span> Tournament
+          <br />
+          Year: <span className="font-bold underline">2024-25</span>
+        </div>
+        <div className="text-right">
+          Manager:{" "}
+          <span className="font-bold underline">Dr. Gunjan Bhardwaj</span>
+        </div>
+      </div>
+
+      {/* Category Row */}
+      <div className="flex justify-center mt-1 text-sm">
+        Category: <span className="font-bold ml-1">Men</span>
+      </div>
+    </div>
+
                   <table className="min-w-full border-collapse">
                     <thead>
                       {/* First header row matching Word export */}
@@ -892,7 +1542,7 @@ const StudentExport = () => {
                         </tr>
                       ) : (
                         getSelectedStudents().map((s, idx) => (
-                          <tr key={s.universityRegNo} className="hover:bg-orange-50 transition">
+                          <tr key={s.universityRegNo} className="hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
                             <td className="border p-2 text-center">{idx+1}</td>
                             <td className="border p-2">{s.name || ""}</td>
                             <td className="border p-2">{s.fatherName || ""}</td>
@@ -946,10 +1596,15 @@ const StudentExport = () => {
                     <FileSpreadsheet className="w-4 h-4" />
                     Export to Excel
                   </>
-                ) : (
+                ) : previewMode === "word" ? (
                   <>
                     <FileText className="w-4 h-4" />
                     Export to Word
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4" />
+                    Export to PDF
                   </>
                 )}
               </Button>

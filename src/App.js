@@ -1,6 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LoadingProvider } from './contexts/LoadingContext';
 import LoginPage from './pages/LoginPage';
 import StudentDashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -26,20 +27,22 @@ import Certificate from './pages/Certificate';
 import CaptainListCert from './pages/CaptainListCert';
 import StudentsTable from './pages/Scorematrix';
 import AdminLayout from './components/AdminLayout';
+import EligibilityPDF from './pages/EligibiliyPDF';
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
+      <LoadingProvider>
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student" element={<StudentProfileForm />} />
           <Route path="/teacher" element={<TeacherDashboard />} />
           <Route path="/captain" element={<CaptainDashboard />} />
 
           {/* Admin routes with persistent sidebar */}
           <Route element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/students" element={<AllStudents />} />
             <Route path="/admin/captains" element={<CaptainsAndTeams />} />
             <Route path="/admin/student/:id" element={<StudentDetails />} />
@@ -57,9 +60,12 @@ function App() {
             <Route path="/admin/approvals" element={<AdminApprovalDashboard />} />
             <Route path="/admin/assign-position" element={<AdminAssignPosition />} />
             <Route path="/admin/session" element={<AdminSessionManager />} />
+            <Route path="/admin/pdf" element={<EligibilityPDF />} />
+            
           </Route>
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </LoadingProvider>
     </ThemeProvider>
   );
 }

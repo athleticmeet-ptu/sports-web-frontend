@@ -62,7 +62,7 @@ function LoginPage() {
     setTimeout(() => {
       if (role === "admin") navigate("/admin");
       else if (role === "teacher") navigate("/teacher");
-      else if (role === "student") navigate("/student/profile");
+      else if (role === "student") navigate("/student");
       else if (role === "captain") navigate("/captain");
       else navigate("/");
     }, 200);

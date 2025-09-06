@@ -318,33 +318,90 @@ const StudentProfileForm = () => {
   const disableSports = !personalApproved || sportsPending || sportsApproved;
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-bold mb-4">Student Profile</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8">
+            <h2 className="text-3xl font-bold text-white mb-2">Student Profile</h2>
+            <p className="text-blue-100">Manage your sports profile and achievements</p>
+          </div>
+          <div className="p-6 space-y-6">
       {!selectedSessionIsActive && (
-        <p className="text-red-600 font-semibold mb-4">
-          ⚠️ This session has expired. You cannot update details.
-        </p>
-      )}
-      {/* ---- Status Messages ---- */}
-      {personalApproved && (
-        <p className="text-green-600 font-semibold mb-4">
-          ✅ Personal details approved
-        </p>
-      )}
-      {personalPending && !personalApproved && (
-        <p className="text-amber-600 font-semibold mb-4">
-          ⏳ Personal details pending approval
-        </p>
-      )}
-      {err && <p className="text-red-500 mb-2">{err}</p>}
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-r-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-300 font-semibold">
+                      This session has expired. You cannot update details.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-      {/* ---- Session Select ---- */}
-      <div className="mb-4">
-        <label className="block mb-1 font-semibold">Select Session</label>
+            {/* Status Messages */}
+      {personalApproved && (
+              <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 p-4 rounded-r-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700 dark:text-green-300 font-semibold">
+                      Personal details approved
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+      {personalPending && !personalApproved && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-amber-700 dark:text-amber-300 font-semibold">
+                      Personal details pending approval
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {err && (
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-r-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-300">{err}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Session Select */}
+            <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                Select Session
+              </label>
         <select
           value={selectedSession}
           onChange={(e) => setSelectedSession(e.target.value)}
-          className="border p-2 rounded w-full"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors"
         >
           <option value="">-- Select Session --</option>
           {sessions.map((s) => (
@@ -355,190 +412,355 @@ const StudentProfileForm = () => {
         </select>
       </div>
 
-      {/* ---- Personal Details ---- */}
+            {/* Personal Details */}
       {profile && (
         <>
           {!personalApproved ? (
-            <form className="space-y-4 mb-4">
-              {/* Inputs - all disabled if session is expired */}
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                      <svg className="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Personal Details
+                    </h3>
+                    <form className="space-y-6">
+                      {/* Basic Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            CRN
+                          </label>
               <input
                 name="crn"
-                placeholder="CRN"
+                            placeholder="Enter CRN"
                 value={formData.crn}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
+                        </div>
 
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Date of Birth
+                          </label>
               <input
                 name="dob"
                 type="date"
                 value={formData.dob}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
+                        </div>
 
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Gender
+                          </label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
+                        </div>
 
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Father's Name
+                          </label>
               <input
                 name="fatherName"
-                placeholder="Father's Name"
+                            placeholder="Enter Father's Name"
                 value={formData.fatherName}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
+                        </div>
+                      </div>
 
+                      {/* Academic Information */}
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                          Academic Information
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Matric Year
+                            </label>
               <input
                 type="number"
                 name="yearOfPassingMatric"
+                              placeholder="Year of passing matric"
                 value={formData.yearOfPassingMatric}
                 onChange={handleChange}
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
               />
+                          </div>
 
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              +2 Year
+                            </label>
               <input
                 type="number"
                 name="yearOfPassingPlusTwo"
+                              placeholder="Year of passing +2"
                 value={formData.yearOfPassingPlusTwo}
                 onChange={handleChange}
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
               />
+                          </div>
 
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              First Admission Date
+                            </label>
               <input
                 name="firstAdmissionDate"
                 type="month"
                 value={formData.firstAdmissionDate}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
+                          </div>
 
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Last Exam Name
+                            </label>
               <input
                 name="lastExamName"
                 placeholder="Name of Last Exam Passed"
                 value={formData.lastExamName}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending}
               />
+                          </div>
 
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Last Exam Year
+                            </label>
               <input
                 name="lastExamYear"
                 placeholder="Year of Last Exam Passed"
                 value={formData.lastExamYear}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending}
               />
+                          </div>
 
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Years of Participation
+                            </label>
               <input
                 type="number"
                 name="yearsOfParticipation"
+                              placeholder="Number of years"
                 value={formData.yearsOfParticipation}
                 onChange={handleChange}
                 disabled={!selectedSessionIsActive || personalPending}
-                className="w-full border p-2 rounded"
-              />
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
 
+                      {/* Contact Information */}
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                          Contact Information
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Contact Number
+                            </label>
               <input
                 name="contact"
-                placeholder="Contact Number"
+                              placeholder="Enter contact number"
                 value={formData.contact}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
               />
-              
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Address
+                            </label>
+                            <textarea
+                              name="address"
+                              placeholder="Enter your address"
+                              value={formData.address}
+                              onChange={handleChange}
+                              rows={3}
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors resize-none"
+                              disabled={!selectedSessionIsActive || personalPending}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Course Information */}
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                          Course Information
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Inter-College Graduate Course Count
+                            </label>
               <input
                 type="number"
                 name="interCollegeGraduateCourse"
+                              placeholder="Number of graduate courses"
                 value={formData.interCollegeGraduateCourse}
                 onChange={handleChange}
-                placeholder="Inter-College Graduate Course Count"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
-                className="w-full border p-2 rounded"
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
               />
+                          </div>
 
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Inter-College PG Course Count
+                            </label>
               <input
                 type="number"
                 name="interCollegePgCourse"
+                              placeholder="Number of PG courses"
                 value={formData.interCollegePgCourse}
                 onChange={handleChange}
-                placeholder="Inter-College PG Course Count"
                 disabled={!selectedSessionIsActive || personalPending || profile?.isCloned}
-                className="w-full border p-2 rounded"
-              />
-              
-              <textarea
-                name="address"
-                placeholder="Address"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-                disabled={!selectedSessionIsActive || personalPending}
-              />
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Uploads */}
+                      {/* File Uploads */}
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                          File Uploads
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block mb-1 font-semibold">Upload Photo</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Upload Photo
+                            </label>
+                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                              <div className="space-y-1 text-center">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div className="flex text-sm text-gray-600 dark:text-gray-400">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleUpload(e, "photo")}
                   disabled={!selectedSessionIsActive || personalPending || uploading || profile?.isCloned}
-                />
+                                    className="sr-only"
+                                    id="photo-upload"
+                                  />
+                                  <label htmlFor="photo-upload" className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span>Upload a photo</span>
+                                  </label>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG up to 10MB</p>
+                              </div>
+                            </div>
                 {formData.photo && (
+                              <div className="mt-4">
                   <img
                     src={formData.photo}
                     alt="Preview"
-                    className="w-24 h-24 object-cover rounded mt-2"
+                                  className="w-32 h-32 object-cover rounded-lg mx-auto border border-gray-200 dark:border-gray-700"
                   />
+                              </div>
                 )}
               </div>
 
               <div>
-                <label className="block mb-1 font-semibold">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Upload Signature
                 </label>
+                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                              <div className="space-y-1 text-center">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div className="flex text-sm text-gray-600 dark:text-gray-400">
                 <input
                   name="signaturePhoto"
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleUpload(e, "signaturePhoto")}
                   disabled={!selectedSessionIsActive || personalPending || uploading || profile?.isCloned}
-                />
+                                    className="sr-only"
+                                    id="signature-upload"
+                                  />
+                                  <label htmlFor="signature-upload" className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span>Upload signature</span>
+                                  </label>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG up to 10MB</p>
+                              </div>
+                            </div>
                 {formData.signaturePhoto && (
+                              <div className="mt-4">
                   <img
                     src={formData.signaturePhoto}
                     alt="Signature"
-                    className="w-24 h-12 object-contain mt-2 border"
+                                  className="w-32 h-16 object-contain mx-auto border border-gray-200 dark:border-gray-700 rounded-lg"
                   />
+                              </div>
                 )}
+                          </div>
+                        </div>
               </div>
 
-              {/* Buttons */}
-              <div className="flex space-x-2">
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={handleSavePersonal}
                   disabled={!selectedSessionIsActive || personalPending || submitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {submitting ? "Saving..." : "Save Personal Details"}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                        >
+                          {submitting ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                              Save Personal Details
+                            </>
+                          )}
                 </button>
                 <button
                   type="button"
@@ -546,87 +768,181 @@ const StudentProfileForm = () => {
                   disabled={
                     !selectedSessionIsActive || personalPending || personalApproved || submittingForApproval
                   }
-                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {submittingForApproval
-                    ? "Submitting..."
-                    : "Submit for Approval"}
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                        >
+                          {submittingForApproval ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Submit for Approval
+                            </>
+                          )}
                 </button>
               </div>
             </form>
+                  </div>
           ) : (
             // Case 2: Approved → Show readonly
-            <div className="space-y-2 mb-4 bg-gray-50 p-4 rounded">
-              <p><strong>CRN:</strong> {formData.crn}</p>
-              <p><strong>Father's Name:</strong> {formData.fatherName}</p>
-              <p><strong>DOB:</strong> {formData.dob}</p>
-              <p><strong>Gender:</strong> {formData.gender}</p>
-              <p><strong>Matric Year:</strong> {formData.yearOfPassingMatric}</p>
-              <p><strong>+2 Year:</strong> {formData.yearOfPassingPlusTwo}</p>
-              <p><strong>First Admission:</strong> {formData.firstAdmissionDate}</p>
-              <p>
-                <strong>Last Exam:</strong> {formData.lastExamName} (
-                {formData.lastExamYear})
-              </p>
-              <p>
-                <strong>Participation Years:</strong>{" "}
-                {formData.yearsOfParticipation}
-              </p>
-              <p><strong>Contact:</strong> {formData.contact}</p>
-              <p><strong>Address:</strong> {formData.address}</p>
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
+                    <div className="flex items-center mb-4">
+                      <svg className="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">Personal Details - Approved</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">CRN:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.crn}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Father's Name:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.fatherName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">DOB:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.dob}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Gender:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.gender}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Matric Year:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.yearOfPassingMatric}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">+2 Year:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.yearOfPassingPlusTwo}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">First Admission:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.firstAdmissionDate}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Last Exam:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.lastExamName} ({formData.lastExamYear})</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Participation Years:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.yearsOfParticipation}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Contact:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.contact}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Address:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{formData.address}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {(formData.photo || formData.signaturePhoto) && (
+                      <div className="mt-6 flex flex-wrap gap-4">
               {formData.photo && (
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Profile Photo</p>
                 <img
                   src={formData.photo}
                   alt="Profile"
-                  className="w-24 h-24 object-cover rounded"
+                              className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                 />
+                          </div>
               )}
               {formData.signaturePhoto && (
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Signature</p>
                 <img
                   src={formData.signaturePhoto}
                   alt="Signature"
-                  className="w-24 h-12 object-contain border"
+                              className="w-24 h-12 object-contain border border-gray-200 dark:border-gray-700 rounded-lg"
                 />
+                          </div>
+                        )}
+                      </div>
               )}
             </div>
           )}
 
-          {/* ---- Sports Section with Three Categories ---- */}
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">Sports</label>
+                {/* Sports Section */}
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                    <svg className="w-6 h-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Sports & Achievements
+                  </h3>
 
             {!personalApproved && (
-              <p className="text-sm text-gray-500">
-                ⚠️ Sports can be added only after personal details are approved.
-              </p>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded-r-lg mb-6">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            Sports can be added only after personal details are approved.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
             )}
 
             {sportsApproved && (
+                    <div className="mb-6">
+                      <div className="flex items-center mb-4">
+                        <svg className="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">Approved Sports</h4>
+                      </div>
               <div className="flex flex-wrap gap-2">
                 {profile.sports.map((sport, idx) => (
                   <span
                     key={idx}
-                    className="bg-green-200 px-3 py-1 rounded-full"
+                            className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-4 py-2 rounded-full text-sm font-medium border border-green-200 dark:border-green-800"
                   >
                     {sport}
                   </span>
                 ))}
-                <p>Sports approved too!!!!</p>
+                      </div>
               </div>
             )}
-            
-            <label className="block mb-1 font-semibold">Sports & Positions</label>
-
+                  {/* Achievements */}
             {profile?.positions?.length > 0 && (
-              <div className="space-y-2 mb-3">
-                <h3 className="font-semibold text-green-700">🏆 Achievements</h3>
-                <ul className="list-disc list-inside text-gray-700">
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                        <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                        Achievements
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {profile.positions.map((p, idx) => (
-                    <li key={idx}>
-                      {p.sport} - <span className="font-bold">{p.position}</span>
-                    </li>
-                  ))}
-                </ul>
+                          <div key={idx} className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-gray-900 dark:text-gray-100">{p.sport}</span>
+                              <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-full text-sm font-bold">
+                                {p.position}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
               </div>
             )}
             
@@ -751,12 +1067,12 @@ const StudentProfileForm = () => {
 
           {/* ---- Student History Section ---- */}
           <div className="mt-6">
-            <h3 className="text-xl font-bold mb-2">📚 Student History</h3>
+            <h3 className="text-xl  font-bold mb-2">📚 Student History</h3>
             {loadingHistory && <p>Loading history...</p>}
             {history && (
               <div className="space-y-4">
                 {/* Sports History */}
-                <div className="border p-3 rounded bg-yellow-100">
+                <div className="border p-3 rounded bg-yellow-100 text-black ">
                   <h4 className="font-semibold">Sports History</h4>
                   {history.sportsHistory?.length > 0 ? (
                     history.sportsHistory.map((sport, i) => (
@@ -770,7 +1086,7 @@ const StudentProfileForm = () => {
                 </div>
 
                 {/* Captain History */}
-                <div className="border p-3 rounded bg-green-100">
+                <div className="border p-3 rounded bg-green-100 text-black ">
                   <h4 className="font-semibold">Captain History</h4>
                   {history.captainRecords?.length > 0 ? (
                     history.captainRecords.map((c, i) => (
@@ -786,7 +1102,7 @@ const StudentProfileForm = () => {
                 </div>
 
                 {/* Member History */}
-                <div className="border p-3 rounded bg-blue-100">
+                <div className="border p-3 rounded bg-blue-100 text-black ">
                   <h4 className="font-semibold">Team Member History</h4>
                   {history.memberRecords?.length > 0 ? (
                     history.memberRecords.map((m, i) => (
@@ -805,6 +1121,9 @@ const StudentProfileForm = () => {
           </div>
         </>
       )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

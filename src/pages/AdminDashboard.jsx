@@ -330,8 +330,9 @@ if (loading) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="h-full"
         >
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -349,13 +350,13 @@ if (loading) {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col">
               {pendingPositionsLoading ? (
-                <div className="flex items-center justify-center h-64">
+                <div className="flex items-center justify-center flex-1 h-64">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
     </div>
               ) : pendingPositionsError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
                   <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
                   <p className="text-destructive mb-4">{pendingPositionsError}</p>
                   <Button 
@@ -367,7 +368,7 @@ if (loading) {
                   </Button>
                 </div>
               ) : pendingPositions.length > 0 ? (
-                <div className="space-y-3 max-h-48 overflow-y-auto">
+                <div className="space-y-3 flex-1 overflow-y-auto max-h-64">
                   {pendingPositions.map((item, index) => (
                     <motion.div
                       key={item.id || index}
@@ -400,7 +401,7 @@ if (loading) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
                   <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground">No pending positions</p>
                 </div>
@@ -413,8 +414,9 @@ if (loading) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="h-full"
         >
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -432,13 +434,13 @@ if (loading) {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col">
               {pendingApprovalsLoading ? (
-                 <div className="flex items-center justify-center h-64">
+                 <div className="flex items-center justify-center flex-1 h-64">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
     </div>
               ) : pendingApprovalsError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
                   <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
                   <p className="text-destructive mb-4">{pendingApprovalsError}</p>
                   <Button 
@@ -450,7 +452,7 @@ if (loading) {
                   </Button>
                 </div>
               ) : (pendingTeams.length > 0 || pendingProfiles.length > 0) ? (
-                <div className="space-y-4 max-h-48 overflow-y-auto">
+                <div className="space-y-4 flex-1 overflow-y-auto max-h-64">
                   {/* Pending Teams Section */}
                   {pendingTeams.length > 0 && (
                     <div>
@@ -533,7 +535,7 @@ if (loading) {
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
                   <CheckCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground">No pending approvals</p>
                 </div>
@@ -551,8 +553,9 @@ if (loading) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
+          className="h-full"
         >
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -564,13 +567,13 @@ if (loading) {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col">
               {statsLoading ? (
-                <div className="flex items-center justify-center h-64">
+                <div className="flex items-center justify-center flex-1 h-64">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
     </div>
               ) : statsError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
                   <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
                   <p className="text-destructive">{statsError}</p>
                 </div>
@@ -617,8 +620,9 @@ if (loading) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="h-full"
         >
-         <Card className="hover:shadow-lg transition-shadow">
+         <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
   <CardHeader>
     <CardTitle className="flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -627,12 +631,12 @@ if (loading) {
       </div>
     </CardTitle>
   </CardHeader>
-  <CardContent>
+  <CardContent className="flex-1 flex flex-col">
     <div className="mb-4">
       <select
         value={selectedSession}
         onChange={(e) => setSelectedSession(e.target.value)}
-        className="w-full border rounded-md px-3 py-2 bg-background text-foreground"
+        className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
       >
         <option value="">-- Select Session --</option>
         {sessions.map((s) => (
@@ -644,7 +648,7 @@ if (loading) {
     </div>
 
     {studentsLoading ? (
-      <div className="flex items-center justify-center h-40">
+      <div className="flex items-center justify-center flex-1 h-64">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -652,11 +656,11 @@ if (loading) {
         />
       </div>
     ) : !selectedSession ? (
-      <p className="text-muted-foreground text-center h-40 flex items-center justify-center">
+      <p className="text-muted-foreground text-center flex-1 flex items-center justify-center h-64">
         Please select a session
       </p>
     ) : genderData.length > 0 ? (
-      <div className="h-72">
+      <div className="h-64 flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={genderData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -670,7 +674,7 @@ if (loading) {
         </ResponsiveContainer>
       </div>
     ) : (
-      <p className="text-muted-foreground text-center h-40 flex items-center justify-center">
+      <p className="text-muted-foreground text-center flex-1 flex items-center justify-center h-64">
         No student data available for this session
       </p>
     )}
@@ -683,8 +687,9 @@ if (loading) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="h-full"
         >
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -707,13 +712,13 @@ if (loading) {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col">
               {activitiesLoading ? (
-               <div className="flex items-center justify-center h-64">
+               <div className="flex items-center justify-center flex-1 h-64">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
     </div>
               ) : activitiesError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
                   <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
                   <p className="text-destructive mb-4">{activitiesError}</p>
                   <Button 
@@ -763,7 +768,7 @@ if (loading) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
                   <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground">No recent activities</p>
                 </div>

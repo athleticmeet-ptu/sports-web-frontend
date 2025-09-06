@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useLoading } from "../contexts/LoadingContext";
+import API from "../services/api";
 
 const SidebarLink = ({ to, children, icon: Icon, onClick }) => {
   const navigate = useNavigate();
+  const { startLoading, stopLoading } = useLoading();
+
+  const handleNavigation = () => {
+    startLoading('Navigating...');
+    setTimeout(() => {
+      navigate(to);
+      stopLoading();
+      if (onClick) onClick();
+    }, 300); // Small delay to show loading
+  };
 
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <button
-        onClick={() => {
-          navigate(to);
-          if (onClick) onClick();
-        }}
+        onClick={handleNavigation}
         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
       >
         {Icon && <Icon className="h-5 w-5" />}
@@ -21,17 +30,9 @@ const SidebarLink = ({ to, children, icon: Icon, onClick }) => {
   );
 };
 
-const handleLogout = () => {
-  try {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.clear();
-  } catch {}
-  window.location.href = "/";
-};
-
 function AdminLayout() {
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === "undefined") return false;
     return document.documentElement.classList.contains("dark");
@@ -44,6 +45,29 @@ function AdminLayout() {
       document.documentElement.classList.remove("dark");
     }
   }, [isDark]);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Call backend logout API to clear server-side session
+      await API.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Continue with logout even if API call fails
+    } finally {
+      // Clear client-side storage
+      try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.clear();
+      } catch (err) {
+        console.error('Error clearing storage:', err);
+      }
+      // Clear browser history and navigate to login with replace
+      window.history.replaceState(null, '', '/');
+      window.location.replace("/");
+    }
+  };
 
   const links = [
     { to: "/admin", label: "🏠 Home" },
@@ -133,9 +157,17 @@ function AdminLayout() {
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={handleLogout}
-            className="w-full px-3 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600"
+            disabled={isLoggingOut}
+            className="w-full px-3 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Logout
+            {isLoggingOut ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Logging out...
+              </>
+            ) : (
+              'Logout'
+            )}
           </button>
         </div>
         <div className="h-6" />
