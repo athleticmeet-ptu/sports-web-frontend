@@ -16,19 +16,19 @@ import { Navigation } from "swiper/modules";
 // 🎯 Layout configs for different templates
 const layoutConfig = {
   default: {
-    name: { top: "340px", left: "0", fontSize: "32px", textAlign: "center" },
-    urn: { top: "405px", left: "640px", fontSize: "24px" },
-    branch: { top: "405px", left: "185px", fontSize: "24px" },
-    position: { top: "465px", left: "250px", fontSize: "20px" },
-    sport: { top: "465px", left: "435px", fontSize: "20px" },
-    session: { top: "465px", left: "710px", fontSize: "20px" },
-  },
+    name: { top: "330px", left: "0px", textAlign: "center",width:"1000px", fontSize: "32px", fontWeight: "bold" },
+    urn: { top: "398px", left: "640px", fontSize: "24px" },
+    branch: { top: "395px", left: "225px", fontSize: "24px" },
+    sport: { top: "455px", left: "435px", fontSize: "20px" },
+    session: { top: "455px", left: "710px", fontSize: "20px" },
+    position: { top: "455px", right: "750px", fontSize: "20px" },
+                          },
   participation: {
-    name: { top: "344px", left: "0", fontSize: "32px", textAlign: "center" },
-    urn: { top: "410px", left: "600px", fontSize: "24px" },
-    branch: { top: "410px", left: "240px", fontSize: "24px" },
-    sport: { top: "455px", left: "320px", fontSize: "20px" },
-    session: { top: "460px", left: "591px", fontSize: "20px" },
+    name: { top: "330px", left: "0", fontSize: "32px", textAlign: "center" },
+    urn: { top: "398px", left: "600px", fontSize: "24px" },
+    branch: { top: "396px", left: "240px", fontSize: "24px" },
+    sport: { top: "448px", left: "320px", fontSize: "20px" },
+    session: { top: "450px", left: "591px", fontSize: "20px" },
   },
 };
 
@@ -215,7 +215,7 @@ const Certificate = () => {
                   <Download className="w-4 h-4" />
                   Download All
                 </Button>
-                <Button onClick={() => sendToCaptain(captainId)} variant="outline" className="flex items-center gap-2">
+                <Button onClick={() => {sendToCaptain(captainId);navigate('/admin/issue-cert');}} variant="outline" className="flex items-center gap-2">
                   <Send className="w-4 h-4" />
                   Send to Captain
                 </Button>

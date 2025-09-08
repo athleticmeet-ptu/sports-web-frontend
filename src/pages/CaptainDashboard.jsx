@@ -3,6 +3,8 @@ import React, { useEffect, useState,useRef } from 'react';
 import API from '../services/api';
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { color } from 'framer-motion';
+
 
 
 function CaptainDashboard() {
@@ -189,26 +191,48 @@ const generateCertificatesPDF = async () => {
     const input = certRefs.current[i];
     if (!input) continue;
 
-    // ✅ Decide template based on position
+    // Decide template based on position
     const template =
       stu.position?.toLowerCase() === "participated"
         ? "Certificates2.png"
         : "Certificates.png";
 
-    // ✅ force background change before taking screenshot
+    // Force background change before taking screenshot
     input.style.backgroundImage = `url('/${template}')`;
+     await new Promise(resolve => setTimeout(resolve, 100));
 
-    const canvas = await html2canvas(input, { scale: 2 });
+    // Take screenshot
+    const canvas = await html2canvas(input, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+    });
     const imgData = canvas.toDataURL("image/png");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = pdf.internal.pageSize.getHeight();
+
+    // PDF page size
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // Image size
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    // Maintain aspect ratio
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    const finalWidth = imgWidth * ratio;
+    const finalHeight = imgHeight * ratio;
+
+    // Center the image
+    const x = (pdfWidth - finalWidth) / 2;
+    const y = (pdfHeight - finalHeight) / 2;
 
     if (i !== 0) pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+    pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
   }
 
   pdf.save("Team_Certificates.pdf");
 };
+
 
   if (loading) {return (    <div className="flex items-center justify-center h-64">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
@@ -663,19 +687,19 @@ return (
                       
                       const styles = template === "Certificates2.png"
                         ? {
-                            name: { top: "344px", left: "470px", fontSize: "32px", textAlign: "center" },
-                            urn: { top: "410px", left: "600px", fontSize: "24px" },
-                            branch: { top: "410px", left: "240px", fontSize: "24px" },
-                            sport: { top: "455px", left: "320px", fontSize: "20px" },
-                            session: { top: "460px", left: "591px", fontSize: "20px" },
+                          name: { top: "330px", left: "0", fontSize: "32px", textAlign: "center",fontWeight: "bold" , color:"black",width:"100%" },
+                          urn: { top: "398px", left: "600px", fontSize: "24px",color:"black" },
+                          branch: { top: "396px", left: "240px", fontSize: "24px",color:"black" },
+                          sport: { top: "448px", left: "320px", fontSize: "20px",color:"black" },
+                          session: { top: "450px", left: "591px", fontSize: "20px",color:"black" },
                           }
                         : {
-                            name: { top: "340px", left: "0", width: "100%", textAlign: "center", fontSize: "32px", fontWeight: "bold" },
-                            urn: { top: "405px", left: "640px", fontSize: "24px" },
-                            branch: { top: "405px", left: "185px", fontSize: "24px" },
-                            sport: { top: "465px", left: "435px", fontSize: "20px" },
-                            session: { top: "465px", left: "710px", fontSize: "20px" },
-                            position: { top: "465px", right: "750px", fontSize: "20px" },
+                            name: { top: "330px", left: "0px", textAlign: "center",width:"1000px", fontSize: "32px", fontWeight: "bold" , color:"black"},
+                            urn: { top: "398px", left: "640px", fontSize: "24px" , color:"black"},
+                            branch: { top: "395px", left: "225px", fontSize: "24px" , color:"black"},
+                            sport: { top: "455px", left: "435px", fontSize: "20px" , color:"black"},
+                            session: { top: "455px", left: "710px", fontSize: "20px" , color:"black"},
+                            position: { top: "455px", right: "750px", fontSize: "20px", color:"black" },
                           };
 
                       return (
