@@ -15,10 +15,15 @@ import {
   RefreshCw,
   TrendingUp,
   Clock,
-  AlertCircle
+  AlertCircle,
+  User,
+  BarChart2
 } from "lucide-react";
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  PieChart,
+  Pie,
+  Cell
 } from "recharts";
 
 import API from "../services/api";
@@ -313,243 +318,216 @@ if (loading) {
 }
 
 
-  return (
-    <div className="space-y-8">
+return (
+  <div className="space-y-8">
+    {/* Welcome Section */}
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <h1 className="text-3xl font-bold text-foreground">Welcome Admin 👋</h1>
+      <p className="text-muted-foreground mt-2">
+        Manage your sports administration system
+      </p>
+    </motion.div>
+
+    {/* Stats Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Pending Positions */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ delay: 0.1 }}
+        className="h-full"
       >
-        <h1 className="text-3xl font-bold text-foreground">Welcome Admin 👋</h1>
-        <p className="text-muted-foreground mt-2">Manage your sports administration system</p>
+        <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                Pending Positions
+              </div>
+              <Button
+                onClick={fetchPendingPositions}
+                disabled={pendingPositionsLoading}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${
+                    pendingPositionsLoading ? "animate-spin" : ""
+                  }`}
+                />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col">
+            {pendingPositionsLoading ? (
+              <div className="flex items-center justify-center flex-1 h-64">
+                <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            ) : pendingPositionsError ? (
+              <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
+                <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                <p className="text-destructive mb-4">
+                  {pendingPositionsError}
+                </p>
+                <Button onClick={fetchPendingPositions} variant="outline" size="sm">
+                  Retry
+                </Button>
+              </div>
+            ) : pendingPositions.length > 0 ? (
+              <div className="space-y-3 flex-1 overflow-y-auto max-h-[300px] pr-2">
+                {pendingPositions.map((item, index) => (
+                  <motion.div
+                    key={item.id || index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-muted rounded-lg border-l-4 border-primary"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        {item.type === "student" ? (
+                          <Users className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Crown className="w-4 h-4 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">
+                          {item.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs mt-1">
+                          URN: {item.urn} • {item.branch}, {item.year}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Sport: {item.sport} • Position: {item.position}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
+                <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">No pending positions</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="h-full"
-        >
-          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  Pending Positions
-                </div>
-                <Button 
-                  onClick={fetchPendingPositions}
-                  disabled={pendingPositionsLoading}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                >
-                  <RefreshCw className={`w-4 h-4 ${pendingPositionsLoading ? 'animate-spin' : ''}`} />
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
-              {pendingPositionsLoading ? (
-                <div className="flex items-center justify-center flex-1 h-64">
-      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-    </div>
-              ) : pendingPositionsError ? (
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
-                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
-                  <p className="text-destructive mb-4">{pendingPositionsError}</p>
-                  <Button 
-                    onClick={fetchPendingPositions}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Retry
-                  </Button>
-                </div>
-              ) : pendingPositions.length > 0 ? (
-                <div className="space-y-3 flex-1 overflow-y-auto max-h-64">
-                  {pendingPositions.map((item, index) => (
-                    <motion.div
-                      key={item.id || index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-3 bg-muted rounded-lg border-l-4 border-primary"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
-                          {item.type === 'student' ? (
-                            <Users className="w-4 h-4 text-primary" />
-                          ) : (
-                            <Crown className="w-4 h-4 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground text-sm truncate">
-                            {item.name}
-                          </p>
-                          <p className="text-muted-foreground text-xs mt-1">
-                            URN: {item.urn} • {item.branch}, {item.year}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            Sport: {item.sport} • Position: {item.position}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
-                  <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No pending positions</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="h-full"
-        >
-          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                  Pending Approvals
-                </div>
-                <Button 
+      {/* Pending Approvals */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="h-full"
+      >
+        <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                Pending Approvals
+              </div>
+              <Button
+                onClick={fetchPendingApprovals}
+                disabled={pendingApprovalsLoading}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${
+                    pendingApprovalsLoading ? "animate-spin" : ""
+                  }`}
+                />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col">
+            {pendingApprovalsLoading ? (
+              <div className="flex items-center justify-center flex-1 h-64">
+                <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            ) : pendingApprovalsError ? (
+              <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
+                <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                <p className="text-destructive mb-4">{pendingApprovalsError}</p>
+                <Button
                   onClick={fetchPendingApprovals}
-                  disabled={pendingApprovalsLoading}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
+                  variant="outline"
+                  size="sm"
                 >
-                  <RefreshCw className={`w-4 h-4 ${pendingApprovalsLoading ? 'animate-spin' : ''}`} />
+                  Retry
                 </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
-              {pendingApprovalsLoading ? (
-                 <div className="flex items-center justify-center flex-1 h-64">
-      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-    </div>
-              ) : pendingApprovalsError ? (
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
-                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
-                  <p className="text-destructive mb-4">{pendingApprovalsError}</p>
-                  <Button 
-                    onClick={fetchPendingApprovals}
-                    variant="outline"
-                    size="sm"
+              </div>
+            ) : pendingTeams.length > 0 || pendingProfiles.length > 0 ? (
+              <div className="space-y-4 flex-1 overflow-y-auto max-h-[300px] pr-2">
+                {pendingTeams.map((team, index) => (
+                  <motion.div
+                    key={team._id || index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-muted rounded-lg border-l-4 border-primary"
                   >
-                    Retry
-                  </Button>
-                </div>
-              ) : (pendingTeams.length > 0 || pendingProfiles.length > 0) ? (
-                <div className="space-y-4 flex-1 overflow-y-auto max-h-64">
-                  {/* Pending Teams Section */}
-                  {pendingTeams.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Crown className="w-4 h-4 text-primary" />
-                        Pending Teams ({pendingTeams.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {pendingTeams.map((team, index) => (
-                          <motion.div
-                            key={team._id || index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500"
-                          >
-                            <div className="flex items-start gap-2">
-                              <Crown className="w-4 h-4 text-blue-600 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground text-sm">
-                                  {team.captainId?.name || 'Unknown Captain'}
-                                </p>
-                                <p className="text-muted-foreground text-xs mt-1">
-                                  Sport: {team.captainId?.sport || 'N/A'} • Team: {team.captainId?.teamName || 'N/A'}
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                  Session: {team.sessionId?.session || 'N/A'} • Members: {team.members?.length || 0}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
+                    <div className="flex items-start gap-3">
+                      <Users className="w-4 h-4 text-primary" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">
+                          Team: {team.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs mt-1">
+                          Sport: {team.sport}
+                        </p>
                       </div>
                     </div>
-                  )}
-                
-                  {/* Pending Profiles Section */}
-                  {pendingProfiles.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Users className="w-4 h-4 text-primary" />
-                        Pending Profiles ({pendingProfiles.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {pendingProfiles.map((profile, index) => (
-                          <motion.div
-                            key={profile._id || index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500"
-                          >
-                            <div className="flex items-start gap-2">
-                              <Users className="w-4 h-4 text-green-600 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground text-sm">
-                                  {profile.name || 'Unknown Student'}
-                                </p>
-                                <p className="text-muted-foreground text-xs mt-1">
-                                  URN: {profile.urn || 'N/A'} • {profile.branch || 'N/A'}, {profile.year || 'N/A'}
-                                </p>
-                                <div className="flex gap-2 mt-2">
-                                  {profile.pendingPersonal && (
-                                    <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs rounded-full">
-                                      Personal
-                                    </span>
-                                  )}
-                                  {profile.pendingSports && (
-                                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
-                                      Sports
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
+                  </motion.div>
+                ))}
+
+                {pendingProfiles.map((profile, index) => (
+                  <motion.div
+                    key={profile._id || index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-muted rounded-lg border-l-4 border-primary"
+                  >
+                    <div className="flex items-start gap-3">
+                      <User className="w-4 h-4 text-primary" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">
+                          {profile.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs mt-1">
+                          Branch: {profile.branch} • Year: {profile.year}
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No pending approvals</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">No pending approvals</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
 
-      </div>
-
-      {/* Analytics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Position Stats Card */}
-        <motion.div
+    {/* Analytics + Activities */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Position Stats */}
+ <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
@@ -616,169 +594,127 @@ if (loading) {
             </CardContent>
           </Card>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="h-full"
-        >
-         <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
-  <CardHeader>
-    <CardTitle className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <TrendingUp className="w-5 h-5 text-primary" />
-        Performance Analytics
-      </div>
-    </CardTitle>
-  </CardHeader>
-  <CardContent className="flex-1 flex flex-col">
-    <div className="mb-4">
-      <select
-        value={selectedSession}
-        onChange={(e) => setSelectedSession(e.target.value)}
-        className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
+
+      {/* Performance Analytics */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="h-full"
       >
-        <option value="">-- Select Session --</option>
-        {sessions.map((s) => (
-          <option key={s._id} value={s._id}>
-            {s.session}
-          </option>
-        ))}
-      </select>
-    </div>
+        <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Performance Analytics
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col">
+            <div className="mb-4">
+              <select
+                value={selectedSession}
+                onChange={(e) => setSelectedSession(e.target.value)}
+                className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
+              >
+                <option value="">-- Select Session --</option>
+                {sessions.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.session}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-    {studentsLoading ? (
-      <div className="flex items-center justify-center flex-1 h-64">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
-        />
-      </div>
-    ) : !selectedSession ? (
-      <p className="text-muted-foreground text-center flex-1 flex items-center justify-center h-64">
-        Please select a session
-      </p>
-    ) : genderData.length > 0 ? (
-      <div className="h-64 flex-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={genderData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="Male" fill="#3b82f6" />
-            <Bar dataKey="Female" fill="#ec4899" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    ) : (
-      <p className="text-muted-foreground text-center flex-1 flex items-center justify-center h-64">
-        No student data available for this session
-      </p>
-    )}
-  </CardContent>
-</Card>
+            {studentsLoading ? (
+              <div className="flex items-center justify-center flex-1 h-64">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+                />
+              </div>
+            ) : !selectedSession ? (
+              <p className="text-muted-foreground text-center flex-1 flex items-center justify-center h-64">
+                Please select a session
+              </p>
+            ) : genderData.length > 0 ? (
+              <div className="h-[400px] flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={genderData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Male" fill="#3b82f6" />
+                    <Bar dataKey="Female" fill="#ec4899" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center flex-1 flex items-center justify-center h-64">
+                No student data available for this session
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="h-full"
-        >
-          <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
-                  Recent Activities
-                  {!activitiesLoading && !activitiesError && (
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                      {recentActivities.length}
-                    </span>
-                  )}
-                </div>
-                <Button 
-                  onClick={fetchRecentActivities}
-                  disabled={activitiesLoading}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                >
-                  <RefreshCw className={`w-4 h-4 ${activitiesLoading ? 'animate-spin' : ''}`} />
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
-              {activitiesLoading ? (
-               <div className="flex items-center justify-center flex-1 h-64">
-      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-    </div>
-              ) : activitiesError ? (
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
-                  <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
-                  <p className="text-destructive mb-4">{activitiesError}</p>
-                  <Button 
-                    onClick={fetchRecentActivities}
-                    variant="outline"
-                    size="sm"
+      {/* Recent Activities */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="h-full"
+      >
+        <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              Recent Activities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {recentActivities.length > 0 ? (
+              <ul className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                {recentActivities.map((activity, index) => (
+                  <motion.li
+                    key={activity._id || index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-muted rounded-lg"
                   >
-                    Retry
-                  </Button>
-                </div>
-              ) : recentActivities.length > 0 ? (
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-                  {recentActivities.map((activity, index) => (
-                    <motion.div
-                      key={activity._id || index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="p-3 bg-muted rounded-lg border-l-4 border-primary"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground text-sm flex items-center gap-2">
-                            <span className="text-lg">{formatAction(activity.action).icon}</span>
-                            {formatAction(activity.action).text}
-                          </p>
-                          <p className="text-muted-foreground text-xs mt-1">
-                            {activity.description || 'No description available'}
-                          </p>
-                          {activity.targetModel && (
-                            <p className="text-muted-foreground text-xs mt-1">
-                              {activity.targetModel}
-                              {activity.targetId && ` • ID: ${activity.targetId}`}
-                            </p>
-                          )}
-                          {activity.admin && (
-                            <p className="text-muted-foreground text-xs mt-1">
-                              Admin: {activity.admin.name || activity.admin.email}
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-muted-foreground text-xs flex-shrink-0">
-                          {activity.createdAt ? formatTimestamp(activity.createdAt) : 'No timestamp'}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center h-64">
-                  <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No recent activities</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                    <p className="text-sm text-foreground">
+                      <span className="font-medium">{activity.adminName}</span>{" "}
+                      {activity.action}{" "}
+                      <span className="font-medium">
+                        {activity.targetModel}
+                      </span>
+                      {activity.description && (
+                        <> – {activity.description}</>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </p>
+                  </motion.li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-center">
+                No recent activities
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
-  );
+  </div>
+);
+
 }
 
 export default AdminDashboard;

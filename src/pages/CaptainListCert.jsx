@@ -110,47 +110,7 @@ const CaptainListCert = () => {
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-green-600">Sent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border rounded-lg">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="border px-4 py-2 text-left">Captain ID</th>
-                    <th className="border px-4 py-2 text-left">Name</th>
-                    <th className="border px-4 py-2 text-left">Position</th>
-                    <th className="border px-4 py-2 text-left">Session</th>
-                    <th className="border px-4 py-2 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sent.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center p-4 text-muted-foreground">
-                        No Certificates Sent Yet
-                      </td>
-                    </tr>
-                  ) : (
-                    sent.map((cap) => (
-                      <tr key={cap._id} className="hover:bg-muted/50">
-                        <td className="border px-4 py-2">{cap.captainId}</td>
-                        <td className="border px-4 py-2">{cap.name}</td>
-                        <td className="border px-4 py-2">{cap.position}</td>
-                        <td className="border px-4 py-2">{cap.session ? cap.session.name : "—"}</td>
-                        <td className="border px-4 py-2 text-muted-foreground">Sent</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+   
     </div>
   );
 };

@@ -71,6 +71,19 @@
   textarea {
     @apply bg-background text-foreground placeholder-muted-foreground border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
   }
+/* Chrome, Edge, Safari: remove password reveal icon */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  display: none !important;
+}
+
+/* For Webkit browsers (Chrome, Safari) */
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}
 
   /* Buttons - neutral defaults; pages can override */
   button {

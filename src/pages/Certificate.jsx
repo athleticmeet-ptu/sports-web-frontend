@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import API from "../services/api";
@@ -114,6 +114,7 @@ const Certificate = () => {
   const [captainPosition, setCaptainPosition] = useState(""); // ✅ new state
   const certRefs = useRef([]);
   const { captainId } = useParams();
+  const navigate=useNavigate();
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -224,6 +225,7 @@ const Certificate = () => {
                   onClick={() => {
                     setSelectedCaptain(null);
                     setStudents([]);
+                    navigate('/admin/issue-cert')
                   }}
                 >
                   <ArrowLeftRight className="w-4 h-4" />

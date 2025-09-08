@@ -43,7 +43,7 @@ const AssignPosition = () => {
                 ...c, 
                 // Use a consistent ID field
                 id: c.captainId || c._id,
-                assignedPosition: c.position || c.assignedPosition || "" 
+                assignedPosition: c.position  || "" 
               },
             ])
           ).values()
@@ -75,7 +75,7 @@ const AssignPosition = () => {
     }
 
     try {
-      const res = await API.post("/admin/assign-position", {
+      const res = await API.put("/admin/assign-position", {
         captainId,
         position,
       });
@@ -103,7 +103,7 @@ const AssignPosition = () => {
   // Filter captains by sport without re-deduplicating
   const filteredCaptains = captains
     // hide captains already assigned a position
-    .filter(c => !c.assignedPosition)
+    .filter(c => c.assignedPosition=== "pending")
     .filter(c =>
       sportFilter
         ? c.sport && c.sport.toLowerCase().includes(sportFilter.toLowerCase())
@@ -213,7 +213,7 @@ const AssignPosition = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCaptains.map((c, index) => {
               const captainId = c.captainId || c._id;
-              const isAssigned = !!c.assignedPosition;
+              const isAssigned =  c.assignedPosition !== "pending";
 
               return (
                 <motion.div

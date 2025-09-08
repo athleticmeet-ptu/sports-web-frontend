@@ -68,60 +68,6 @@ const exportToExcel = async (students) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Students");
 
-  const sessionName =
-    students.length > 0 && students[0].session ? students[0].session : "N/A";
-
-  // 🔹 Custom Header Start
-  worksheet.mergeCells("A1:S1");
-  const title = worksheet.getCell("A1");
-  title.value = "I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY";
-  title.alignment = { vertical: "middle", horizontal: "center" };
-  title.font = { bold: true, size: 16 };
-  worksheet.getRow(1).height = 25;
-
-  worksheet.mergeCells("A2:S2");
-  const dept = worksheet.getCell("A2");
-  dept.value = "Department of Physical Education & Sports";
-  dept.alignment = { vertical: "middle", horizontal: "center" };
-  dept.font = { bold: true, size: 14 };
-
-  worksheet.mergeCells("A3:S3");
-  const proforma = worksheet.getCell("A3");
-  proforma.value = "Eligibility Proforma for University Tournaments";
-  proforma.alignment = { vertical: "middle", horizontal: "center" };
-  proforma.font = { bold: true, underline: true, size: 14 };
-
-  // College | Tournament + Year | Manager
-  worksheet.mergeCells("A4:F4");
-  worksheet.getCell("A4").value =
-    "College: Guru Nanak Dev Engg. College Ludhiana";
-  worksheet.getCell("A4").alignment = { vertical: "middle", horizontal: "left" };
-
-  worksheet.mergeCells("G4:M4");
-  worksheet.getCell("G4").value =
-    "PTU Inter-college Badminton Tournament\nYear: 2024-25";
-  worksheet.getCell("G4").alignment = {
-    vertical: "middle",
-    horizontal: "center",
-    wrapText: true,
-  };
-
-  worksheet.mergeCells("N4:S4");
-  worksheet.getCell("N4").value = "Manager: Dr. Gunjan Bhardwaj";
-  worksheet.getCell("N4").alignment = {
-    vertical: "middle",
-    horizontal: "right",
-  };
-
-  // Category + Session
-  worksheet.mergeCells("A5:S5");
-  worksheet.getCell("A5").value =
-    "Category: Men   |   Session: " + sessionName;
-  worksheet.getCell("A5").alignment = {
-    vertical: "middle",
-    horizontal: "center",
-  };
-  worksheet.getCell("A5").font = { bold: true };
   // Column widths
   worksheet.columns = [
     { width: 8 },
@@ -444,43 +390,7 @@ new Paragraph({
 
         // ====== MAIN STUDENT TABLE ======
         new DocxTable({ rows: tableRows }),
-  new Paragraph({
-            tabStops: [
-              { type: TabStopType.LEFT, position: 1200 },
-              { type: TabStopType.CENTER, position: 4200 },
-              { type: TabStopType.RIGHT, position: 7800 },
-            ],
-            spacing: { before: 300, after: 150 },
-            children: [
-              new TextRun({
-                text: "Certified that particulars given above have been Verified and checked\t",
-                size: 20,
-              }),
-              new TextRun({
-                text: "Certified that the players are not employed anywhere on full time basis.\t",
-                size: 20,
-              }),
-              new TextRun({
-                text: "Certified that the eligibility of the students listed herein has been verified and they are eligible to participate in PTU Inter-College tournament according to the P.T.U. Rules.",
-                size: 20,
-              }),
-            ],
-          }),
 
-          new Paragraph({
-            tabStops: [
-              { type: TabStopType.LEFT, position: 1200 },
-              { type: TabStopType.CENTER, position: 4200 },
-              { type: TabStopType.RIGHT, position: 7800 },
-            ],
-            spacing: { before: 200 },
-            children: [
-              new TextRun({ text: "Date: ____________", bold: false, size: 20 }),
-              new TextRun({ text: "\tSignature of DPE/Lecturer Phy. Edu.\t", bold: false, size: 20 }),
-              new TextRun({ text: "PRINCIPAL ____________", bold: true, size: 20 }),
-              new TextRun({ text: "\t(Seal of the College/Institute)", italics: true, size: 20 }),
-            ],
-          }),
         ],
       },
     ],
@@ -491,215 +401,247 @@ new Paragraph({
 };
 
 // 🔹 PDF export function
-const exportToPDF = async (students, category, sport, year, manager) => {
-  const doc = new jsPDF('landscape', 'pt', 'a4');
-  doc.setFont('times', 'normal');
+const loadImage = (url, maxWidth = 150, maxHeight = 200) =>
+  new Promise((resolve) => {
+    if (!url) return resolve(null);
 
-  // 🔹 Header
-  doc.setFont('times', 'bold');
-  doc.setFontSize(11);
-  doc.text(
-    'I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY',
-    doc.internal.pageSize.width / 2,
-    30,
-    { align: 'center' }
-  );
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
 
-  doc.setFontSize(11);
-  doc.text(
-    'Department of Physical Education & Sports',
-    doc.internal.pageSize.width / 2,
-    50,
-    { align: 'center' }
-  );
+      // resize ratio maintain
+      const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+      width *= scale;
+      height *= scale;
 
-  doc.text(
-    'Eligibility Proforma for University Tournaments',
-    doc.internal.pageSize.width / 2,
-    70,
-    { align: 'center' }
-  );
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
 
-  // 🔹 College Info Row (labels normal, values bold + underline)
-  doc.setFontSize(10);
-  let y = 90;
-  let x = 40;
-
-  // College (fixed, normal)
-  doc.setFont('times', 'normal');
-  const collegeText = 'College: Guru Nanak Dev Engg. College Ludhiana    ';
-  doc.text(collegeText, x, y);
-  x += doc.getTextWidth(collegeText);
-
-  // Category
-  const catLabel = 'Category: ';
-  const catValue = category;
-  doc.setFont('times', 'normal');
-  doc.text(catLabel, x, y);
-  let labelWidth = doc.getTextWidth(catLabel);
-  doc.setFont('times', 'bold');
-  doc.text(catValue, x + labelWidth, y);
-  let valueWidth = doc.getTextWidth(catValue);
-  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
-  x += labelWidth + valueWidth + 20;
-
-  // Sport
-  const sportLabel = 'PTU Inter-college ';
-  const sportValue = `${sport} Tournament`;
-  doc.setFont('times', 'normal');
-  doc.text(sportLabel, x, y);
-  labelWidth = doc.getTextWidth(sportLabel);
-  doc.setFont('times', 'bold');
-  doc.text(sportValue, x + labelWidth, y);
-  valueWidth = doc.getTextWidth(sportValue);
-  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
-  x += labelWidth + valueWidth + 20;
-
-  // Year
-  const yearLabel = 'Year: ';
-  const yearValue = year;
-  doc.setFont('times', 'normal');
-  doc.text(yearLabel, x, y);
-  labelWidth = doc.getTextWidth(yearLabel);
-  doc.setFont('times', 'bold');
-  doc.text(yearValue, x + labelWidth, y);
-  valueWidth = doc.getTextWidth(yearValue);
-  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
-  x += labelWidth + valueWidth + 20;
-
-  // Manager
-  const mgrLabel = 'Manager: ';
-  const mgrValue = manager;
-  doc.setFont('times', 'normal');
-  doc.text(mgrLabel, x, y);
-  labelWidth = doc.getTextWidth(mgrLabel);
-  doc.setFont('times', 'bold');
-  doc.text(mgrValue, x + labelWidth, y);
-  valueWidth = doc.getTextWidth(mgrValue);
-  doc.line(x + labelWidth, y + 2, x + labelWidth + valueWidth, y + 2);
-
-  // 🔹 Table headers
-  const head = [
-    [
-      'Sr. No',
-      'Name',
-      "Father's Name",
-      'Date of Birth',
-      'University Registration No',
-      'Present Branch/Year',
-      { content: 'Year of Passing', colSpan: 2 },
-      'Date of First Admission',
-      { content: 'Last Examination', colSpan: 2 },
-      {
-        content: 'No of years of Participation\n(Inter College)',
-        colSpan: 2,
-      },
-      'No of years of participation\nin Inter Varsity Tournament',
-      'Signature of the Student',
-      'Home Address\nwith Phone No',
-      'Passport Size\nPhotograph',
-    ],
-    [
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      'Matric\n7(a)',
-      '+2 Exam\n7(b)',
-      '8',
-      'Name\n9(a)',
-      'Year\n9(b)',
-      'Graduate\n10(a)',
-      'PG\n10(b)',
-      '11',
-      '12',
-      '13',
-      '14',
-    ],
-  ];
-
-  // 🔹 Student rows
-  const body = students.map((s, index) => [
-    index + 1,
-    s.name || '',
-    s.fatherName || '',
-    s.dob || '',
-    s.universityRegNo || '',
-    s.branchYear || '',
-    s.matricYear || '',
-    s.plusTwoYear || '',
-    s.firstAdmissionYear || '',
-    s.lastExam || '',
-    s.lastExamYear || '',
-    s.interCollegeGraduateYears || '',
-    s.interCollegePgYears || '',
-    s.interVarsityYears || '',
-    '', // Signature placeholder
-    s.addressWithPhone || '',
-    '', // Passport photo placeholder
-  ]);
-
-  autoTable(doc, {
-    head,
-    body,
-    startY: 120,
-    theme: 'grid',
-    styles: {
-      font: 'times',
-      fontSize: 9,
-      halign: 'center',
-      valign: 'middle',
-      lineColor: [0, 0, 0],
-      lineWidth: 0.5,
-    },
-    headStyles: {
-      font: 'times',
-      fontSize: 8,
-      textColor: 0,
-      fillColor: [255, 255, 255], // white header background
-    },
-    tableWidth: "auto",
+      resolve(canvas.toDataURL("image/jpeg", 0.7)); // compressed JPG
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
   });
 
-  // 🔹 Footer (certifications with wrapping in 3 columns)
-  const pageHeight = doc.internal.pageSize.height;
-  let certY = pageHeight - 120;
+// 🔹 Main Export
+const exportToPDF = async (students, category, sport, year, manager) => {
+  const batchSize = 50; // students per PDF
+  const totalBatches = Math.ceil(students.length / batchSize);
 
-  doc.setFont('times', 'normal');
-  doc.setFontSize(10);
+  for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+    const batchStudents = students.slice(
+      batchIndex * batchSize,
+      (batchIndex + 1) * batchSize
+    );
 
-  const colWidth = doc.internal.pageSize.width / 3 - 40;
-  const col1X = 40;
-  const col2X = col1X + colWidth + 20;
-  const col3X = col2X + colWidth + 20;
+    const doc = new jsPDF("landscape", "pt", "a4");
+    doc.setFont("times", "normal");
 
-  const cert1 =
-    'Certified that particulars given above have been verified and checked';
-  const cert2 =
-    'Certified that the players are not employed anywhere on full time basis.';
-  const cert3 =
-    'Certified that the eligibility of the students listed herein has been verified and they are eligible.';
+    // 🔹 Header
+    doc.setFont("times", "bold");
+    doc.setFontSize(11);
+    doc.text(
+      "I.K. GUJRAL PUNJAB TECHNICAL UNIVERSITY",
+      doc.internal.pageSize.width / 2,
+      30,
+      { align: "center" }
+    );
 
-  const cert1Lines = doc.splitTextToSize(cert1, colWidth);
-  const cert2Lines = doc.splitTextToSize(cert2, colWidth);
-  const cert3Lines = doc.splitTextToSize(cert3, colWidth);
+    doc.setFontSize(11);
+    doc.text(
+      "Department of Physical Education & Sports",
+      doc.internal.pageSize.width / 2,
+      50,
+      { align: "center" }
+    );
 
-  doc.text(cert1Lines, col1X, certY);
-  doc.text(cert2Lines, col2X, certY);
-  doc.text(cert3Lines, col3X, certY);
+    doc.text(
+      "Eligibility Proforma for University Tournaments",
+      doc.internal.pageSize.width / 2,
+      70,
+      { align: "center" }
+    );
 
-  // 🔹 Footer (signatures)
-  let signY = pageHeight - 60;
-  doc.text('Date: ___________', col1X, signY);
-  doc.text('Signature of DPE/Lecturer Physical Edu.', col2X, signY);
-  doc.setFont('times', 'bold');
-  doc.text('PRINCIPAL', col3X, signY);
-  doc.setFont('times', 'normal');
-  doc.text('(Seal of College)', col3X, signY + 15);
+    // 🔹 College Info Row
+    doc.setFontSize(10);
+    let y = 90;
+    let x = 40;
 
-  doc.save('Eligibility_Form.pdf');
+    const collegeText = "College: Guru Nanak Dev Engg. College Ludhiana    ";
+    doc.text(collegeText, x, y);
+    x += doc.getTextWidth(collegeText);
+
+    const addField = (label, value) => {
+      doc.setFont("times", "normal");
+      doc.text(label, x, y);
+      let lw = doc.getTextWidth(label);
+      doc.setFont("times", "bold");
+      doc.text(value, x + lw, y);
+      let vw = doc.getTextWidth(value);
+      doc.line(x + lw, y + 2, x + lw + vw, y + 2);
+      x += lw + vw + 20;
+    };
+
+    addField("Category: ", category);
+    addField("PTU Inter-college ", `${sport} Tournament`);
+    addField("Year: ", year);
+    addField("Manager: ", manager);
+
+    // 🔹 Table headers
+    const head = [
+      [
+        "Sr. No",
+        "Name",
+        "Father's Name",
+        "Date of Birth",
+        "University Reg No",
+        "Branch/Year",
+        { content: "Year of Passing", colSpan: 2 },
+        "First Admission",
+        { content: "Last Exam", colSpan: 2 },
+        { content: "Participation (Inter College)", colSpan: 2 },
+        "Inter Varsity Years",
+        "Signature",
+        "Home Address",
+        "Passport Photo",
+      ],
+      [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "Matric 7(a)",
+        "+2 7(b)",
+        "8",
+        "Name 9(a)",
+        "Year 9(b)",
+        "Graduate 10(a)",
+        "PG 10(b)",
+        "11",
+        "12",
+        "13",
+        "14",
+      ],
+    ];
+
+    // 🔹 Student rows
+    const body = await Promise.all(
+      batchStudents.map(async (s, index) => {
+        const photo = await loadImage(s.passportPhotoUrl);
+        const signature = await loadImage(s.signatureUrl);
+
+        return [
+          index + 1,
+          s.name || "",
+          s.fatherName || "",
+          s.dob || "",
+          s.universityRegNo || "",
+          s.branchYear || "",
+          s.matricYear || "",
+          s.plusTwoYear || "",
+          s.firstAdmissionYear || "",
+          s.lastExam || "",
+          s.lastExamYear || "",
+          s.interCollegeGraduateYears || "",
+          s.interCollegePgYears || "",
+          s.interVarsityYears || "",
+          { content: signature ? "" : "", styles: { minCellHeight: 40 } },
+          s.addressWithPhone || "",
+          { content: photo ? "" : "", styles: { minCellHeight: 50 } },
+        ];
+      })
+    );
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 120,
+      theme: "grid",
+      styles: {
+        font: "times",
+        fontSize: 9,
+        halign: "center",
+        valign: "middle",
+        lineColor: [0, 0, 0],
+        lineWidth: 0.5,
+      },
+      headStyles: {
+        font: "times",
+        fontSize: 8,
+        textColor: 0,
+        fillColor: [255, 255, 255],
+      },
+      tableWidth: "auto",
+      didDrawCell: (data) => {
+        if (data.column.index === 14 && batchStudents[data.row.index]) {
+          const sig = batchStudents[data.row.index].signatureUrl;
+          if (sig) {
+            doc.addImage(
+              sig,
+              "JPEG",
+              data.cell.x + 2,
+              data.cell.y + 2,
+              40,
+              20
+            );
+          }
+        }
+        if (data.column.index === 16 && batchStudents[data.row.index]) {
+          const photo = batchStudents[data.row.index].passportPhotoUrl;
+          if (photo) {
+            doc.addImage(
+              photo,
+              "JPEG",
+              data.cell.x + 8,
+              data.cell.y + 2,
+              35,
+              45
+            );
+          }
+        }
+      },
+    });
+
+    // 🔹 Footer (certifications + signatures)
+    const pageHeight = doc.internal.pageSize.height;
+    let certY = pageHeight - 120;
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+
+    const colWidth = doc.internal.pageSize.width / 3 - 40;
+    const col1X = 40;
+    const col2X = col1X + colWidth + 20;
+    const col3X = col2X + colWidth + 20;
+
+    const certs = [
+      "Certified that particulars given above have been verified and checked",
+      "Certified that the players are not employed anywhere on full time basis.",
+      "Certified that the eligibility of the students listed herein has been verified and they are eligible.",
+    ];
+
+    certs.forEach((c, i) => {
+      const x = [col1X, col2X, col3X][i];
+      const lines = doc.splitTextToSize(c, colWidth);
+      doc.text(lines, x, certY);
+    });
+
+    let signY = pageHeight - 60;
+    doc.text("Date: ___________", col1X, signY);
+    doc.text("Signature of DPE/Lecturer Physical Edu.", col2X, signY);
+    doc.setFont("times", "bold");
+    doc.text("PRINCIPAL", col3X, signY);
+    doc.setFont("times", "normal");
+    doc.text("(Seal of College)", col3X, signY + 15);
+
+    // Save per batch
+    doc.save(`Eligibility_Form_Part${batchIndex + 1}.pdf`);
+  }
 };
 
 // 🔹 Main Component

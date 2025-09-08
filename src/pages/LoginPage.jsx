@@ -102,7 +102,7 @@ function LoginPage() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white/70"
+                className="w-full p-3 border border-gray-300 !text-black rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none !bg-white/70"
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
@@ -115,7 +115,7 @@ function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10 bg-white/70"
+                className="w-full p-3 border !text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10 !bg-white/70"
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
@@ -147,7 +147,7 @@ function LoginPage() {
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none bg-white/70"
+              className="!text-black w-full p-3 mb-6 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none !bg-white/70"
             >
               <option value="">-- Choose Role --</option>
               {roles.map((r) => (
