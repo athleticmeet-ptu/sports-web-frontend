@@ -13,7 +13,6 @@ function LoginPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
   const passwordRef = useRef(null);
   const navigate = useNavigate();
 
@@ -22,35 +21,44 @@ function LoginPage() {
     const userAgent = window.navigator.userAgent;
     const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
     setIsSafari(isSafari);
-    
-    // Safari-specific fix: Force re-render after a short delay
-    if (isSafari) {
-      const timer = setTimeout(() => {
-        setForceUpdate(prev => prev + 1);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
   }, []);
 
   // Safari-specific workaround for password field rendering
   useEffect(() => {
-    if (isSafari && passwordRef.current) {
-      // This forces Safari to re-render the password field
-      const timer = setTimeout(() => {
-        if (passwordRef.current) {
-          const tempValue = passwordRef.current.value;
-          passwordRef.current.type = "text";
-          setTimeout(() => {
-            if (passwordRef.current) {
-              passwordRef.current.type = "password";
-              passwordRef.current.value = tempValue;
+    if (isSafari && passwordRef.current && !showPassword) {
+      // Force Safari to properly render the password field
+      const fixSafariPasswordField = () => {
+        const input = passwordRef.current;
+        if (!input) return;
+        
+        // Store current value and selection
+        const currentValue = input.value;
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+        
+        // Temporarily change to text type to trigger rendering
+        input.type = "text";
+        
+        // Force a reflow
+        void input.offsetWidth;
+        
+        // Change back to password after a delay
+        setTimeout(() => {
+          if (input) {
+            input.type = "password";
+            input.value = currentValue;
+            if (document.activeElement === input) {
+              input.setSelectionRange(selectionStart, selectionEnd);
             }
-          }, 50);
-        }
-      }, 200);
+          }
+        }, 50);
+      };
+      
+      // Apply the fix after a short delay
+      const timer = setTimeout(fixSafariPasswordField, 100);
       return () => clearTimeout(timer);
     }
-  }, [isSafari, forceUpdate]);
+  }, [isSafari, showPassword, password]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -109,8 +117,7 @@ function LoginPage() {
 
   // Safari-specific password toggle with focus workaround
   const togglePasswordVisibility = () => {
-    const newShowPassword = !showPassword;
-    setShowPassword(newShowPassword);
+    setShowPassword(!showPassword);
     
     // Safari-specific fix: refocus input after a small delay
     if (isSafari && passwordRef.current) {
@@ -120,17 +127,30 @@ function LoginPage() {
           // Set selection to end to maintain cursor position
           const length = passwordRef.current.value.length;
           passwordRef.current.setSelectionRange(length, length);
-          
-          // Additional fix for Safari placeholder issue
-          if (!newShowPassword) {
-            const tempValue = passwordRef.current.value;
-            passwordRef.current.type = "text";
-            setTimeout(() => {
-              if (passwordRef.current) {
-                passwordRef.current.type = "password";
-                passwordRef.current.value = tempValue;
-              }
-            }, 50);
+        }
+      }, 50);
+    }
+  };
+
+  // Handle input changes with Safari workaround
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    
+    // Safari-specific: Force re-render of password field after change
+    if (isSafari && !showPassword && passwordRef.current) {
+      const input = passwordRef.current;
+      const currentValue = input.value;
+      const selectionStart = input.selectionStart;
+      const selectionEnd = input.selectionEnd;
+      
+      // Temporarily change type to force Safari to render properly
+      input.type = "text";
+      setTimeout(() => {
+        if (input) {
+          input.type = "password";
+          input.value = currentValue;
+          if (document.activeElement === input) {
+            input.setSelectionRange(selectionStart, selectionEnd);
           }
         }
       }, 50);
@@ -188,11 +208,22 @@ function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   required
                   className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg pr-12 bg-white/70 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   style={{ height: "48px", boxSizing: "border-box" }}
-                  key={`password-${showPassword ? "text" : "password"}-${forceUpdate}`} // Force re-render
+                  onFocus={(e) => {
+                    // Safari fix: Ensure proper rendering on focus
+                    if (isSafari && !showPassword) {
+                      const input = e.target;
+                      const currentValue = input.value;
+                      input.type = "text";
+                      setTimeout(() => {
+                        input.type = "password";
+                        input.value = currentValue;
+                      }, 50);
+                    }
+                  }}
                 />
 
                 {/* Eye Icon with Safari fix */}
@@ -208,7 +239,7 @@ function LoginPage() {
               {/* Safari warning message */}
               {isSafari && (
                 <p className="text-xs text-gray-700 mt-2 bg-white/50 p-1 rounded">
-                  Using Safari? If password field appears empty, try clicking inside it.
+                  Using Safari? Click in the password field if text isn't visible.
                 </p>
               )}
             </div>
