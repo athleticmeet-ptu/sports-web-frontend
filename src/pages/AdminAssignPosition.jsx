@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
@@ -20,6 +20,17 @@ import {
 } from "lucide-react";
 import API from "../services/api";
 
+const predefinedSports = [
+  "Basketball",
+  "Football",
+  "Volleyball",
+  "Badminton",
+  "Cricket",
+  "Athletics"
+];
+
+const positionsList = ["1st", "2nd", "3rd", "Participated"];
+
 const AdminAssignPosition = () => {
   const [students, setStudents] = useState([]);
   const [positionData, setPositionData] = useState({});
@@ -38,14 +49,14 @@ const AdminAssignPosition = () => {
         setLoading(true);
         setError(null);
         const res = await API.get("/admin/students");
-        // Filter out students who have all positions assigned
-        const pendingStudents = res.data.filter(student => 
-          !student.positions || 
-          student.positions.length === 0 || 
-          (student.sports || []).some(sport => 
-            !student.positions.some(p => p.sport === sport)
-          )
-        );
+
+        // Remove fully assigned students
+        const pendingStudents = res.data.filter(student => {
+          const studentSports = student.sports || [];
+          const assignedSports = student.positions?.map(p => p.sport) || [];
+          return studentSports.some(sport => !assignedSports.includes(sport));
+        });
+
         setStudents(pendingStudents);
       } catch (err) {
         console.error("Error fetching students", err);
@@ -58,12 +69,12 @@ const AdminAssignPosition = () => {
   }, []);
 
   const handlePositionChange = (studentId, sportName, value) => {
-    setPositionData((prev) => ({
+    setPositionData(prev => ({
       ...prev,
       [studentId]: {
         ...(prev[studentId] || {}),
-        [sportName]: value,
-      },
+        [sportName]: value
+      }
     }));
   };
 
@@ -77,63 +88,39 @@ const AdminAssignPosition = () => {
     try {
       await API.put(`/admin/students/${studentId}/assign-sport-position`, {
         sportName,
-        position,
+        position
       });
       setMessage(`✅ ${sportName} position assigned successfully!`);
 
       // Reset select
-      setPositionData((prev) => ({
+      setPositionData(prev => ({
         ...prev,
-        [studentId]: {
-          ...prev[studentId],
-          [sportName]: "",
-        },
+        [studentId]: { ...prev[studentId], [sportName]: "" }
       }));
 
-      // Update local state and remove if all positions are assigned
-      setStudents((prev) => {
-        const updatedStudents = prev.map((student) => {
+      // Update students locally and remove fully assigned
+      setStudents(prev => {
+        const updated = prev.map(student => {
           if (student._id === studentId) {
-            const newPositions = [
-              ...(student.positions || []),
-              { sport: sportName, position },
-            ];
-            
-            return {
-              ...student,
-              positions: newPositions,
-            };
+            const newPositions = [...(student.positions || []), { sport: sportName, position }];
+            return { ...student, positions: newPositions };
           }
           return student;
         });
-        
-        // Filter out students who now have all positions assigned
-        return updatedStudents.filter(student => 
-          (student.sports || []).some(sport => 
-            !student.positions?.some(p => p.sport === sport)
-          )
+
+        return updated.filter(student => 
+          (student.sports || []).some(sport => !student.positions?.some(p => p.sport === sport))
         );
       });
     } catch (err) {
-      console.error("Error assigning position", err);
+      console.error(err);
       setMessage("❌ Failed to assign position");
     }
   };
 
-  // Handle bulk assignment
   const handleBulkAssign = async () => {
-    if (selectedStudents.size === 0) {
-      setMessage("⚠ Please select at least one student");
-      return;
-    }
-
-    if (!bulkPosition) {
-      setMessage("⚠ Please select a position for bulk assignment");
-      return;
-    }
-
-    if (!bulkSport) {
-      setMessage("⚠ Please select a sport for bulk assignment");
+    if (!bulkPosition || !bulkSport || selectedStudents.size === 0) {
+      setMessage("⚠ Please select students, sport, and position");
       return;
     }
 
@@ -141,17 +128,13 @@ const AdminAssignPosition = () => {
       const assignments = [];
       for (const studentId of selectedStudents) {
         const student = students.find(s => s._id === studentId);
-        // Only assign if student has this sport and it's not already assigned
-        if (student && student.sports && student.sports.includes(bulkSport)) {
-          const isAlreadyAssigned = student.positions?.some(p => 
-            p.sport === bulkSport
-          );
-          
-          if (!isAlreadyAssigned) {
+        if (student && student.sports.includes(bulkSport)) {
+          const isAlreadyAssigned = student.positions?.some(p => p.sport === bulkSport);
+          if (!isAlreadyAssigned || bulkPosition === "Participated") {
             assignments.push(
               API.put(`/admin/students/${studentId}/assign-sport-position`, {
                 sportName: bulkSport,
-                position: bulkPosition,
+                position: bulkPosition
               })
             );
           }
@@ -160,52 +143,38 @@ const AdminAssignPosition = () => {
 
       await Promise.all(assignments);
       setMessage(`✅ Position ${bulkPosition} for ${bulkSport} assigned to ${assignments.length} students!`);
-      
-      // Update local state and remove students with all positions assigned
+
+      // Update students locally
       setStudents(prev => {
-        const updatedStudents = prev.map(student => {
-          if (selectedStudents.has(student._id) && 
-              student.sports && 
-              student.sports.includes(bulkSport) &&
-              !student.positions?.some(p => p.sport === bulkSport)) {
-            const newPositions = [
-              ...(student.positions || []),
-              { sport: bulkSport, position: bulkPosition },
-            ];
+        const updated = prev.map(student => {
+          if (selectedStudents.has(student._id) && student.sports.includes(bulkSport)) {
+            const newPositions = [...(student.positions || []), { sport: bulkSport, position: bulkPosition }];
             return { ...student, positions: newPositions };
           }
           return student;
         });
-        
-        // Filter out students who now have all positions assigned
-        return updatedStudents.filter(student => 
-          (student.sports || []).some(sport => 
-            !student.positions?.some(p => p.sport === sport)
-          )
+
+        return updated.filter(student => 
+          (student.sports || []).some(sport => !student.positions?.some(p => p.sport === sport))
         );
       });
 
-      // Clear selection
       setSelectedStudents(new Set());
       setBulkPosition("");
+      setBulkSport("");
     } catch (err) {
-      console.error("Error in bulk assignment", err);
+      console.error(err);
       setMessage("❌ Failed to assign positions to some students");
     }
   };
 
-  // Toggle student selection
   const toggleStudentSelection = (studentId) => {
     const newSelection = new Set(selectedStudents);
-    if (newSelection.has(studentId)) {
-      newSelection.delete(studentId);
-    } else {
-      newSelection.add(studentId);
-    }
+    if (newSelection.has(studentId)) newSelection.delete(studentId);
+    else newSelection.add(studentId);
     setSelectedStudents(newSelection);
   };
 
-  // Toggle select all
   const toggleSelectAll = () => {
     if (selectedStudents.size === filteredStudents.length) {
       setSelectedStudents(new Set());
@@ -214,36 +183,15 @@ const AdminAssignPosition = () => {
     }
   };
 
-  // Get unique sports from all pending students
-  const getAvailableSports = () => {
-    const sports = new Set();
-    filteredStudents.forEach(student => {
-      (student.sports || []).forEach(sport => {
-        // Only include sports that aren't already assigned for this student
-        if (!student.positions?.some(p => p.sport === sport)) {
-          sports.add(sport);
-        }
-      });
-    });
-    return Array.from(sports);
-  };
-
-  // Filter students by sport and name
-  const filteredStudents = students.filter((student) => {
+  const filteredStudents = students.filter(student => {
     const matchesSport = sportFilter
-      ? (student.sports || []).some((s) =>
-          s.toLowerCase().includes(sportFilter.toLowerCase())
-        )
+      ? (student.sports || []).some(s => s.toLowerCase().includes(sportFilter.toLowerCase()))
       : true;
-    
     const matchesName = nameFilter
       ? student.name?.toLowerCase().includes(nameFilter.toLowerCase())
       : true;
-    
     return matchesSport && matchesName;
   });
-
-  const availableSports = getAvailableSports();
 
   if (loading) {
     return (
@@ -310,7 +258,7 @@ const AdminAssignPosition = () => {
         </motion.div>
       )}
 
-      {/* Filters and Bulk Actions */}
+      {/* Filters and Bulk */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -320,14 +268,13 @@ const AdminAssignPosition = () => {
         <Card>
           <CardContent className="p-4">
             <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filter by Sport
+              <Filter className="w-4 h-4" /> Filter by Sport
             </label>
             <Input
               type="text"
               placeholder="e.g. Basketball, Football..."
               value={sportFilter}
-              onChange={(e) => setSportFilter(e.target.value)}
+              onChange={e => setSportFilter(e.target.value)}
             />
           </CardContent>
         </Card>
@@ -335,14 +282,13 @@ const AdminAssignPosition = () => {
         <Card>
           <CardContent className="p-4">
             <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Filter by Name
+              <Search className="w-4 h-4" /> Filter by Name
             </label>
             <Input
               type="text"
               placeholder="Search student name..."
               value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
+              onChange={e => setNameFilter(e.target.value)}
             />
           </CardContent>
         </Card>
@@ -350,27 +296,16 @@ const AdminAssignPosition = () => {
         <Card>
           <CardContent className="p-4">
             <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Bulk Assign Position
+              <Target className="w-4 h-4" /> Bulk Assign Position
             </label>
             <div className="space-y-2">
-              <Select
-                value={bulkSport}
-                onChange={(e) => setBulkSport(e.target.value)}
-              >
+              <Select value={bulkSport} onChange={e => setBulkSport(e.target.value)}>
                 <option value="">Select Sport</option>
-                {availableSports.map(sport => (
-                  <option key={sport} value={sport}>{sport}</option>
-                ))}
+                {predefinedSports.map(s => <option key={s} value={s}>{s}</option>)}
               </Select>
-              <Select
-                value={bulkPosition}
-                onChange={(e) => setBulkPosition(e.target.value)}
-              >
+              <Select value={bulkPosition} onChange={e => setBulkPosition(e.target.value)}>
                 <option value="">Select Position</option>
-                <option value="1st">1st</option>
-                <option value="2nd">2nd</option>
-                <option value="3rd">3rd</option>
+                {positionsList.map(p => <option key={p} value={p}>{p}</option>)}
               </Select>
               <Button
                 onClick={handleBulkAssign}
@@ -392,16 +327,9 @@ const AdminAssignPosition = () => {
                 ) : (
                   <Square className="w-5 h-5 text-muted-foreground" />
                 )}
-                <span className="font-semibold text-foreground">
-                  {selectedStudents.size} selected
-                </span>
+                <span className="font-semibold text-foreground">{selectedStudents.size} selected</span>
               </div>
-              <Button
-                onClick={toggleSelectAll}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
+              <Button onClick={toggleSelectAll} variant="outline" size="sm" className="w-full">
                 {selectedStudents.size === filteredStudents.length ? "Deselect All" : "Select All"}
               </Button>
             </div>
@@ -420,15 +348,14 @@ const AdminAssignPosition = () => {
             <CardContent className="p-12 text-center">
               <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">No Pending Students</h3>
-              <p className="text-muted-foreground">No pending students found matching your filters.</p>
-              <p className="text-muted-foreground text-sm mt-2">All position assignments are complete!</p>
+              <p className="text-muted-foreground">All position assignments are complete!</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredStudents.map((student, index) => {
-              const pendingSports = (student.sports || []).filter(sport => 
-                !student.positions?.some(p => p.sport === sport)
+              const pendingSports = (student.sports || []).filter(s => 
+                !student.positions?.some(p => p.sport === s)
               );
 
               return (
@@ -453,10 +380,7 @@ const AdminAssignPosition = () => {
                           />
                           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-border">
                             <img
-                              src={
-                                student.photo ||
-                                "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                              }
+                              src={student.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
                               alt={student.name}
                               className="w-full h-full object-cover"
                             />
@@ -472,9 +396,7 @@ const AdminAssignPosition = () => {
                       </div>
 
                       <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-foreground mb-1">
-                          {student.name}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-1">{student.name}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <GraduationCap className="w-4 h-4" />
                           <span>URN: {student.urn || "-"}</span>
@@ -500,19 +422,13 @@ const AdminAssignPosition = () => {
                                 <div className="flex items-center gap-2">
                                   <Select
                                     value={currentSelection}
-                                    onChange={(e) => handlePositionChange(student._id, sport, e.target.value)}
-                                    className="w-20"
+                                    onChange={e => handlePositionChange(student._id, sport, e.target.value)}
+                                    className="w-28"
                                   >
                                     <option value="">Position</option>
-                                    <option value="1st">1st</option>
-                                    <option value="2nd">2nd</option>
-                                    <option value="3rd">3rd</option>
+                                    {positionsList.map(p => <option key={p} value={p}>{p}</option>)}
                                   </Select>
-                                  <Button
-                                    onClick={() => handleAssign(student._id, sport)}
-                                    size="sm"
-                                    disabled={!currentSelection}
-                                  >
+                                  <Button onClick={() => handleAssign(student._id, sport)} size="sm" disabled={!currentSelection}>
                                     Assign
                                   </Button>
                                 </div>
