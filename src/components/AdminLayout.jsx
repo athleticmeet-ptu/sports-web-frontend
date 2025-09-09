@@ -72,11 +72,11 @@ function AdminLayout() {
   const links = [
     { to: "/admin", label: "🏠 Home" },
     { to: "/admin/create-student", label: "Student" },
-    { to: "/admin/create-teacher", label: "Create Teacher" },
+    // { to: "/admin/create-teacher", label: "Create Teacher" },
     { to: "/admin/create-captain", label: "Create Captain" },
     { to: "/admin/session", label: "Manage Sessions" },
     { to: "/admin/approvals", label: "Approve Teams" },
-    { to: "/admin/captains", label: "Captains & Teams" },
+    // { to: "/admin/captains", label: "Captains & Teams" },
     { to: "/admin/gym-attendance", label: "Gym-Attendance" },
     { to: "/admin/swimming-attendance", label: "Swimming-Attendance" },
     { to: "/admin/assign-position", label: "Assign Positions" },
