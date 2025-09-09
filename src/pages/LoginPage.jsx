@@ -1,5 +1,5 @@
 // src/pages/LoginPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
@@ -13,13 +13,44 @@ function LoginPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
+  const passwordRef = useRef(null);
   const navigate = useNavigate();
 
   // Detect Safari browser
   useEffect(() => {
     const userAgent = window.navigator.userAgent;
-    setIsSafari(/^((?!chrome|android).)*safari/i.test(userAgent));
+    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+    setIsSafari(isSafari);
+    
+    // Safari-specific fix: Force re-render after a short delay
+    if (isSafari) {
+      const timer = setTimeout(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
   }, []);
+
+  // Safari-specific workaround for password field rendering
+  useEffect(() => {
+    if (isSafari && passwordRef.current) {
+      // This forces Safari to re-render the password field
+      const timer = setTimeout(() => {
+        if (passwordRef.current) {
+          const tempValue = passwordRef.current.value;
+          passwordRef.current.type = "text";
+          setTimeout(() => {
+            if (passwordRef.current) {
+              passwordRef.current.type = "password";
+              passwordRef.current.value = tempValue;
+            }
+          }, 50);
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isSafari, forceUpdate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -78,17 +109,29 @@ function LoginPage() {
 
   // Safari-specific password toggle with focus workaround
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    const newShowPassword = !showPassword;
+    setShowPassword(newShowPassword);
     
     // Safari-specific fix: refocus input after a small delay
-    if (isSafari) {
+    if (isSafari && passwordRef.current) {
       setTimeout(() => {
-        const passwordInput = document.querySelector('input[type="password"], input[type="text"]');
-        if (passwordInput) {
-          passwordInput.focus();
+        if (passwordRef.current) {
+          passwordRef.current.focus();
           // Set selection to end to maintain cursor position
-          const length = passwordInput.value.length;
-          passwordInput.setSelectionRange(length, length);
+          const length = passwordRef.current.value.length;
+          passwordRef.current.setSelectionRange(length, length);
+          
+          // Additional fix for Safari placeholder issue
+          if (!newShowPassword) {
+            const tempValue = passwordRef.current.value;
+            passwordRef.current.type = "text";
+            setTimeout(() => {
+              if (passwordRef.current) {
+                passwordRef.current.type = "password";
+                passwordRef.current.value = tempValue;
+              }
+            }, 50);
+          }
         }
       }, 50);
     }
@@ -141,6 +184,7 @@ function LoginPage() {
               </label>
               <div className="relative">
                 <input
+                  ref={passwordRef}
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
@@ -148,7 +192,7 @@ function LoginPage() {
                   required
                   className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg pr-12 bg-white/70 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   style={{ height: "48px", boxSizing: "border-box" }}
-                  key={showPassword ? "text" : "password"} // Force re-render on type change
+                  key={`password-${showPassword ? "text" : "password"}-${forceUpdate}`} // Force re-render
                 />
 
                 {/* Eye Icon with Safari fix */}
@@ -164,7 +208,7 @@ function LoginPage() {
               {/* Safari warning message */}
               {isSafari && (
                 <p className="text-xs text-gray-700 mt-2 bg-white/50 p-1 rounded">
-                  Using Safari? Toggling password visibility may require a click in the field to refresh.
+                  Using Safari? If password field appears empty, try clicking inside it.
                 </p>
               )}
             </div>
