@@ -124,17 +124,12 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
+                <span
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 text-xl"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <span className="text-xl">🙈</span>
-                  ) : (
-                    <span className="text-xl">👁️</span>
-                  )}
-                </button>
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
               </div>
             </div>
 
