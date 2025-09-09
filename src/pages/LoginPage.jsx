@@ -119,12 +119,13 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-             <span
+            <span
   onClick={() => setShowPassword(!showPassword)}
-  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 select-none"
+  className="absolute right-3 top-10 cursor-pointer text-gray-600 hover:text-gray-800 select-none"
 >
   {showPassword ? "🙈" : "👁️"}
 </span>
+
 
             </div>
 
