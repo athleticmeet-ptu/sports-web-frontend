@@ -58,6 +58,31 @@ const AttendanceDashboard = ({ defaultSport }) => {
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("");
 
+  const courses = [
+    "B.Tech.(Civil Engineering)",
+    "B.Tech.(Computer Science and Engineering)",
+    "B.Tech.(Electrical Engineering)",
+    "B.Tech.(Electronics and Communication Engineering)",
+    "B.Tech.(Information Technology)",
+    "B.Tech.(Mechanical Engineering)",
+    "B.Tech.(Robotics and Artificial Intelligence)",
+    "M.Tech.(Electronics and Communication Engineering)",
+    "M.Tech.(Environmental Science and Engineering)",
+    "M.Tech.(Computer Science and Information Technology)",
+    "M.Tech.(Power Engineering)",
+    "M.Tech.(Production Engineering)",
+    "M.Tech.(Structural Engineering)",
+    "M.Tech.(Computer Science and Engineering)",
+    "MBA (Masters in Business Administration)",
+    "MCA (Masters in Computer Application)",
+    "BCA (Bachelor of Computer Applications)",
+    "BBA (Bachelor of Business Administration)",
+    "B.Voc.(Interior Design)",
+    "B.Com.(Entrepreneurship)"
+  ];
+  const years = [1, 2, 3, 4, 5];
+
+
   useEffect(() => { loadSessions(); loadStudents(); }, []);
   useEffect(() => { if (selectedSession) loadAttendance(date, selectedSession); }, [date, selectedSession]);
   useEffect(() => { calculateAttendanceCounts(); }, [attendance, selectedSession]);
@@ -340,9 +365,16 @@ const AttendanceDashboard = ({ defaultSport }) => {
                 <label className="text-sm font-medium text-foreground">Full Name</label> 
                 <Input name="name" placeholder="Enter full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /> 
               </div> 
-              <div className="space-y-2"> 
-                <label className="text-sm font-medium text-foreground">Branch</label> 
-                <Input name="branch" placeholder="Enter branch" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} required /> 
+               <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Course</label>
+                <Select
+                  value={form.course}
+                  onChange={(e) => setForm({ ...form, course: e.target.value })}
+                  required
+                >
+                  <option value="">Select Course</option>
+                  {courses.map(course => <option key={course} value={course}>{course}</option>)}
+                </Select>
               </div> 
             </div> 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
@@ -356,9 +388,16 @@ const AttendanceDashboard = ({ defaultSport }) => {
               </div> 
             </div> 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
-              <div className="space-y-2"> 
-                <label className="text-sm font-medium text-foreground">Year</label> 
-                <Input type="number" name="year" placeholder="Enter year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} required /> 
+               <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Year</label>
+                <Select
+                  value={form.year}
+                  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
+                  required
+                >
+                  <option value="">Select Year</option>
+                  {years.map(year => <option key={year} value={year}>{`D${year}`}</option>)}
+                </Select>
               </div> 
               <div className="space-y-2"> 
                 <label className="text-sm font-medium text-foreground">Sport</label> 
