@@ -75,7 +75,8 @@ export default function Students() {
   "B.Voc.(Interior Design)",
   "B.Com.(Entrepreneurship)"
 ];
-const years = ['D1', 'D2', 'D3', 'D4', 'D5'];
+const years = [1, 2, 3, 4, 5];
+
 
 
   useEffect(() => {
@@ -289,15 +290,16 @@ const years = ['D1', 'D2', 'D3', 'D4', 'D5'];
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Year</label>
                 <Select
-                  value={form.year}
-                  onChange={(e) => setForm({ ...form, year: e.target.value })}
-                  required
-                >
-                  <option value="">Select Year</option>
-                  {years.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </Select>
+  value={form.year}
+  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
+  required
+>
+  <option value="">Select Year</option>
+  {years.map(year => (
+    <option key={year} value={year}>{`D${year}`}</option>
+  ))}
+</Select>
+
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Session</label>
