@@ -233,8 +233,159 @@ const AttendanceDashboard = ({ defaultSport }) => {
         </Card>
       </motion.div>
 
-      {/* Students List (unchanged, can keep your existing code here) */}
-      {/* Add Student Modal (unchanged except email validation included) */}
+       {/* Students List */} 
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} > 
+        <Card> 
+          <CardHeader> 
+            <CardTitle className="flex items-center gap-2"> 
+              <Users className="w-5 h-5 text-primary" /> Students ({students.length}) 
+            </CardTitle> 
+          </CardHeader> 
+          <CardContent> 
+            {students.length === 0 ? ( 
+              <div className="text-center py-12"> 
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" /> 
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Students Found</h3> 
+                <p className="text-muted-foreground">No students available for {defaultSport || "Gym"}.</p> 
+              </div> 
+            ) : ( 
+              <div className="space-y-4"> 
+                {students 
+                  .filter(st => (nameFilter? (st.name||"").toLowerCase().includes(nameFilter.toLowerCase()):true)) 
+                  .filter(st => (urnFilter? (st.urn||"").toLowerCase().includes(urnFilter.toLowerCase()):true)) 
+                  .map((st, index) => { 
+                    const att = attendance[`${st._id}_${selectedSession}`]; 
+                    const isPresent = att?.status === "Present" && att?.date === date; 
+                    const isAbsent = att?.status === "Absent" && att?.date === date; 
+                    return ( 
+                      <motion.div key={st._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors" > 
+                        <div className="flex items-center justify-between"> 
+                          <div className="flex items-center gap-4"> 
+                            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center"> 
+                              <Users className="w-5 h-5 text-primary" /> 
+                            </div> 
+                            <div> 
+                              <h3 className="font-semibold text-foreground">{st.name}</h3> 
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground"> 
+                                <span>URN: {st.urn}</span> <span>CRN: {st.crn}</span> <span>Branch: {st.branch}</span> <span>Year: {st.year}</span> 
+                              </div> 
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1"> 
+                                <span>Sport: {st.sport}</span> {st.email && <span>Email: {st.email}</span>} {st.phone && <span>Phone: {st.phone}</span>} 
+                              </div> 
+                            </div> 
+                          </div> 
+                          <div className="flex items-center gap-4"> 
+                            {/* Attendance Status */} 
+                            <div className="text-center"> 
+                              {isPresent ? ( 
+                                <div className="flex items-center gap-2 text-green-600 dark:text-green-400"> 
+                                  <CheckCircle className="w-5 h-5" /> 
+                                  <span className="font-medium">Present</span> 
+                                </div> 
+                              ) : isAbsent ? ( 
+                                <div className="flex items-center gap-2 text-red-600 dark:text-red-400"> 
+                                  <XCircle className="w-5 h-5" /> 
+                                  <span className="font-medium">Absent</span> 
+                                </div> 
+                              ) : ( 
+                                <div className="flex items-center gap-2 text-muted-foreground"> 
+                                  <Clock className="w-5 h-5" /> 
+                                  <span className="font-medium">Not Marked</span> 
+                                </div> 
+                              )} 
+                            </div> 
+                            {/* Attendance Actions */} 
+                            <div className="flex gap-2"> 
+                              <Button onClick={() => handleAttendance(st._id, "Present", date)} variant="outline" size="sm" className="flex items-center gap-2" > 
+                                <CheckCircle className="w-4 h-4" /> Present 
+                              </Button> 
+                              <Button onClick={() => handleAttendance(st._id, "Absent", date)} variant="outline" size="sm" className="flex items-center gap-2" > 
+                                <XCircle className="w-4 h-4" /> Absent 
+                              </Button> 
+                            </div> 
+                            {/* Student Actions */} 
+                            <div className="flex gap-2"> 
+                              <Button onClick={() => { setEditStudent(st); setForm(st); setShowForm(true); }} variant="outline" size="sm" className="flex items-center gap-2" > 
+                                <Edit className="w-4 h-4" /> Edit 
+                              </Button> 
+                              <Button onClick={() => handleDelete(st._id)} variant="destructive" size="sm" className="flex items-center gap-2" > 
+                                <Trash2 className="w-4 h-4" /> Delete 
+                              </Button> 
+                            </div> 
+                          </div> 
+                        </div> 
+                      </motion.div> 
+                    ); 
+                  })} 
+              </div> 
+            )} 
+          </CardContent> 
+        </Card> 
+      </motion.div> 
+
+      {/* Add Student Modal */} 
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setEditStudent(null); }}> 
+        <ModalHeader> 
+          <ModalTitle className="flex items-center gap-2"> 
+            <UserPlus className="w-5 h-5 text-primary" /> {editStudent ? "Edit Student" : "Add Student"} 
+          </ModalTitle> 
+        </ModalHeader> 
+        <ModalContent> 
+          <div className="mb-4 p-3 bg-muted rounded-lg"> 
+            <p className="text-sm text-muted-foreground"> Session: <strong className="text-foreground">{sessions.find(s => s._id === selectedSession)?.session}</strong> </p> 
+          </div> 
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveStudent(); }} className="space-y-4"> 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">Full Name</label> 
+                <Input name="name" placeholder="Enter full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /> 
+              </div> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">Branch</label> 
+                <Input name="branch" placeholder="Enter branch" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} required /> 
+              </div> 
+            </div> 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">URN</label> 
+                <Input name="urn" placeholder="Enter URN" value={form.urn} onChange={(e) => setForm({ ...form, urn: e.target.value })} required /> 
+              </div> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">CRN</label> 
+                <Input name="crn" placeholder="Enter CRN" value={form.crn} onChange={(e) => setForm({ ...form, crn: e.target.value })} required /> 
+              </div> 
+            </div> 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">Year</label> 
+                <Input type="number" name="year" placeholder="Enter year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} required /> 
+              </div> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">Sport</label> 
+                <Select name="sport" value={form.sport} onChange={(e) => setForm({ ...form, sport: e.target.value })} > 
+                  <option value={defaultSport || "Gym"}>{defaultSport || "Gym"}</option> 
+                </Select> 
+              </div> 
+            </div> 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">Email (Optional)</label> 
+                <Input name="email" type="email" placeholder="Enter email address" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /> 
+              </div> 
+              <div className="space-y-2"> 
+                <label className="text-sm font-medium text-foreground">Phone (Optional)</label> 
+                <Input name="phone" type="tel" placeholder="Enter phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /> 
+              </div> 
+            </div> 
+          </form> 
+        </ModalContent> 
+        <ModalFooter> 
+          <Button variant="outline" onClick={() => { setShowForm(false); setEditStudent(null); }} > Cancel </Button> 
+          <Button onClick={handleSaveStudent} disabled={submitLoading} className="flex items-center gap-2" > 
+            {submitLoading ? ( <> <RefreshCw className="w-4 h-4 animate-spin" /> {editStudent ? "Updating..." : "Adding..."} </> ) : ( <> <UserPlus className="w-4 h-4" /> {editStudent ? "Update Student" : "Add Student"} </> )} 
+          </Button> 
+        </ModalFooter> 
+      </Modal>
     </div>
   );
 };
