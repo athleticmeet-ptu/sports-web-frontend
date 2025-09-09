@@ -76,10 +76,8 @@ function LoginPage() {
         backgroundImage: `url('https://sports.gndec.ac.in/sites/default/files/5.jpg')`,
       }}
     >
-      {/* Optional dark overlay for readability */}
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
 
-      {/* Glassmorphism Login Form */}
       <form
         onSubmit={handleLogin}
         className="relative w-full max-w-sm p-8 rounded-2xl border border-white/20 shadow-xl backdrop-blur-md bg-white/30"
@@ -111,7 +109,7 @@ function LoginPage() {
               />
             </div>
 
-            {/* Password Field with Eye Toggle - FIXED FOR MAC */}
+            {/* Password Field */}
             <div className="mb-6">
               <label className="block text-gray-800 text-sm font-medium mb-1">
                 Password
@@ -121,33 +119,20 @@ function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
-                  className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-12 bg-white/70 placeholder-gray-700"
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  style={{ 
-                    height: '48px', 
-                    boxSizing: 'border-box',
-                    lineHeight: 'normal',
-                    paddingRight: '3.5rem'
-                  }}
+                  className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg pr-12 bg-white/70 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  style={{ height: "48px", boxSizing: "border-box" }}
                 />
 
-                {/* Eye Icon Button - Fixed for Mac */}
-                <button
-                  type="button"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 bg-transparent border-none p-2 cursor-pointer rounded-md"
+                {/* Eye Icon (div for Mac/Safari fix) */}
+                <div
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  style={{ 
-                    height: '36px', 
-                    width: '36px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                </div>
               </div>
             </div>
 
@@ -183,7 +168,6 @@ function LoginPage() {
               ))}
             </select>
 
-            {/* Continue Button */}
             <button
               type="button"
               disabled={loading}
