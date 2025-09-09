@@ -110,7 +110,7 @@ function LoginPage() {
               />
             </div>
 
-            {/* Password Field w/ Toggle - FIXED */}
+            {/* Password Field w/ Toggle - FINALLY FIXED */}
             <div className="mb-6">
               <label className="block text-gray-800 text-sm font-medium mb-1">
                 Password
@@ -124,12 +124,12 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <span
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 text-xl"
+                <div 
+                  className="absolute right-3 top-3 cursor-pointer text-gray-600 hover:text-gray-800 text-xl"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? "🙈" : "👁️"}
-                </span>
+                </div>
               </div>
             </div>
 
