@@ -118,13 +118,14 @@ function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-12 bg-white/70 placeholder-gray-700"
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+  type={showPassword ? "text" : "password"}
+  placeholder="Enter your password"
+  value={password}
+  className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-12 bg-white/70 placeholder-gray-700 tracking-normal font-sans"
+  onChange={(e) => setPassword(e.target.value)}
+  required
+/>
+
                 {/* Eye Icon */}
                 <div
   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800"
