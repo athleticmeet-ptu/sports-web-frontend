@@ -10,24 +10,20 @@ import {
   UserPlus, 
   Eye, 
   EyeOff, 
-  ArrowLeft, 
   Users, 
-  GraduationCap, 
-  Calendar,
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
 import API from '../services/api';
-import { useNavigate } from 'react-router-dom';
 import AllStudents from './AllStudents';
 
 export default function Students() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [reloadTrigger, setReloadTrigger] = useState(0); // to refresh AllStudents
 
   const [form, setForm] = useState({
     name: '',
@@ -41,44 +37,33 @@ export default function Students() {
     role: 'student',
   });
 
-  const [students, setStudents] = useState([]); // future API
   const [sessions, setSessions] = useState([]);
-  // Stats: participated and 1st/2nd/3rd counts
-  const [stats, setStats] = useState({ participated: 0, first: 0, second: 0, third: 0 });
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState('');
 
-  // Custom dropdown states
-  const [courseOpen, setCourseOpen] = useState(false);
-  const [yearOpen, setYearOpen] = useState(false);
-  const [sessionOpen, setSessionOpen] = useState(false);
+  const courses = [
+    "B.Tech.(Civil Engineering)",
+    "B.Tech.(Computer Science and Engineering)",
+    "B.Tech.(Electrical Engineering)",
+    "B.Tech.(Electronics and Communication Engineering)",
+    "B.Tech.(Information Technology)",
+    "B.Tech.(Mechanical Engineering)",
+    "B.Tech.(Robotics and Artificial Intelligence)",
+    "M.Tech.(Electronics and Communication Engineering)",
+    "M.Tech.(Environmental Science and Engineering)",
+    "M.Tech.(Computer Science and Information Technology)",
+    "M.Tech.(Power Engineering)",
+    "M.Tech.(Production Engineering)",
+    "M.Tech.(Structural Engineering)",
+    "M.Tech.(Computer Science and Engineering)",
+    "MBA (Masters in Business Administration)",
+    "MCA (Masters in Computer Application)",
+    "BCA (Bachelor of Computer Applications)",
+    "BBA (Bachelor of Business Administration)",
+    "B.Voc.(Interior Design)",
+    "B.Com.(Entrepreneurship)"
+  ];
+  const years = [1, 2, 3, 4, 5];
 
- const courses = [
-  "B.Tech.(Civil Engineering)",
-  "B.Tech.(Computer Science and Engineering)",
-  "B.Tech.(Electrical Engineering)",
-  "B.Tech.(Electronics and Communication Engineering)",
-  "B.Tech.(Information Technology)",
-  "B.Tech.(Mechanical Engineering)",
-  "B.Tech.(Robotics and Artificial Intelligence)",
-  "M.Tech.(Electronics and Communication Engineering)",
-  "M.Tech.(Environmental Science and Engineering)",
-  "M.Tech.(Computer Science and Information Technology)",
-  "M.Tech.(Power Engineering)",
-  "M.Tech.(Production Engineering)",
-  "M.Tech.(Structural Engineering)",
-  "M.Tech.(Computer Science and Engineering)",
-  "MBA (Masters in Business Administration)",
-  "MCA (Masters in Computer Application)",
-  "BCA (Bachelor of Computer Applications)",
-  "BBA (Bachelor of Business Administration)",
-  "B.Voc.(Interior Design)",
-  "B.Com.(Entrepreneurship)"
-];
-const years = [1, 2, 3, 4, 5];
-
-
-
+  // Load active session on mount
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
     API.get('/session/active')
@@ -89,32 +74,6 @@ const years = [1, 2, 3, 4, 5];
         }
       })
       .catch(() => setMessage('⚠ No active session found.'));
-
-    // Load stats
-    const loadStats = async () => {
-      try {
-        setStatsError('');
-        setStatsLoading(true);
-        const res = await API.get('/admin/students');
-        const students = res.data || [];
-        let participated = 0, first = 0, second = 0, third = 0;
-        students.forEach(st => {
-          (st.positions || []).forEach(pos => {
-            const p = (pos?.position || '').toLowerCase();
-            if (p.includes('particip')) participated += 1;
-            else if (p.includes('1')) first += 1;
-            else if (p.includes('2')) second += 1;
-            else if (p.includes('3')) third += 1;
-          });
-        });
-        setStats({ participated, first, second, third });
-      } catch (e) {
-        setStatsError('Failed to load stats');
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-    loadStats();
   }, []);
 
   const handleChange = (e) => {
@@ -123,15 +82,45 @@ const years = [1, 2, 3, 4, 5];
     setForm({ ...form, [name]: value });
   };
 
+  // Email validation function
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Email validation
+    if (!validateEmail(form.email)) {
+      setMessage('⚠ Invalid email address');
+      return;
+    }
+
     setSubmitLoading(true);
     try {
       const res = await API.post('/admin/create-user', form);
       setMessage(res.data.message);
+
+      // Trigger reload of student list
+      setReloadTrigger(prev => prev + 1);
+
       setTimeout(() => {
         setShowModal(false);
         setSubmitLoading(false);
+        setMessage('');
+        // Reset form
+        setForm({
+          name: '',
+          email: '',
+          password: '',
+          rollNumber: '',
+          course: '',
+          year: '',
+          sessionId: form.sessionId,
+          sports: [],
+          role: 'student',
+        });
       }, 1200);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error creating student');
@@ -142,8 +131,8 @@ const years = [1, 2, 3, 4, 5];
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-    </div>
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+      </div>
     );
   }
 
@@ -157,7 +146,6 @@ const years = [1, 2, 3, 4, 5];
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-4">
-
           <div>
             <h1 className="text-3xl font-bold text-foreground">Student Management</h1>
             <p className="text-muted-foreground mt-1">Create and manage student accounts</p>
@@ -209,6 +197,7 @@ const years = [1, 2, 3, 4, 5];
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Full Name</label>
@@ -253,11 +242,7 @@ const years = [1, 2, 3, 4, 5];
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-muted-foreground" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
                   </Button>
                 </div>
               </div>
@@ -282,24 +267,19 @@ const years = [1, 2, 3, 4, 5];
                   required
                 >
                   <option value="">Select Course</option>
-                  {courses.map(course => (
-                    <option key={course} value={course}>{course}</option>
-                  ))}
+                  {courses.map(course => <option key={course} value={course}>{course}</option>)}
                 </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Year</label>
                 <Select
-  value={form.year}
-  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
-  required
->
-  <option value="">Select Year</option>
-  {years.map(year => (
-    <option key={year} value={year}>{`D${year}`}</option>
-  ))}
-</Select>
-
+                  value={form.year}
+                  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
+                  required
+                >
+                  <option value="">Select Year</option>
+                  {years.map(year => <option key={year} value={year}>{`D${year}`}</option>)}
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Session</label>
@@ -309,9 +289,7 @@ const years = [1, 2, 3, 4, 5];
                   required
                 >
                   <option value="">Select Session</option>
-                  {sessions.map(session => (
-                    <option key={session._id} value={session._id}>{session.session}</option>
-                  ))}
+                  {sessions.map(session => <option key={session._id} value={session._id}>{session.session}</option>)}
                 </Select>
               </div>
             </div>
@@ -319,29 +297,11 @@ const years = [1, 2, 3, 4, 5];
         </ModalContent>
 
         <ModalFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setShowModal(false);
-              setMessage('');
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={submitLoading}
-            onClick={handleSubmit}
-            className="flex items-center gap-2"
-          >
+          <Button type="button" variant="outline" onClick={() => { setShowModal(false); setMessage(''); }}>Cancel</Button>
+          <Button type="submit" disabled={submitLoading} onClick={handleSubmit} className="flex items-center gap-2">
             {submitLoading ? (
               <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                />
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                 Creating...
               </>
             ) : (
@@ -355,11 +315,7 @@ const years = [1, 2, 3, 4, 5];
       </Modal>
 
       {/* Student Management Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -368,7 +324,7 @@ const years = [1, 2, 3, 4, 5];
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <AllStudents />
+            <AllStudents reloadTrigger={reloadTrigger} />
           </CardContent>
         </Card>
       </motion.div>
