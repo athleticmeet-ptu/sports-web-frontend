@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { Eye, EyeOff } from "lucide-react";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -110,7 +111,7 @@ function LoginPage() {
               />
             </div>
 
-            {/* Password Field w/ Toggle - FINALLY FIXED */}
+            {/* Password Field with Eye Toggle */}
             <div className="mb-6">
               <label className="block text-gray-800 text-sm font-medium mb-1">
                 Password
@@ -124,15 +125,13 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <div 
-  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 flex items-center justify-center w-6 h-6"
+                {/* Eye Icon */}
+                <div
+  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800"
   onClick={() => setShowPassword(!showPassword)}
 >
-  <span className="text-lg leading-none">
-    {showPassword ? "🙈" : "👁️"}
-  </span>
+  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 </div>
-
               </div>
             </div>
 
