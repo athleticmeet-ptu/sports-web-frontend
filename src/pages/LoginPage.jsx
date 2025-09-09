@@ -97,37 +97,45 @@ function LoginPage() {
           <>
             {/* Email */}
             <div className="mb-4">
-              <label className="block text-gray-800 text-sm mb-1">Email</label>
+              <label className="block text-gray-800 text-sm font-medium mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                className="placeholder-black placeholder-opacity-100 focus:placeholder-transparent w-full p-3 border border-gray-300 !text-black rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none !bg-white/70"
+                className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white/70 placeholder-gray-700"
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
 
-            {/* Password Field w/ Toggle */}
-            <div className="mb-6 relative">
-              <label className="block text-gray-800 text-sm mb-1">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={password}
-                className="placeholder-black placeholder-opacity-100 focus:placeholder-transparent w-full p-3 border !text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10 !bg-white/70"
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-           <span
-  onClick={() => setShowPassword(!showPassword)}
-  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 select-none text-xl leading-none"
->
-  {showPassword ? "🙈" : "👁️"}
-</span>
-
-
-
+            {/* Password Field w/ Toggle - FIXED */}
+            <div className="mb-6">
+              <label className="block text-gray-800 text-sm font-medium mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-12 bg-white/70 placeholder-gray-700"
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <span className="text-lg">🙈</span>
+                  ) : (
+                    <span className="text-lg">👁️</span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Login Button */}
@@ -146,11 +154,13 @@ function LoginPage() {
         ) : (
           <>
             {/* Role Selection */}
-            <label className="block text-gray-800 text-sm mb-2">Select Role</label>
+            <label className="block text-gray-800 text-sm font-medium mb-2">
+              Select Role
+            </label>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="!text-black w-full p-3 mb-6 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none !bg-white/70"
+              className="w-full p-3 mb-6 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none bg-white/70"
             >
               <option value="">-- Choose Role --</option>
               {roles.map((r) => (
