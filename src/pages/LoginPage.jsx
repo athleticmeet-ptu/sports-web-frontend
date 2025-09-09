@@ -21,44 +21,12 @@ function LoginPage() {
     const userAgent = window.navigator.userAgent;
     const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
     setIsSafari(isSafari);
-  }, []);
-
-  // Safari-specific workaround for password field rendering
-  useEffect(() => {
-    if (isSafari && passwordRef.current && !showPassword) {
-      // Force Safari to properly render the password field
-      const fixSafariPasswordField = () => {
-        const input = passwordRef.current;
-        if (!input) return;
-        
-        // Store current value and selection
-        const currentValue = input.value;
-        const selectionStart = input.selectionStart;
-        const selectionEnd = input.selectionEnd;
-        
-        // Temporarily change to text type to trigger rendering
-        input.type = "text";
-        
-        // Force a reflow
-        void input.offsetWidth;
-        
-        // Change back to password after a delay
-        setTimeout(() => {
-          if (input) {
-            input.type = "password";
-            input.value = currentValue;
-            if (document.activeElement === input) {
-              input.setSelectionRange(selectionStart, selectionEnd);
-            }
-          }
-        }, 50);
-      };
-      
-      // Apply the fix after a short delay
-      const timer = setTimeout(fixSafariPasswordField, 100);
-      return () => clearTimeout(timer);
+    
+    // For Safari, always show password by default to avoid rendering issues
+    if (isSafari) {
+      setShowPassword(true);
     }
-  }, [isSafari, showPassword, password]);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -115,45 +83,15 @@ function LoginPage() {
     }, 200);
   };
 
-  // Safari-specific password toggle with focus workaround
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-    
-    // Safari-specific fix: refocus input after a small delay
-    if (isSafari && passwordRef.current) {
-      setTimeout(() => {
-        if (passwordRef.current) {
-          passwordRef.current.focus();
-          // Set selection to end to maintain cursor position
-          const length = passwordRef.current.value.length;
-          passwordRef.current.setSelectionRange(length, length);
-        }
-      }, 50);
-    }
-  };
-
-  // Handle input changes with Safari workaround
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-    
-    // Safari-specific: Force re-render of password field after change
-    if (isSafari && !showPassword && passwordRef.current) {
-      const input = passwordRef.current;
-      const currentValue = input.value;
-      const selectionStart = input.selectionStart;
-      const selectionEnd = input.selectionEnd;
-      
-      // Temporarily change type to force Safari to render properly
-      input.type = "text";
-      setTimeout(() => {
-        if (input) {
-          input.type = "password";
-          input.value = currentValue;
-          if (document.activeElement === input) {
-            input.setSelectionRange(selectionStart, selectionEnd);
-          }
-        }
-      }, 50);
+    if (isSafari) {
+      // For Safari, we'll keep it simple - always show password text
+      // but allow toggling the eye icon for visual consistency
+      setShowPassword(!showPassword);
+    } else {
+      // Standard behavior for other browsers
+      setShowPassword(!showPassword);
     }
   };
 
@@ -205,41 +143,41 @@ function LoginPage() {
               <div className="relative">
                 <input
                   ref={passwordRef}
-                  type={showPassword ? "text" : "password"}
+                  // For Safari, always use "text" type to avoid rendering issues
+                  type={isSafari ? "text" : (showPassword ? "text" : "password")}
                   placeholder="Enter your password"
                   value={password}
-                  onChange={handlePasswordChange}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg pr-12 bg-white/70 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   style={{ height: "48px", boxSizing: "border-box" }}
-                  onFocus={(e) => {
-                    // Safari fix: Ensure proper rendering on focus
-                    if (isSafari && !showPassword) {
-                      const input = e.target;
-                      const currentValue = input.value;
-                      input.type = "text";
-                      setTimeout(() => {
-                        input.type = "password";
-                        input.value = currentValue;
-                      }, 50);
-                    }
-                  }}
                 />
 
-                {/* Eye Icon with Safari fix */}
+                {/* Eye Icon - Show different behavior for Safari */}
                 <div
                   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800"
                   onClick={togglePasswordVisibility}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {isSafari ? (
+                    // For Safari, show a different icon to indicate special behavior
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                      <text x="6" y="18" fontSize="8" fill="currentColor">Safari</text>
+                    </svg>
+                  ) : showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
                 </div>
               </div>
               
-              {/* Safari warning message */}
+              {/* Safari info message */}
               {isSafari && (
-                <p className="text-xs text-gray-700 mt-2 bg-white/50 p-1 rounded">
-                  Using Safari? Click in the password field if text isn't visible.
+                <p className="text-xs text-gray-700 mt-2 bg-white/70 p-2 rounded">
+                  <strong>Safari Mode:</strong> Password is always visible to avoid browser rendering issues.
                 </p>
               )}
             </div>
