@@ -1,5 +1,5 @@
 // src/pages/LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
@@ -12,7 +12,14 @@ function LoginPage() {
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
   const navigate = useNavigate();
+
+  // Detect Safari browser
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent;
+    setIsSafari(/^((?!chrome|android).)*safari/i.test(userAgent));
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -69,6 +76,24 @@ function LoginPage() {
     }, 200);
   };
 
+  // Safari-specific password toggle with focus workaround
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+    
+    // Safari-specific fix: refocus input after a small delay
+    if (isSafari) {
+      setTimeout(() => {
+        const passwordInput = document.querySelector('input[type="password"], input[type="text"]');
+        if (passwordInput) {
+          passwordInput.focus();
+          // Set selection to end to maintain cursor position
+          const length = passwordInput.value.length;
+          passwordInput.setSelectionRange(length, length);
+        }
+      }, 50);
+    }
+  };
+
   return (
     <div
       className="flex items-center justify-center min-h-screen bg-cover bg-center relative"
@@ -123,17 +148,25 @@ function LoginPage() {
                   required
                   className="w-full p-3 border border-gray-300 text-gray-900 rounded-lg pr-12 bg-white/70 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   style={{ height: "48px", boxSizing: "border-box" }}
+                  key={showPassword ? "text" : "password"} // Force re-render on type change
                 />
 
-                {/* Eye Icon (div for Mac/Safari fix) */}
+                {/* Eye Icon with Safari fix */}
                 <div
                   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={togglePasswordVisibility}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </div>
               </div>
+              
+              {/* Safari warning message */}
+              {isSafari && (
+                <p className="text-xs text-gray-700 mt-2 bg-white/50 p-1 rounded">
+                  Using Safari? Toggling password visibility may require a click in the field to refresh.
+                </p>
+              )}
             </div>
 
             {/* Login Button */}
