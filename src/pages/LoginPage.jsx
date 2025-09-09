@@ -125,11 +125,14 @@ function LoginPage() {
                   required
                 />
                 <div 
-                  className="absolute right-3 top-3 cursor-pointer text-gray-600 hover:text-gray-800 text-xl"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "🙈" : "👁️"}
-                </div>
+  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 flex items-center justify-center w-6 h-6"
+  onClick={() => setShowPassword(!showPassword)}
+>
+  <span className="text-lg leading-none">
+    {showPassword ? "🙈" : "👁️"}
+  </span>
+</div>
+
               </div>
             </div>
 
