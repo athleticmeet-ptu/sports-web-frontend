@@ -126,13 +126,13 @@ function LoginPage() {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <span className="text-lg">🙈</span>
+                    <span className="text-xl">🙈</span>
                   ) : (
-                    <span className="text-lg">👁️</span>
+                    <span className="text-xl">👁️</span>
                   )}
                 </button>
               </div>
