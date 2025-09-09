@@ -14,7 +14,6 @@ import {
   EyeOff, 
   CheckCircle, 
   AlertCircle,
-  RefreshCw,
   UserPlus
 } from 'lucide-react';
 import API from '../services/api';
@@ -28,28 +27,44 @@ export default function CreateCaptain() {
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  // Selected captain for viewing/editing
-const [selectedCaptain, setSelectedCaptain] = useState(null);
-const [isEditing, setIsEditing] = useState(false);
-const [editForm, setEditForm] = useState({});
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
-// Function to start editing captain
-const startEditing = (captain) => {
-  setIsEditing(true);
-  setEditForm({
-    name: captain.name || '',
-    branch: captain.branch || '',
-    year: captain.year || '',
-    urn: captain.urn || '',
-    sport: captain.sport || '',
-    email: captain.email || '',
-    phone: captain.phone || '',
-    teamMemberCount: captain.teamMemberCount || '',
-  });
-  setSelectedCaptain(captain);
-};
+  // Form arrays
+  const branches = [
+    "Civil Engineering",
+    "Computer Science and Engineering",
+    "Electrical Engineering",
+    "Electronics and Communication Engineering",
+    "Information Technology",
+    "Mechanical Engineering",
+    "Robotics and Artificial Intelligence",
+    "M.Tech Electronics and Communication Engineering",
+    "M.Tech Environmental Science and Engineering",
+    "M.Tech Computer Science and Information Technology",
+    "M.Tech Power Engineering",
+    "M.Tech Production Engineering",
+    "M.Tech Structural Engineering",
+    "M.Tech Computer Science and Engineering",
+    "MBA",
+    "MCA",
+    "BCA",
+    "BBA",
+    "B.Voc Interior Design",
+    "B.Com Entrepreneurship"
+  ];
 
-
+  const years = [1, 2, 3, 4, 5];
+  const teamSizes = [5, 6, 7, 8, 9, 10];
+  const sportsList = [
+    "Football",
+    "Basketball",
+    "Volleyball",
+    "Cricket",
+    "Badminton",
+    "Table Tennis",
+    "Hockey",
+    "Athletics"
+  ];
 
   const [form, setForm] = useState({
     name: '',
@@ -65,15 +80,14 @@ const startEditing = (captain) => {
   });
 
   const [sessions, setSessions] = useState([]);
-  const [captains, setCaptains] = useState([]);
   const [filterName, setFilterName] = useState('');
   const [filterURN, setFilterURN] = useState('');
   const [filterSport, setFilterSport] = useState('');
 
   useEffect(() => {
-    // simulate loading
     setTimeout(() => setLoading(false), 600);
 
+    // Load active session
     API.get('/session/active')
       .then(res => {
         if (res.data?._id) {
@@ -82,30 +96,50 @@ const startEditing = (captain) => {
         }
       })
       .catch(() => setMessage('⚠ No active session found.'));
-    
-    // fetch existing captains for display
-    API.get('/admin/captains')
-      .then(res => setCaptains(res.data || []))
-      .catch(() => {});
   }, []);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Email validation
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateEmail(form.email)) {
+      setMessage('⚠ Invalid email address');
+      return;
+    }
+
     setSubmitLoading(true);
     try {
       const res = await API.post('/admin/create-user', form);
       setMessage(res.data.message);
+
+      // Refresh captain list
       setTimeout(() => {
         setShowModal(false);
         setSubmitLoading(false);
         setMessage('');
-        // optionally refresh captain list
-        API.get('/admin/users?role=captain')
-          .then(res => setCaptains(res.data || []))
-          .catch(() => {});
+        setReloadTrigger(prev => prev + 1);
+
+        // Reset form
+        setForm({
+          name: '',
+          email: '',
+          password: '',
+          branch: '',
+          urn: '',
+          year: '',
+          sport: '',
+          teamMemberCount: '',
+          sessionId: form.sessionId,
+          role: 'captain'
+        });
       }, 1200);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error creating captain');
@@ -165,18 +199,19 @@ const startEditing = (captain) => {
             Create New Captain
           </ModalTitle>
         </ModalHeader>
+
         <ModalContent>
           {message && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`p-4 rounded-lg mb-6 flex items-center gap-2 ${
-                message.includes('success') || message.includes('created')
+                message.toLowerCase().includes('success') || message.toLowerCase().includes('created')
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800'
                   : 'bg-destructive/10 text-destructive border border-destructive/20'
               }`}
             >
-              {message.includes('success') || message.includes('created') ? (
+              {message.toLowerCase().includes('success') || message.toLowerCase().includes('created') ? (
                 <CheckCircle className="w-5 h-5" />
               ) : (
                 <AlertCircle className="w-5 h-5" />
@@ -197,6 +232,7 @@ const startEditing = (captain) => {
                   required
                 />
               </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Email</label>
                 <Input
@@ -229,26 +265,26 @@ const startEditing = (captain) => {
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                 </Button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Branch */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Branch</label>
-                <Input
-                  name="branch"
-                  placeholder="Enter branch"
+                <Select
                   value={form.branch}
-                  onChange={handleChange}
+                  onChange={(e) => setForm({ ...form, branch: e.target.value })}
                   required
-                />
+                >
+                  <option value="">Select Branch</option>
+                  {branches.map(branch => <option key={branch} value={branch}>{branch}</option>)}
+                </Select>
               </div>
+
+              {/* URN */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">URN</label>
                 <Input
@@ -262,41 +298,48 @@ const startEditing = (captain) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Year */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Year</label>
-                <Input
-                  name="year"
-                  type="number"
-                  placeholder="Enter year"
+                <Select
                   value={form.year}
-                  onChange={handleChange}
+                  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
                   required
-                />
+                >
+                  <option value="">Select Year</option>
+                  {years.map(year => <option key={year} value={year}>{`D${year}`}</option>)}
+                </Select>
               </div>
+
+              {/* Sport */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Sport</label>
-                <Input
-                  name="sport"
-                  placeholder="Enter sport"
+                <Select
                   value={form.sport}
-                  onChange={handleChange}
+                  onChange={(e) => setForm({ ...form, sport: e.target.value })}
                   required
-                />
+                >
+                  <option value="">Select Sport</option>
+                  {sportsList.map(sport => <option key={sport} value={sport}>{sport}</option>)}
+                </Select>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Team Member Count */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Team Member Count</label>
-                <Input
-                  name="teamMemberCount"
-                  type="number"
-                  placeholder="Enter team size"
+                <Select
                   value={form.teamMemberCount}
-                  onChange={handleChange}
+                  onChange={(e) => setForm({ ...form, teamMemberCount: Number(e.target.value) })}
                   required
-                />
+                >
+                  <option value="">Select Team Size</option>
+                  {teamSizes.map(size => <option key={size} value={size}>{size}</option>)}
+                </Select>
               </div>
+
+              {/* Session */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Session</label>
                 <Select
@@ -305,28 +348,16 @@ const startEditing = (captain) => {
                   required
                 >
                   <option value="">Select Session</option>
-                  {sessions.map(session => (
-                    <option key={session._id} value={session._id}>
-                      {session.session}
-                    </option>
-                  ))}
+                  {sessions.map(session => <option key={session._id} value={session._id}>{session.session}</option>)}
                 </Select>
               </div>
             </div>
           </form>
         </ModalContent>
+
         <ModalFooter>
-          <Button
-            variant="outline"
-            onClick={() => setShowModal(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={submitLoading}
-            className="flex items-center gap-2"
-          >
+          <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={submitLoading} className="flex items-center gap-2">
             {submitLoading ? (
               <>
                 <motion.div
@@ -378,6 +409,7 @@ const startEditing = (captain) => {
               nameFilter={filterName}
               urnFilter={filterURN}
               sportFilter={filterSport}
+              reloadTrigger={reloadTrigger} // refresh after new creation
             />
           </CardContent>
         </Card>
