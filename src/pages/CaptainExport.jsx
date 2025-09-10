@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Select } from "../components/ui/select";
+import { Input } from "../components/ui/input";
+
 import {
   Download,
   FileSpreadsheet,
@@ -41,6 +43,35 @@ const CaptainExport = () => {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
+  const [captains, setCaptains] = useState([]);
+const [filterName, setFilterName] = useState("");
+const [filterURN, setFilterURN] = useState("");
+const [filterSport, setFilterSport] = useState("");
+
+
+  useEffect(() => {
+  const fetchCaptains = async () => {
+    try {
+      setError(null);
+     const payload = {
+  session: selectedSession || "",
+  sport: selectedSport || "",
+  position: selectedPosition || "",
+  name: filterName || "",
+  urn: filterURN || "",
+  sportSearch: filterSport || "", // ✅ keep separate if needed
+};
+
+      const res = await API.post("/admin/list-captains", payload);
+      setCaptains(res.data || []);
+    } catch (err) {
+      console.error("Error fetching captains:", err);
+      setError("Failed to load captains list");
+    }
+  };
+  fetchCaptains();
+},  [selectedSession, selectedSport, selectedPosition, filterName, filterURN, filterSport]);
+
 
   // fetch filters data (sessions, sports)
   useEffect(() => {
@@ -61,9 +92,12 @@ const CaptainExport = () => {
 
   const fetchData = async () => {
     const payload = {
-      session: selectedSession._id,
-      sport: selectedSport,
-      position: selectedPosition,
+      session: selectedSession || "",
+      sport: selectedSport || "",
+      position: selectedPosition || "",
+      name: filterName || "",
+      urn: filterURN || "",
+      sportSearch: filterSport || "",
     };
     const res = await API.post("/admin/export-captains", payload);
     return res.data;
@@ -249,9 +283,10 @@ const CaptainExport = () => {
                 >
                   <option value="">All Sessions</option>
                   {sessions.map((s, idx) => (
-                    <option key={idx} value={s}>
-                      {s.session}
-                    </option>
+                   <option key={s._id} value={s._id}>
+  {s.session}
+</option>
+
                   ))}
                 </Select>
               </div>
@@ -273,6 +308,19 @@ const CaptainExport = () => {
                   ))}
                 </Select>
               </div>
+              <div className="space-y-2">
+  <label className="text-sm font-medium">Search by Name</label>
+  <Input value={filterName} onChange={(e) => setFilterName(e.target.value)} />
+</div>
+<div className="space-y-2">
+  <label className="text-sm font-medium">Search by URN</label>
+  <Input value={filterURN} onChange={(e) => setFilterURN(e.target.value)} />
+</div>
+<div className="space-y-2">
+  <label className="text-sm font-medium">Search by Sport</label>
+  <Input value={filterSport} onChange={(e) => setFilterSport(e.target.value)} />
+</div>
+
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground flex items-center gap-2">
@@ -295,6 +343,70 @@ const CaptainExport = () => {
           </CardContent>
         </Card>
       </motion.div>
+      {/* Captain List */}
+<motion.div 
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.2 }}
+>
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <Users className="w-5 h-5 text-primary" />
+        Captains ({captains.length})
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      {captains.length === 0 ? (
+        <div className="text-center py-12">
+          <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Captains Found</h3>
+          <p className="text-muted-foreground">No captains match the selected filters.</p>
+        </div>
+      ) : (
+        <div className="space-y-4 max-h-[500px] overflow-y-auto">
+          {captains.map((cap, index) => (
+            <motion.div
+              key={cap.urn}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h3 className="font-semibold text-foreground">{cap.name}</h3>
+                  <p className="text-sm text-muted-foreground">URN: {cap.urn}</p>
+                  <p className="text-sm text-muted-foreground">Branch-Year: {cap.branch} - {cap.year}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Sport: {cap.sport}</p>
+                  <p className="text-sm text-muted-foreground">Position: {cap.position}</p>
+                  <p className="text-sm text-muted-foreground">Session: {cap.session?.session}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Phone: {cap.phone}</p>
+                  <p className="text-sm text-muted-foreground">Email: {cap.email}</p>
+                </div>
+              </div>
+              {cap.teamMembers?.length > 0 && (
+                <div className="mt-3 pl-4 border-l-2 border-muted space-y-1">
+                  <p className="text-sm font-medium text-foreground">Team Members:</p>
+                  {cap.teamMembers.map((m, idx) => (
+                    <p key={idx} className="text-sm text-muted-foreground">
+                      {m.name} ({m.urn}) - {m.branch} {m.year}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</motion.div>
+
 
       {/* Export Buttons */}
       <motion.div 
