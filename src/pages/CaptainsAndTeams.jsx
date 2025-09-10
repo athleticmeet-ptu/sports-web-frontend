@@ -62,7 +62,7 @@ function CaptainsAndTeams({ nameFilter = "", urnFilter = "", sportFilter = "" })
   const handleDeleteMember = async (captainId, sessionId, memberIndex) => {
     if (!window.confirm("Delete this team member?")) return;
     try {
-      await fetch(`/api/admin/${captainId}/${sessionId}/members/${memberIndex}`, {
+      await fetch(`/api/admin/captains/${captainId}/${sessionId}/members/${memberIndex}`, {
         method: "DELETE",
       });
       setSelectedCaptain({
@@ -357,7 +357,7 @@ const handleEditSubmit = async () => {
                               <Button
                                 onClick={() =>
                                   handleDeleteMember(
-                                    selectedCaptain._id,
+                                    selectedCaptain.captainId,
                                     selectedCaptain.sessionId,
                                     index
                                   )
