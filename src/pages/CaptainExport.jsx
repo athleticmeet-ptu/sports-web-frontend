@@ -62,7 +62,7 @@ const [filterSport, setFilterSport] = useState("");
   sportSearch: filterSport || "", // ✅ keep separate if needed
 };
 
-      const res = await API.post("/admin/list-captains", payload);
+      const res = await API.post("/admin/captains", payload);
       setCaptains(res.data || []);
     } catch (err) {
       console.error("Error fetching captains:", err);
